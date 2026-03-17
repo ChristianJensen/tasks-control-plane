@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 target-repo: api
 wave: 1
 priority: high
