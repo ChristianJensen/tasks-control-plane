@@ -1,0 +1,10 @@
+name: Ship Ledger
+on:
+  pull_request:
+    types: [closed]
+jobs:
+  update-ledger:
+    uses: ChristianJensen/Relay/.github/workflows/ship-ledger.yml@main
+    with:
+      relay_nwo: ChristianJensen/tasks-control-plane
+    secrets: inherit

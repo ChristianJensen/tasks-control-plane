@@ -1,0 +1,12 @@
+name: Dispatch Agents
+on:
+  push:
+    branches: [main]
+    paths: ['queue/**']
+  workflow_dispatch: {}
+jobs:
+  dispatch:
+    uses: ChristianJensen/Relay/.github/workflows/dispatch-agents.yml@main
+    with:
+      relay_nwo: ChristianJensen/tasks-control-plane
+    secrets: inherit

@@ -1,0 +1,8 @@
+relay-nwo: ChristianJensen/tasks-control-plane
+relay-repo: ChristianJensen/Relay
+relay-path: /Users/christianjensen/src/agentic-sdlc-demo/relay
+github-org: ChristianJensen
+execution-mode: local
+repos:
+  api: ChristianJensen/agentic-sdlc-api
+  frontend: ChristianJensen/agentic-sdlc-frontend
