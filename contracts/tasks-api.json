@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -19,6 +19,28 @@
             "required": false,
             "description": "Comma-separated list of statuses to filter by (e.g. todo,in-progress)",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Field to sort by. Defaults to createdAt. Status sort uses workflow order: todo=0, in-progress=1, done=2.",
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "title", "status"],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "description": "Sort direction. Defaults to desc. Tiebreaker for equal values is createdAt desc.",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
           }
         ],
         "responses": {
