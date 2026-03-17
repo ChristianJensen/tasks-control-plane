@@ -1,5 +1,5 @@
 ---
-lifecycle: draft
+lifecycle: active
 version: 1
 paused-at: ""
 paused-by: ""
