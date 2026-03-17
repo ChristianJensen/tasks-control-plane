@@ -1,6 +1,6 @@
-# Relay
+# Relay Control Plane
 
-You are the **Architect Agent**. You decompose Feature Specs into repo-scoped tasks and coordinate cross-repo work via the Git-native task queue in `queue/`.
+This is a **Relay control plane** — a Git-native coordination hub for multi-repo feature delivery. Workflows define agent roles; this file provides shared context and reference material.
 
 ## Repos
 
@@ -14,69 +14,45 @@ See `service-catalog.md` for tech stacks, contracts, and purposes.
 
 ## Relay Framework
 
-Process files (scripts, templates, skills) live in the Relay framework repo at `/Users/christianjensen/src/agentic-sdlc-demo/relay`. This control plane contains only app data (features, queue, contracts, repos, reports).
+Process files (scripts, templates, workflows) live in the Relay framework repo at `/Users/christianjensen/src/agentic-sdlc-demo/relay`. This control plane contains only app data (features, queue, contracts, repos, reports).
 
 - **Templates:** `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/`
-- **Skills:** Installed globally as `relay:slice`, `relay:new-feature`, `relay:report-bug`, `relay:status-report`
+- **Workflows:** `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/`
 - **CLI:** Use `relay <command>` for automation (relay agents, relay doctor, relay feature-lifecycle, etc.)
 
-## Codebase Briefs
+## Available Workflows
 
-Each repo has a navigational index at `repos/<short>/codebase-brief.md`. These briefs tell the Architect what code lives where, what patterns to follow, and key file sizes for task estimation. Generate or update briefs with `relay generate-brief <repo-short> <local-path>`.
+| Workflow | Path | Purpose |
+|----------|------|---------|
+| **Spec** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/spec.md` | Interview user, produce feature spec + contract update |
+| **Slice** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/slice.md` | Decompose feature spec into repo-scoped, wave-grouped queue tasks |
+| **Relay** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/relay.md` | Push tasks and hand off work to coding agents |
+| **Report Bug** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/report-bug.md` | Create a bug report from user description or agent discovery |
+| **Status Report** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/status-report.md` | Generate PM-facing progress report from queue state |
 
-Use the `/slice` skill (or `relay:slice`) for the full decomposition workflow (reads briefs automatically).
+To run a workflow, read the workflow file and follow its instructions.
 
-## Architect Workflow
+## Roadmap
 
-### 1. Read the Feature Spec
+`features/ROADMAP.md` is a numbered list of feature slugs that PMs maintain to set build priority. Top = build first. PMs edit this via GitHub's web UI.
 
-Load the feature spec from `features/`. Understand what needs to be built.
-
-### Roadmap File
-
-`features/ROADMAP.md` is a numbered list of feature slugs that PMs maintain to set build priority. Top = build first. PMs edit this via GitHub's web UI (pencil icon → edit → commit).
-
-- The Architect reads the roadmap when choosing what to decompose next
+- Workflows read the roadmap when choosing what to work on next
 - The watcher uses roadmap position as a sort key (wave ASC → roadmap position ASC → priority ASC)
 - Features not listed default to position 9999 (lowest priority)
-- During task archival (step 6), also remove the completed feature from ROADMAP.md
+- During task archival, also remove the completed feature from ROADMAP.md
 
-### 2. Update the Contract
+## Reference: Queue Format
 
-Modify `contracts/tasks-api.json` (OpenAPI spec) to reflect any API changes.
-
-### 3. Decompose into Queue Tasks
-
-Group tasks into **waves** — each wave is a set of tasks that ship together as a single PR per repo. The wave is the unit of work, review, and CI.
-
-**Wave sizing rule:** A wave's combined estimated line count must stay **under 400 lines** per repo to keep PRs reviewable. Guidelines:
-- Several smalls (3-4 × ~50 lines ≈ 200 lines) — fine
-- A small + a medium (~250 lines) — fine
-- Two mediums — only if both are on the light side
-- Never exceed ~400 lines — split into additional waves
-
-**Wave sequencing:** Within a wave, tasks are ordered by dependency. Across waves, later waves may depend on earlier waves being merged. Cross-repo waves can run in parallel when they work against the contract.
-
-Create a feature directory and task files in the queue:
-
-```
-queue/<feature-name>/
-  wave-1-api-<task>.md
-  wave-1-frontend-<task>.md
-  wave-2-api-<task>.md
-  ...
-```
-
-Each task file uses the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/task-queue-item.md`:
+Task files live in `queue/<feature>/` and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/task-queue-item.md`:
 
 ```yaml
 ---
-status: ready          # ready | in-progress | done | blocked | paused | cancelled
-target-repo: api       # api | frontend
+status: ready          # pending | ready | in-progress | done | blocked | paused | cancelled
+target-repo: api       # from service catalog
 wave: 1
 priority: high         # critical | high | normal | low
-feature: <feature-name> # matches directory name in queue/
-type: feature            # feature | bug
+feature: <feature>     # matches directory name in queue/
+type: feature          # feature | bug
 contracts:
   - contracts/tasks-api.json
 ---
@@ -84,83 +60,27 @@ contracts:
 
 Followed by: Description, Why, Implementation Notes, Contract References, and Acceptance Criteria sections.
 
-### 4. Decomposition Validation Gate
+**Wave sizing rule:** A wave's combined estimated line count must stay **under 400 lines** per repo to keep PRs reviewable.
 
-After creating all task files, create a `_validation.md` file in the feature queue directory:
+## Reference: Task Status State Machine
 
-```markdown
-# Decomposition Validation: <feature-name>
-
-## Checklist
-
-- [ ] Each task can be implemented independently within its repo
-- [ ] Cross-repo tasks coordinate only via contracts
-- [ ] No task estimated >400 lines without split justification
-- [ ] All tasks have appropriate priority set
-- [ ] Each edge case from Feature Spec maps to at least one task's acceptance criteria
-- [ ] Contract changes are sufficient for all tasks
-- [ ] No circular dependencies
-- [ ] Critical-priority tasks have no unresolved dependencies
-- [ ] Tasks are grouped into waves, each wave <400 lines per repo
-- [ ] Wave ordering respects cross-wave dependencies
-
-## Status
-Awaiting validation — tasks are created with `status: ready`.
-Promote one wave at a time. Review and merge each wave's PRs before setting the next wave's tasks to `status: ready`.
+```
+pending → ready → in-progress → done (or blocked)
+                              → paused (human chose to stop)
+                              → cancelled (feature dropped)
 ```
 
-### 5. Wave Promotion
+| Status | Meaning |
+|--------|---------|
+| `pending` | Task exists but wave is not yet promoted |
+| `ready` | Task is available for agent pickup |
+| `in-progress` | Agent has claimed and is working |
+| `done` | Agent completed, PR created/merged |
+| `blocked` | Agent failed, needs human attention |
+| `paused` | Human chose to stop; may resume (distinct from `blocked`) |
+| `cancelled` | Feature dropped; terminal |
 
-Tasks in wave 1 start as `status: ready`. Tasks in later waves start as `status: pending` (not yet ready for pickup). After wave N's PRs are merged:
-1. Update wave N task files to `status: done`
-2. Update wave N+1 task files from `status: pending` to `status: ready`
-3. If all waves in the feature are now `status: done`, archive the feature (see step 6)
-
-Use `relay promote <feature> [--wave N]` for interactive wave promotion.
-
-### 6. Task Archival
-
-When all tasks in a feature reach `status: done`:
-1. Move the entire feature directory to the archive:
-   ```bash
-   git mv queue/<feature>/ queue/_done/<feature>/
-   ```
-2. Commit: `chore: archive completed <feature> tasks`
-
-## Bug Workflow
-
-Bugs are treated as lightweight features. Bug reports live in `features/` with a `-bug.md` suffix and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/bug-report.md`.
-
-### Reading and Triaging a Bug Report
-
-Bug reports contain diagnostic reasoning (root cause analysis, affected code paths, fix strategy) that feature specs don't need. Read the Diagnostic Reasoning section carefully — it contains the LLM's analysis of the likely cause.
-
-### Single-Task Bug Path
-
-For simple bugs (one repo, <50 lines):
-1. Create the bug report at `features/<slug>-bug.md` (use `/report-bug` or manually)
-2. Set `lifecycle: active`
-3. Create one task file in `queue/<slug>/` with `type: bug`
-4. Agent claims using `fix/` branch prefix
-
-### Complex Bug Path
-
-For bugs requiring multi-repo or multi-step fixes:
-1. Create the bug report at `features/<slug>-bug.md`
-2. Decompose into waves exactly like a feature — same queue structure, validation gate, wave promotion
-3. All task files set `type: bug`
-4. Same archival process when all tasks reach `done`
-
-### Bug Severity Guide
-
-| Severity | Criteria | Response |
-|----------|----------|----------|
-| **critical** | Data loss, security vulnerability, or complete feature outage | Immediate — sort before all feature work |
-| **high** | Core feature broken, no workaround available | Next pickup — sort before features at same wave |
-| **medium** | Wrong behavior but workaround exists | Normal queue priority |
-| **low** | Cosmetic issue, minor UX annoyance | Low priority |
-
-## Feature Lifecycle
+## Reference: Feature Lifecycle
 
 Feature specs and bug reports share a lifecycle managed via YAML frontmatter:
 
@@ -197,32 +117,14 @@ draft ──→ active ──→ paused ──→ active (resume)
 
 ### Replanning Protocol
 
-When an architect sees a `queue/<feature>/_replan-v<N>.md` file:
+When a `queue/<feature>/_replan-v<N>.md` file exists:
 
 1. Read the replan document for context on completed and cancelled work
-2. Create new tasks starting at the wave number specified in the document (continues from where previous decomposition stopped)
+2. Create new tasks starting at the wave number specified in the document
 3. Reference the replan document in the AgDR
 4. After creating new tasks, run `relay feature-lifecycle resume <feature>` to set lifecycle back to `active`
 
-## Task Status State Machine
-
-```
-pending → ready → in-progress → done (or blocked)
-                              → paused (human chose to stop)
-                              → cancelled (feature dropped)
-```
-
-| Status | Meaning |
-|--------|---------|
-| `pending` | Task exists but wave is not yet promoted |
-| `ready` | Task is available for agent pickup |
-| `in-progress` | Agent has claimed and is working |
-| `done` | Agent completed, PR created/merged |
-| `blocked` | Agent failed, needs human attention |
-| `paused` | Human chose to stop; may resume (distinct from `blocked`) |
-| `cancelled` | Feature dropped; terminal |
-
-## Branch-Claim Protocol
+## Reference: Branch-Claim Protocol
 
 Agent branches use `git push` as an atomic distributed lock — first push wins, all others are rejected.
 
@@ -290,7 +192,7 @@ Integrated into the watcher poll loop:
 - Delete remote branch (`git push origin --delete <prefix>/<slug>`)
 - Reset task file status back to `ready`
 
-## PR Linking Conventions
+## Reference: PR Linking Conventions
 
 When Claude creates a PR for a task, it must include both human-readable links and machine-parseable labels.
 
@@ -334,36 +236,36 @@ When Claude creates a PR for a task, it must include both human-readable links a
 **GitHub URLs use this base:**
 `https://github.com/ChristianJensen/tasks-control-plane/blob/main/`
 
-## Sizing Guide
+## Reference: Bug Workflow
 
-When decomposing tasks, consider size:
+Bugs are treated as lightweight features. Bug reports live in `features/` with a `-bug.md` suffix and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/bug-report.md`.
+
+**Single-task bugs** (one repo, <50 lines): create one task file in `queue/<slug>/` with `type: bug`. Agent claims using `fix/` branch prefix.
+
+**Complex bugs** (multi-repo or multi-step): decompose into waves like a feature — same queue structure, validation gate, wave promotion.
+
+| Severity | Criteria | Response |
+|----------|----------|----------|
+| **critical** | Data loss, security vulnerability, or complete feature outage | Immediate — sort before all feature work |
+| **high** | Core feature broken, no workaround available | Next pickup — sort before features at same wave |
+| **medium** | Wrong behavior but workaround exists | Normal queue priority |
+| **low** | Cosmetic issue, minor UX annoyance | Low priority |
+
+## Reference: Sizing Guide
 
 - **small:** Single file, <50 lines changed, follows an existing pattern exactly.
 - **medium:** 2-4 files, <200 lines changed, may introduce minor new patterns.
-- **large:** 5+ files or >200 lines changed. Must explain why this task cannot be split further. Humans pick up large tasks for paired work rather than letting the watcher auto-claim.
+- **large:** 5+ files or >200 lines changed. Must explain why this task cannot be split further.
 
-## Retrospective Context
+## Reference: Task Archival
 
-Before decomposing a new Feature Spec, the Architect Agent should:
-
-1. Read `retrospectives/retro-log.md` for past failure patterns
-2. Read `retrospectives/edge-case-library.md` for accumulated edge cases
-3. Check the current decomposition against past `bad-decomposition` failures
-4. Ensure edge cases from the library are addressed in acceptance criteria where relevant
-
-## Agent Auto-Reporting Protocol
-
-When an agent encounters a pre-existing bug during task work (not a bug it introduced):
-
-1. Create `features/<slug>-bug.md` using the bug report template
-   - Set `reported-by: agent:<current-task-file-path>`
-   - Set `lifecycle: draft`
-   - Fill Diagnostic Reasoning from the agent's context
-2. Continue the original task — don't block on the bug report
-3. If the bug blocks the current task:
-   - Set the current task to `status: blocked`
-   - Note the bug slug in the task file's Implementation Notes
-4. The bug report will be triaged separately by a human or architect
+When all tasks in a feature reach `status: done`:
+1. Move the entire feature directory to the archive:
+   ```bash
+   git mv queue/<feature>/ queue/_done/<feature>/
+   ```
+2. Remove the feature from `features/ROADMAP.md`
+3. Commit: `chore: archive completed <feature> tasks`
 
 ## Conventions
 
