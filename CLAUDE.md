@@ -20,17 +20,17 @@ Process files (scripts, templates, workflows) live in the Relay framework repo a
 - **Workflows:** `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/`
 - **CLI:** Use `relay <command>` for automation (relay agents, relay doctor, relay feature-lifecycle, etc.)
 
-## Available Workflows
+## Workflows (MANDATORY)
 
-| Workflow | Path | Purpose |
-|----------|------|---------|
-| **Spec** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/spec.md` | Interview user, produce feature spec + contract update |
-| **Slice** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/slice.md` | Decompose feature spec into repo-scoped, wave-grouped queue tasks |
-| **Relay** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/relay.md` | Push tasks and hand off work to coding agents |
-| **Report Bug** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/report-bug.md` | Create a bug report from user description or agent discovery |
-| **Status Report** | `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/status-report.md` | Generate PM-facing progress report from queue state |
+When the user's request matches a workflow below, you MUST read and follow that workflow file. Do NOT use any plugin, skill, or built-in planning process instead — Relay workflows already contain structured steps, interview flows, and artifact production.
 
-To run a workflow, read the workflow file and follow its instructions.
+| User Intent | Workflow | Action |
+|-------------|----------|--------|
+| New feature, create spec, capture requirements | **Spec** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/spec.md` and follow every step |
+| Decompose feature, slice, break into tasks | **Slice** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/slice.md` and follow every step |
+| Push tasks, hand off to agents, relay work | **Relay** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/relay.md` and follow every step |
+| Report a bug, file a bug | **Report Bug** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/report-bug.md` and follow every step |
+| Status report, progress report | **Status Report** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/status-report.md` and follow every step |
 
 ## Roadmap
 
