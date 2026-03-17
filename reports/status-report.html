@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Status Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; }
+    .summary-row {
+      display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;
+    }
+    .stat-card {
+      flex: 1; min-width: 120px; padding: 1.25rem;
+      background: #fff; border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+    .stat-card .number { font-size: 2rem; font-weight: 700; }
+    .stat-card .label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-shipped .number { color: #16a34a; }
+    .stat-inprogress .number { color: #2563eb; }
+    .stat-notstarted .number { color: #d97706; }
+    .stat-blocked .number { color: #dc2626; }
+    .stat-bugs .number { color: #ea580c; }
+
+    .section-title { font-size: 1.25rem; margin: 2rem 0 1rem; color: #334155; }
+
+    .feature-card {
+      background: #fff; border-radius: 8px; padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      margin-bottom: 1.25rem;
+      border: 1px solid #e2e8f0;
+    }
+    .feature-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .feature-name { font-size: 1.1rem; font-weight: 600; }
+    .badge {
+      display: inline-block; padding: 0.15rem 0.6rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+      color: #fff; white-space: nowrap;
+    }
+    .badge-shipped { background: #16a34a; }
+    .badge-inprogress { background: #2563eb; }
+    .badge-notstarted { background: #d97706; }
+    .badge-blocked { background: #dc2626; }
+
+    .problem { color: #64748b; font-size: 0.9rem; margin-bottom: 1rem; }
+
+    .progress-bar-container {
+      background: #e2e8f0; border-radius: 999px; height: 10px;
+      overflow: hidden; margin-bottom: 0.25rem;
+    }
+    .progress-bar-fill {
+      height: 100%; border-radius: 999px;
+      transition: width 0.3s;
+    }
+    .progress-label { font-size: 0.8rem; color: #64748b; margin-bottom: 0.75rem; }
+
+    .wave-progress { font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 3px; }
+    .dot-done { background: #16a34a; }
+    .dot-inprogress { background: #2563eb; }
+    .dot-ready { background: #94a3b8; }
+    .dot-blocked { background: #dc2626; }
+
+    .repo-breakdown { font-size: 0.85rem; color: #475569; margin-bottom: 0.75rem; }
+
+    .missing-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; margin-top: 0.5rem; }
+    .missing-table th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid #e2e8f0; color: #64748b; font-weight: 600; }
+    .missing-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #f1f5f9; }
+
+    .footer { text-align: center; color: #94a3b8; font-size: 0.8rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
+
+    @media print {
+      body { background: #fff; }
+      .stat-card, .feature-card { box-shadow: none; border: 1px solid #d1d5db; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Project Status Report</h1>
+    <p class="subtitle">Generated on 2026-03-17</p>
+
+    <!-- Executive Summary -->
+    <div class="summary-row">
+      <div class="stat-card stat-shipped">
+        <div class="number">2</div>
+        <div class="label">Shipped</div>
+      </div>
+      <div class="stat-card stat-inprogress">
+        <div class="number">0</div>
+        <div class="label">In Progress</div>
+      </div>
+      <div class="stat-card stat-notstarted">
+        <div class="number">0</div>
+        <div class="label">Not Started</div>
+      </div>
+      <div class="stat-card stat-blocked">
+        <div class="number">0</div>
+        <div class="label">Blocked</div>
+      </div>
+      <div class="stat-card stat-bugs">
+        <div class="number">0</div>
+        <div class="label">Bug Fixes</div>
+      </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <h2 class="section-title">Features</h2>
+
+    <!-- Task Status Workflow -->
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-name">Task Status Workflow</span>
+        <span class="badge badge-shipped">Shipped</span>
+      </div>
+      <p class="problem">The Tasks app has no task CRUD or status management. Users cannot create tasks, track their progress, or visualize work status.</p>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" style="width: 100%; background: #16a34a;"></div>
+      </div>
+      <p class="progress-label">2 / 2 tasks complete (100%)</p>
+
+      <div class="wave-progress">
+        W1: <span class="dot dot-done"></span><span class="dot dot-done"></span>
+      </div>
+
+      <div class="repo-breakdown">API: 1/1 | Frontend: 1/1</div>
+    </div>
+
+    <!-- Task Sorting -->
+    <div class="feature-card">
+      <div class="feature-header">
+        <span class="feature-name">Task Sorting</span>
+        <span class="badge badge-shipped">Shipped</span>
+      </div>
+      <p class="problem">Tasks are returned in an undefined order from the API, and the frontend has no way for users to control how tasks are arranged.</p>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" style="width: 100%; background: #16a34a;"></div>
+      </div>
+      <p class="progress-label">2 / 2 tasks complete (100%)</p>
+
+      <div class="wave-progress">
+        W1: <span class="dot dot-done"></span><span class="dot dot-done"></span>
+      </div>
+
+      <div class="repo-breakdown">API: 1/1 | Frontend: 1/1</div>
+    </div>
+
+    <div class="footer">Generated on 2026-03-17 by /status-report</div>
+  </div>
+</body>
+</html>

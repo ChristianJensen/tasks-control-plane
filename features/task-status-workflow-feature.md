@@ -1,5 +1,5 @@
 ---
-lifecycle: active
+lifecycle: completed
 version: 1
 paused-at: ""
 paused-by: ""
