@@ -1,10 +1,13 @@
 ---
-status: ready
+status: in-progress
 target-repo: frontend
 wave: 1
 priority: high
 feature: logging
 type: feature
+claimed-by: agent-Christians-MacBook-Air-32392
+claimed-at: 2026-03-19T16:07:46Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
