@@ -1,13 +1,13 @@
 ---
-status: ready
+status: in-progress
 target-repo: api
 wave: 1
 priority: high
 feature: task-audit-log
 type: feature
-claimed-by: ""
-claimed-at: ""
-claimed-on: ""
+claimed-by: "autonomous-agent"
+claimed-at: "2026-03-19"
+claimed-on: "agent/task-audit-log-w1-audit-endpoints"
 contracts:
   - contracts/tasks-api.json
 ---
