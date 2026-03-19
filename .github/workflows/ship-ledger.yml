@@ -1,7 +1,7 @@
 name: Ship Ledger
 on:
   pull_request:
-    types: [closed]
+    types: [closed, labeled]
 jobs:
   update-ledger:
     uses: ChristianJensen/Relay/.github/workflows/ship-ledger.yml@main
