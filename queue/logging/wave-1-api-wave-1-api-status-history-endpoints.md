@@ -1,10 +1,13 @@
 ---
-status: ready
+status: in-progress
 target-repo: api
 wave: 1
 priority: high
 feature: logging
 type: feature
+claimed-by: christianjensen
+claimed-at: 2026-03-19T15:58:55Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
