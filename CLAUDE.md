@@ -26,10 +26,10 @@ When the user's request matches a workflow below, you MUST read and follow that 
 
 | User Intent | Workflow | Action |
 |-------------|----------|--------|
-| New feature, create spec, capture requirements | **Spec** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/spec.md` and follow every step |
-| Decompose feature, slice, break into tasks | **Slice** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/slice.md` and follow every step |
+| New feature, create spec, capture requirements | **Spec** | Run `relay spec` (script-orchestrated) |
+| Decompose feature, slice, break into tasks | **Slice** | Run `relay slice <feature>` (script-orchestrated) |
+| Report a bug, file a bug | **Report Bug** | Run `relay report-bug` (script-orchestrated) |
 | Push tasks, hand off to agents, relay work | **Relay** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/relay.md` and follow every step |
-| Report a bug, file a bug | **Report Bug** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/report-bug.md` and follow every step |
 | Status report, progress report | **Status Report** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/status-report.md` and follow every step |
 
 ## Roadmap
