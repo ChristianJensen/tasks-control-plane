@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -11,14 +11,18 @@
         "operationId": "listTasks",
         "summary": "List all tasks",
         "description": "Returns all tasks, optionally filtered by status. Use comma-separated values to filter by multiple statuses.",
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "parameters": [
           {
             "name": "status",
             "in": "query",
             "required": false,
             "description": "Comma-separated list of statuses to filter by (e.g. todo,in-progress)",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "sort",
@@ -27,7 +31,11 @@
             "description": "Field to sort by. Defaults to createdAt. Status sort uses workflow order: todo=0, in-progress=1, done=2.",
             "schema": {
               "type": "string",
-              "enum": ["createdAt", "title", "status"],
+              "enum": [
+                "createdAt",
+                "title",
+                "status"
+              ],
               "default": "createdAt"
             }
           },
@@ -38,7 +46,10 @@
             "description": "Sort direction. Defaults to desc. Tiebreaker for equal values is createdAt desc.",
             "schema": {
               "type": "string",
-              "enum": ["asc", "desc"],
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "default": "desc"
             }
           }
@@ -50,7 +61,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Task" }
+                  "items": {
+                    "$ref": "#/components/schemas/Task"
+                  }
                 }
               }
             }
@@ -59,7 +72,9 @@
             "description": "Invalid status filter value",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -69,18 +84,31 @@
         "operationId": "createTask",
         "summary": "Create a new task",
         "description": "Creates a task. Status defaults to 'todo' if not provided.",
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["title"],
+                "required": [
+                  "title"
+                ],
                 "properties": {
-                  "title": { "type": "string", "minLength": 1, "maxLength": 255 },
-                  "description": { "type": "string", "maxLength": 2000 },
-                  "status": { "$ref": "#/components/schemas/TaskStatus" }
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "status": {
+                    "$ref": "#/components/schemas/TaskStatus"
+                  }
                 }
               }
             }
@@ -91,7 +119,9 @@
             "description": "Task created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Task" }
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
               }
             }
           },
@@ -99,7 +129,9 @@
             "description": "Invalid request body",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -111,13 +143,17 @@
         "operationId": "getTask",
         "summary": "Get a single task",
         "description": "Returns a task by its ID.",
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "parameters": [
           {
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -125,7 +161,9 @@
             "description": "Task found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Task" }
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
               }
             }
           },
@@ -133,7 +171,9 @@
             "description": "Task not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -142,14 +182,21 @@
       "patch": {
         "operationId": "updateTask",
         "summary": "Update a task",
-        "description": "Partially updates a task. At least one field must be provided. Setting status to its current value is a no-op (returns 200).",
-        "tags": ["tasks"],
+        "description": "Partially updates a task. At least one field must be provided. Setting status to its current value is a no-op (returns 200, no history entry created). The X-User-Id header is required to identify who made the change.",
+        "tags": [
+          "tasks"
+        ],
         "parameters": [
           {
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/XUserId"
           }
         ],
         "requestBody": {
@@ -160,9 +207,18 @@
                 "type": "object",
                 "minProperties": 1,
                 "properties": {
-                  "title": { "type": "string", "minLength": 1, "maxLength": 255 },
-                  "description": { "type": "string", "maxLength": 2000 },
-                  "status": { "$ref": "#/components/schemas/TaskStatus" }
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "status": {
+                    "$ref": "#/components/schemas/TaskStatus"
+                  }
                 }
               }
             }
@@ -173,15 +229,19 @@
             "description": "Task updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Task" }
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
               }
             }
           },
           "400": {
-            "description": "Invalid request body",
+            "description": "Invalid request body or missing X-User-Id header",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -189,7 +249,9 @@
             "description": "Task not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -198,14 +260,18 @@
       "delete": {
         "operationId": "deleteTask",
         "summary": "Delete a task",
-        "description": "Permanently deletes a task and all its associated comments (cascade).",
-        "tags": ["tasks"],
+        "description": "Permanently deletes a task and all its associated comments and status history entries (cascade).",
+        "tags": [
+          "tasks"
+        ],
         "parameters": [
           {
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -216,7 +282,9 @@
             "description": "Task not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -228,13 +296,17 @@
         "operationId": "createComment",
         "summary": "Add a comment to a task",
         "description": "Creates a comment. The X-User-Id header identifies the author.",
-        "tags": ["comments"],
+        "tags": [
+          "comments"
+        ],
         "parameters": [
           {
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           },
           {
             "$ref": "#/components/parameters/XUserId"
@@ -246,9 +318,15 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["text"],
+                "required": [
+                  "text"
+                ],
                 "properties": {
-                  "text": { "type": "string", "minLength": 1, "maxLength": 2000 }
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
                 }
               }
             }
@@ -259,7 +337,9 @@
             "description": "Comment created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Comment" }
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
               }
             }
           }
@@ -271,19 +351,25 @@
         "operationId": "deleteComment",
         "summary": "Delete a comment",
         "description": "Permanently deletes a comment. Only the comment author (matched via X-User-Id header) may delete it.",
-        "tags": ["comments"],
+        "tags": [
+          "comments"
+        ],
         "parameters": [
           {
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           },
           {
             "name": "commentId",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           },
           {
             "$ref": "#/components/parameters/XUserId"
@@ -294,10 +380,12 @@
             "description": "Comment deleted successfully"
           },
           "403": {
-            "description": "Forbidden — caller is not the comment author",
+            "description": "Forbidden \u2014 caller is not the comment author",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -305,7 +393,54 @@
             "description": "Comment or task not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{taskId}/history": {
+      "get": {
+        "operationId": "getTaskHistory",
+        "summary": "Get status transition history for a task",
+        "description": "Returns the ordered list of status transitions for a task, sorted by changedAt ascending (oldest first). Returns an empty array if the task exists but has no transitions.",
+        "tags": [
+          "history"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of status transitions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatusTransition"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -320,43 +455,124 @@
         "in": "header",
         "required": true,
         "description": "Identifies the calling user. Used for ownership checks.",
-        "schema": { "type": "string" }
+        "schema": {
+          "type": "string"
+        }
       }
     },
     "schemas": {
       "TaskStatus": {
         "type": "string",
-        "enum": ["todo", "in-progress", "done"],
+        "enum": [
+          "todo",
+          "in-progress",
+          "done"
+        ],
         "description": "Task workflow status"
       },
       "Task": {
         "type": "object",
-        "required": ["id", "title", "status", "createdAt", "updatedAt"],
+        "required": [
+          "id",
+          "title",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
         "properties": {
-          "id": { "type": "integer" },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
-          "status": { "$ref": "#/components/schemas/TaskStatus" },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "StatusTransition": {
+        "type": "object",
+        "required": [
+          "id",
+          "taskId",
+          "oldStatus",
+          "newStatus",
+          "changedBy",
+          "changedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "taskId": {
+            "type": "integer"
+          },
+          "oldStatus": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "newStatus": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "changedBy": {
+            "type": "string",
+            "description": "Matches X-User-Id of the user who made the change"
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "Comment": {
         "type": "object",
-        "required": ["id", "taskId", "text", "authorId", "createdAt"],
+        "required": [
+          "id",
+          "taskId",
+          "text",
+          "authorId",
+          "createdAt"
+        ],
         "properties": {
-          "id": { "type": "integer" },
-          "taskId": { "type": "integer" },
-          "text": { "type": "string" },
-          "authorId": { "type": "string", "description": "Matches X-User-Id of the creator" },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "integer"
+          },
+          "taskId": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "authorId": {
+            "type": "string",
+            "description": "Matches X-User-Id of the creator"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "Error": {
         "type": "object",
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "properties": {
-          "message": { "type": "string" }
+          "message": {
+            "type": "string"
+          }
         }
       }
     }
