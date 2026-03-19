@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.5.0",
+    "version": "0.4.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -68,13 +68,8 @@
       "post": {
         "operationId": "createTask",
         "summary": "Create a new task",
-        "description": "Creates a task. Status defaults to 'todo' if not provided. Also creates an initial audit entry recording the creation.",
+        "description": "Creates a task. Status defaults to 'todo' if not provided.",
         "tags": ["tasks"],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/XUserId"
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -147,7 +142,7 @@
       "patch": {
         "operationId": "updateTask",
         "summary": "Update a task",
-        "description": "Partially updates a task. At least one field must be provided. Setting status to its current value is a no-op (returns 200, no audit entry created). A status change creates an audit entry with old and new values.",
+        "description": "Partially updates a task. At least one field must be provided. Setting status to its current value is a no-op (returns 200).",
         "tags": ["tasks"],
         "parameters": [
           {
@@ -155,9 +150,6 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer" }
-          },
-          {
-            "$ref": "#/components/parameters/XUserId"
           }
         ],
         "requestBody": {
@@ -206,7 +198,7 @@
       "delete": {
         "operationId": "deleteTask",
         "summary": "Delete a task",
-        "description": "Permanently deletes a task and all its associated comments and audit entries (cascade).",
+        "description": "Permanently deletes a task and all its associated comments (cascade).",
         "tags": ["tasks"],
         "parameters": [
           {
@@ -219,43 +211,6 @@
         "responses": {
           "204": {
             "description": "Task deleted successfully"
-          },
-          "404": {
-            "description": "Task not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/tasks/{taskId}/audit": {
-      "get": {
-        "operationId": "listAuditEntries",
-        "summary": "Get audit log for a task",
-        "description": "Returns all audit entries for a task, ordered by createdAt descending (newest first). Each entry records a status change with old and new values.",
-        "tags": ["audit"],
-        "parameters": [
-          {
-            "name": "taskId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of audit entries",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/AuditEntry" }
-                }
-              }
-            }
           },
           "404": {
             "description": "Task not found",
@@ -364,7 +319,7 @@
         "name": "X-User-Id",
         "in": "header",
         "required": true,
-        "description": "Identifies the calling user. Used for ownership checks and audit attribution.",
+        "description": "Identifies the calling user. Used for ownership checks.",
         "schema": { "type": "string" }
       }
     },
@@ -384,23 +339,6 @@
           "status": { "$ref": "#/components/schemas/TaskStatus" },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "AuditEntry": {
-        "type": "object",
-        "required": ["id", "taskId", "oldStatus", "newStatus", "userId", "createdAt"],
-        "properties": {
-          "id": { "type": "integer" },
-          "taskId": { "type": "integer" },
-          "oldStatus": {
-            "type": "string",
-            "nullable": true,
-            "description": "Previous status. Null for task creation entries.",
-            "enum": ["todo", "in-progress", "done", null]
-          },
-          "newStatus": { "$ref": "#/components/schemas/TaskStatus" },
-          "userId": { "type": "string", "description": "X-User-Id of the user who made the change" },
-          "createdAt": { "type": "string", "format": "date-time" }
         }
       },
       "Comment": {
