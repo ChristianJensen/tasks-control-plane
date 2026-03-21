@@ -399,9 +399,14 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     ? `<span class="type-icon type-bug" title="Bug">&#9679;</span>`
     : `<span class="type-icon type-feature" title="Feature">&#9670;</span>`;
 
-  // Jira epic link
-  const jiraLink = (linkContext.jiraBaseUrl && feature.epic)
-    ? `<a href="${escHTML(linkContext.jiraBaseUrl)}/browse/${escHTML(feature.epic)}" target="_blank" rel="noopener" class="jira-link" title="View in Jira">Jira: ${escHTML(feature.epic)}</a>`
+  // Jira epic link — split pill: left = filter toggle, right = external Jira link
+  const jiraLink = feature.epic
+    ? `<span class="jira-pill">`
+      + `<span class="epic-filter-toggle" data-epic="${escHTML(feature.epic)}" title="Filter by epic ${escHTML(feature.epic)}">${escHTML(feature.epic)}</span>`
+      + (linkContext.jiraBaseUrl
+        ? `<a href="${escHTML(linkContext.jiraBaseUrl)}/browse/${escHTML(feature.epic)}" target="_blank" rel="noopener" class="jira-link-icon" title="Open in Jira">&#8599;</a>`
+        : "")
+      + `</span>`
     : "";
 
   // SHA-pinned spec link
@@ -465,7 +470,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
 
   const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
 
-  return `<div class="feature-row${isDimmed ? " feature-dimmed" : ""}" data-status="${feature.status}" data-type="${feature.type}" data-execution="${feature.execution || ""}" data-title="${escHTML(feature.title.toLowerCase())}" style="animation-delay:${idx * 60}ms">
+  return `<div class="feature-row${isDimmed ? " feature-dimmed" : ""}" data-status="${feature.status}" data-type="${feature.type}" data-execution="${feature.execution || ""}" data-title="${escHTML(feature.title.toLowerCase())}" data-epic="${escHTML(feature.epic)}" style="animation-delay:${idx * 60}ms">
     <div class="feature-header" onclick="this.parentElement.classList.toggle('expanded')">
       <div class="feature-left">
         ${typeIcon}
@@ -874,16 +879,33 @@ body::before {
 }
 
 /* ── Jira & Spec Links ── */
-.jira-link {
-  display: inline-flex; align-items: center; gap: 3px;
-  padding: 1px 8px; border-radius: 6px;
+.jira-pill {
+  display: inline-flex; align-items: center;
+  border-radius: 6px; overflow: hidden;
   background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
-  font-size: 10px; font-weight: 600; color: #60a5fa;
-  text-decoration: none; font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600; font-family: var(--font-mono);
   vertical-align: middle; margin-left: 6px;
   transition: all var(--transition);
 }
-.jira-link:hover { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.4); }
+.epic-filter-toggle {
+  padding: 1px 6px; color: #60a5fa; cursor: pointer;
+  transition: all var(--transition); user-select: none;
+}
+.epic-filter-toggle:hover { background: rgba(59,130,246,0.2); }
+.epic-filter-toggle.epic-active { background: rgba(59,130,246,0.35); color: #93bbfd; }
+.jira-link-icon {
+  padding: 1px 5px; color: #60a5fa; text-decoration: none;
+  border-left: 1px solid rgba(59,130,246,0.2);
+  transition: all var(--transition); font-size: 11px; line-height: 1;
+}
+.jira-link-icon:hover { background: rgba(59,130,246,0.2); }
+.epic-filter-banner {
+  padding: 6px 14px; margin-bottom: 10px; border-radius: 8px;
+  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+  font-size: 12px; color: #60a5fa;
+}
+.epic-filter-banner a { color: #93bbfd; text-decoration: none; font-size: 11px; }
+.epic-filter-banner a:hover { text-decoration: underline; }
 .spec-link {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 1px 8px; border-radius: 6px;
@@ -1101,13 +1123,14 @@ const execBtns = document.querySelectorAll('#execFilters .filter-btn');
 const searchInput = document.getElementById('searchInput');
 let activeStatus = 'all';
 let activeExec = 'all';
+let activeEpic = null;
 
 function applyFilters() {
   const q = searchInput.value.toLowerCase();
   rows.forEach(row => {
     let show = true;
-    // Search filter
-    if (q && !(row.dataset.title || '').includes(q)) show = false;
+    // Search filter (matches title and epic key)
+    if (q && !(row.dataset.title || '').includes(q) && !(row.dataset.epic || '').toLowerCase().includes(q)) show = false;
     // Status filter
     if (show && activeStatus !== 'all') {
       if (activeStatus === 'bug') { if (row.dataset.type !== 'bug') show = false; }
@@ -1116,6 +1139,10 @@ function applyFilters() {
     // Execution filter
     if (show && activeExec !== 'all') {
       if (row.dataset.execution !== activeExec) show = false;
+    }
+    // Epic filter
+    if (show && activeEpic) {
+      if ((row.dataset.epic || '') !== activeEpic) show = false;
     }
     row.style.display = show ? '' : 'none';
   });
@@ -1141,6 +1168,40 @@ execBtns.forEach(btn => {
 
 // ── Search ──
 searchInput.addEventListener('input', applyFilters);
+
+// ── Epic Filtering ──
+function setEpicFilter(epicKey) {
+  activeEpic = epicKey;
+  document.querySelectorAll('.epic-filter-toggle').forEach(el => {
+    el.classList.toggle('epic-active', el.dataset.epic === epicKey);
+  });
+  let banner = document.querySelector('.epic-filter-banner');
+  if (epicKey) {
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.className = 'epic-filter-banner';
+      document.querySelector('.controls').appendChild(banner);
+    }
+    banner.innerHTML = 'Filtered by epic: <strong>' + epicKey + '</strong> <a href="#" onclick="setEpicFilter(null);return false">Clear</a>';
+  } else if (banner) {
+    banner.remove();
+  }
+  applyFilters();
+}
+
+document.addEventListener('click', e => {
+  const toggle = e.target.closest('.epic-filter-toggle');
+  if (toggle) {
+    e.preventDefault();
+    e.stopPropagation();
+    const epic = toggle.dataset.epic;
+    setEpicFilter(activeEpic === epic ? null : epic);
+  }
+});
+
+// ── URL param: ?epic=KEY ──
+const epicParam = new URLSearchParams(window.location.search).get('epic');
+if (epicParam) setEpicFilter(epicParam);
 
 // ── Workers Toggle ──
 document.querySelectorAll('.workers-header').forEach(h => {
