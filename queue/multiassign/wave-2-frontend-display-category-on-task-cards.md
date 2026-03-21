@@ -1,11 +1,14 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
 priority: high
 feature: multiassign
 type: feature
+claimed-by: agent-06-36-06-7A-C3-F6-54628
+claimed-at: 2026-03-21T16:20:38Z
+claimed-on: 06-36-06-7A-C3-F6
 ---
 
 ## Description
