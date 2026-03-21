@@ -20,6 +20,14 @@ Process files (scripts, templates, workflows) live in the Relay framework repo a
 - **Workflows:** `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/`
 - **CLI:** Use `relay <command>` for automation (relay agents, relay doctor, relay feature-lifecycle, etc.)
 
+## Constitution
+
+Rules from Relay (corporate) and this control plane (app-level) are compiled into each code repo's `.relay/constitution.md`. This control plane also has its own `constitution.md` with merged rules.
+
+- **Propagate rules:** `relay upgrade --repos` recompiles constitutions for all repos
+- **Check freshness:** `relay check-rules` from any repo to detect stale rules
+- **Add app rules:** Edit `manifest.md` and add files to `rules/` in this control plane
+
 ## Workflows (MANDATORY)
 
 When the user's request matches a workflow below, you MUST read and follow that workflow file. Do NOT use any plugin, skill, or built-in planning process instead — Relay workflows already contain structured steps, interview flows, and artifact production.
