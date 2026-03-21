@@ -1,7 +1,7 @@
 ---
 lifecycle: replanning
-version: 3
-paused-at: 2026-03-21T13:25:28Z
+version: 4
+paused-at: 2026-03-21T13:34:19Z
 paused-by: christianjensen
 pause-reason: ""
 deployed-at: ""
@@ -70,6 +70,13 @@ Users need a way to organize their tasks by category (work, personal, errands). 
 **Spec changes:** None — all requirements, acceptance criteria, and scope unchanged.
 **Action:** Re-running refinement rounds that were never completed in v1.
 
+## Replan v3
+
+**Trigger:** Resuming — no requirements change. Refinement rounds were never completed in v1 or v2.
+**Completed work:** None.
+**Spec changes:** None — all requirements, acceptance criteria, and scope unchanged.
+**Action:** Completing all five refinement rounds.
+
 ## Refinement Log
 
 ### Round 1: Assumptions
@@ -77,14 +84,18 @@ _What does this spec assume but not explicitly state?_
 
 | # | Assumption | Challenged? | Resolution |
 |---|-----------|-------------|------------|
-| A1 | | | |
+| A1 | Batch category update is idempotent — re-assigning the same category counts as "updated" | Yes | Confirmed. Tasks appear in `updated` array regardless of prior category value. No special no-op handling. |
+| A2 | Category is a simple nullable enum column on the tasks table, not a separate table with FK | Yes | Confirmed. Single column, cascade-deletes with the task row. Separate table deferred to custom-categories scope. |
+| A3 | Batch-update-category endpoint does not require `X-User-Id` | Yes | Reversed. Require `X-User-Id` for consistency with other mutating endpoints and future audit capability. Validate presence (400 if missing). |
 
 ### Round 2: Edge Cases
 _Stress-test the spec with edge cases._
 
 | # | Edge Case | Addressed By | Resolution |
 |---|----------|-------------|------------|
-| E1 | | | |
+| E1 | All IDs in batch request are not found | R4, AC5 | Return 200 with `{ updated: [], notFound: [...] }` — matches batch-delete pattern. Valid request, empty result. |
+| E2 | Invalid category value in batch request (e.g., "urgent") | R3, AC6 | Reject entire request with 400. Category validation is request-level, not per-task. No tasks updated. |
+| E3 | Task deleted by another user while batch-update is in flight | R4, AC5, AC9 | Deleted task appears in `notFound` array. Remaining tasks updated normally. Frontend refresh (AC9) reflects deletion. No special handling needed. |
 
 ### Round 3: Scope Boundaries
 _Propose adjacent features and confirm whether they are in or out of scope._
