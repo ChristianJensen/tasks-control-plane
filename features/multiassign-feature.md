@@ -1,8 +1,8 @@
 ---
-lifecycle: draft
-version: 1
-paused-at: ""
-paused-by: ""
+lifecycle: replanning
+version: 2
+paused-at: 2026-03-21T13:15:27Z
+paused-by: christianjensen
 pause-reason: ""
 deployed-at: ""
 deployed-env: ""
