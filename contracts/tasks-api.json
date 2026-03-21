@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -127,6 +127,62 @@
           },
           "400": {
             "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/batch-delete": {
+      "post": {
+        "operationId": "batchDeleteTasks",
+        "summary": "Delete multiple tasks",
+        "description": "Permanently deletes multiple tasks and all their associated comments and status history entries (cascade). Handles partial success: valid tasks are deleted even if some IDs are not found. Returns 200 for all valid requests, including when all IDs are not found.",
+        "tags": [
+          "tasks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids"
+                ],
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "description": "Array of task IDs to delete. Duplicates are deduplicated."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch delete processed. Check deleted and notFound arrays for details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDeleteResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body (empty array, exceeds 50 IDs, or malformed)",
             "content": {
               "application/json": {
                 "schema": {
@@ -561,6 +617,29 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "BatchDeleteResult": {
+        "type": "object",
+        "required": [
+          "deleted",
+          "notFound"
+        ],
+        "properties": {
+          "deleted": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "IDs of tasks that were successfully deleted"
+          },
+          "notFound": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "IDs that did not match any existing task"
           }
         }
       },
