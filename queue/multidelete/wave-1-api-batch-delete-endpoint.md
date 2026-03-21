@@ -1,10 +1,13 @@
 ---
-status: ready
+status: in-progress
 target-repo: api
 wave: 1
 priority: high
 feature: multidelete
 type: feature
+claimed-by: agent-06-36-06-7A-C3-F6-52577
+claimed-at: 2026-03-21T01:55:12Z
+claimed-on: 06-36-06-7A-C3-F6
 ---
 
 ## Description
