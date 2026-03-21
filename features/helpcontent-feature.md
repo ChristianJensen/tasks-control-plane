@@ -1,5 +1,5 @@
 ---
-lifecycle: active
+lifecycle: completed
 execution: autonomous
 priority: high
 epic: ABC
@@ -9,6 +9,7 @@ paused-by: ""
 pause-reason: ""
 deployed-at: ""
 deployed-env: ""
+completed-at: 2026-03-21T15:54:50Z
 ---
 # Feature Spec: Help Content Drawer
 
