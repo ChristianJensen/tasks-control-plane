@@ -1,5 +1,5 @@
 ---
-status: pending
+status: ready
 execution: autonomous
 target-repo: frontend
 wave: 2
