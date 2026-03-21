@@ -79,6 +79,7 @@ function groupByWave(tasks) {
       tasks: waves[num].map((t) => ({
         filename: t.filename, status: t.status, repo: t.repo,
         priority: t.priority, claimed_by: t.claimed_by || null,
+        description: t.description || "", title: t.title || "",
       })),
     }));
 }
@@ -103,8 +104,24 @@ function taskCounts(tasks) {
   return counts;
 }
 
+function extractTaskDescription(body) {
+  const m = body.match(/## Description\s*\n+([\s\S]*?)(?=\n##|\n*$)/);
+  if (!m) return "";
+  return m[1].trim().split(/\n\n/)[0].trim();
+}
+
+function deriveTaskTitle(filename) {
+  // wave-1-api-sort-endpoint.md → Sort Endpoint
+  return filename
+    .replace(/\.md$/, "")
+    .replace(/^wave-\d+-[^-]+-/, "")
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function parseTask(content, filename, featureSlug, isArchived) {
-  const { fields } = parseFrontmatter(content);
+  const { fields, body } = parseFrontmatter(content);
   const waveMatch = filename.match(/^wave-(\d+)/);
   return {
     filename, feature: fields.feature || featureSlug,
@@ -114,6 +131,8 @@ function parseTask(content, filename, featureSlug, isArchived) {
     execution: fields.execution || "",
     claimed_by: fields["claimed-by"] || "", claimed_at: fields["claimed-at"] || "",
     claimed_on: fields["claimed-on"] || "",
+    description: extractTaskDescription(body),
+    title: deriveTaskTitle(filename),
   };
 }
 
@@ -174,8 +193,16 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
             filename: t.filename, status: t.status, priority: t.priority,
             wave: t.wave, claimed_by: t.claimed_by || null,
             claimed_at: t.claimed_at || null,
+            description: t.description || "", title: t.title || "",
           }))
         : [],
+      allTasks: tasks.map((t) => ({
+        filename: t.filename, status: t.status, priority: t.priority,
+        wave: t.wave, claimed_by: t.claimed_by || null,
+        claimed_at: t.claimed_at || null,
+        description: t.description || "", title: t.title || "",
+        repo: t.repo || "",
+      })),
     };
 
     if (spec.type === "bug") { feature.severity = spec.severity; summary.bugs++; }
@@ -374,13 +401,14 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
 
   // Jira epic link
   const jiraLink = (linkContext.jiraBaseUrl && feature.epic)
-    ? `<a href="${escHTML(linkContext.jiraBaseUrl)}/browse/${escHTML(feature.epic)}" target="_blank" rel="noopener" class="jira-link" title="View in Jira">${escHTML(feature.epic)}</a>`
+    ? `<a href="${escHTML(linkContext.jiraBaseUrl)}/browse/${escHTML(feature.epic)}" target="_blank" rel="noopener" class="jira-link" title="View in Jira">Jira: ${escHTML(feature.epic)}</a>`
     : "";
 
   // SHA-pinned spec link
   const specFileName = isBug ? `${feature.slug}-bug.md` : `${feature.slug}-feature.md`;
+  const specLinkLabel = isBug ? "Bug Report" : "Feature Specification";
   const specLink = linkContext.githubBaseUrl
-    ? `<a href="${escHTML(linkContext.githubBaseUrl)}/features/${specFileName}" target="_blank" rel="noopener" class="spec-link" title="View spec @ ${(linkContext.commitSha || "").slice(0, 7)}">&#128279;</a>`
+    ? `<a href="${escHTML(linkContext.githubBaseUrl)}/features/${specFileName}" target="_blank" rel="noopener" class="spec-link" title="View spec @ ${(linkContext.commitSha || "").slice(0, 7)}">${specLinkLabel}</a>`
     : "";
 
   // Execution mode badge
@@ -395,7 +423,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
 
   const wavesDots = (feature.waves || []).map((w) =>
     `<div class="wave-group"><span class="wave-lbl">W${w.number}</span>${w.tasks.map((t) =>
-      `<span class="wdot wdot-${t.status}" title="${t.filename}: ${t.status}"></span>`
+      `<span class="wdot wdot-${t.status}" title="${t.title || t.filename}: ${t.status}"></span>`
     ).join("")}</div>`
   ).join("");
 
@@ -407,19 +435,30 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     `<div class="pr-row"><svg width="14" height="14" viewBox="0 0 16 16" fill="var(--accent)"><path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg><a href="${escHTML(pr.url)}" target="_blank" rel="noopener">#${pr.number} ${escHTML(pr.title)}</a></div>`
   ).join("");
 
-  const sortedMissing = [...(feature.missing || [])].sort((a, b) => (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9));
-  const missingRows = sortedMissing.map((t) => {
+  // Use allTasks for shipped features, missing for others
+  const isShipped = feature.status === "shipped";
+  const taskList = isShipped ? (feature.allTasks || []) : (feature.missing || []);
+  const sortedTaskList = [...taskList].sort((a, b) =>
+    (a.wave || 0) - (b.wave || 0) || (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9)
+  );
+  const taskTableLabel = isShipped ? "All Tasks" : "Remaining Tasks";
+
+  const taskRows = sortedTaskList.map((t) => {
+    const taskPath = isShipped ? `queue/_done/${feature.slug}/${t.filename}` : `queue/${feature.slug}/${t.filename}`;
     const taskLink = linkContext.githubBaseUrl
-      ? `<a href="${escHTML(linkContext.githubBaseUrl)}/queue/${escHTML(feature.slug)}/${escHTML(t.filename)}" target="_blank" rel="noopener">${escHTML(t.filename.replace(".md", ""))}</a>`
-      : escHTML(t.filename.replace(".md", ""));
+      ? `<a href="${escHTML(linkContext.githubBaseUrl)}/${taskPath}" target="_blank" rel="noopener">${escHTML(t.title || t.filename.replace(".md", ""))}</a>`
+      : escHTML(t.title || t.filename.replace(".md", ""));
     const stale = isStaleTask(t, generatedAt);
+    const descSnippet = t.description
+      ? escHTML(t.description.length > 120 ? t.description.slice(0, 120) + "..." : t.description)
+      : "";
     return `<tr class="${stale ? "stale-task" : ""}">
       <td class="mono">${taskLink}</td>
       <td><span class="wdot wdot-${t.status}"></span> ${t.status}${stale ? ' <span class="stale-warn" title="In progress for over 2 hours">&#9888;</span>' : ""}</td>
       <td>${priorityDot(t.priority)} ${t.priority}</td>
       <td class="mono">W${t.wave}</td>
       <td>${workerIcon(t.claimed_by)}</td>
-    </tr>`;
+    </tr>${descSnippet ? `\n    <tr class="task-desc-row"><td colspan="5">${descSnippet}</td></tr>` : ""}`;
   }).join("");
 
   const hasDetails = tasks.total > 0;
@@ -431,8 +470,8 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       <div class="feature-left">
         ${typeIcon}
         <div class="feature-info">
-          <div class="feature-title">${escHTML(feature.title)} ${specLink} ${jiraLink}</div>
-          ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem.length > 120 ? feature.problem.slice(0, 120) + "..." : feature.problem)}</div>` : ""}
+          <div class="feature-title">${escHTML(feature.title)} ${jiraLink} ${specLink}</div>
+          ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem)}</div>` : ""}
         </div>
       </div>
       <div class="feature-right">
@@ -457,9 +496,9 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
         ${repoChips ? `<div class="detail-repos"><div class="detail-label">Repositories</div><div class="repo-chips">${repoChips}</div></div>` : ""}
         ${prRows ? `<div class="detail-prs"><div class="detail-label">Pull Requests</div>${prRows}</div>` : ""}
       </div>
-      ${missingRows ? `<div class="detail-missing">
-        <div class="detail-label">Remaining Tasks (${feature.missing.length})</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Worker</th></tr></thead><tbody>${missingRows}</tbody></table>
+      ${taskRows ? `<div class="detail-missing">
+        <div class="detail-label">${taskTableLabel} (${sortedTaskList.length})</div>
+        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Worker</th></tr></thead><tbody>${taskRows}</tbody></table>
       </div>` : ""}
     </div>` : ""}
   </div>`;
@@ -729,7 +768,7 @@ body::before {
 .feature-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
 .feature-info { min-width: 0; }
 .feature-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.feature-desc { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.feature-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
 .feature-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .task-count { font-size: 12px; color: var(--text-secondary); }
 .chevron {
@@ -767,7 +806,7 @@ body::before {
   background: var(--bg-detail); border-top: 1px solid var(--border);
 }
 .feature-row.expanded .feature-detail {
-  max-height: 1200px; padding: 20px;
+  max-height: 3000px; padding: 20px;
 }
 .detail-grid { display: grid; grid-template-columns: auto 1fr; gap: 16px 24px; align-items: start; }
 .detail-progress { display: flex; align-items: center; gap: 16px; grid-column: 1 / -1; }
@@ -820,6 +859,7 @@ body::before {
 }
 .missing-tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
 .missing-tbl tr:last-child td { border-bottom: none; }
+.missing-tbl tr:has(+ .task-desc-row) td { border-bottom: none; }
 .missing-tbl .mono { font-family: var(--font-mono); font-size: 11px; }
 .worker-empty { color: var(--text-muted); }
 .worker-icon { font-size: 14px; }
@@ -845,12 +885,17 @@ body::before {
 }
 .jira-link:hover { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.4); }
 .spec-link {
-  font-size: 12px; color: var(--text-muted); text-decoration: none;
-  vertical-align: middle; margin-left: 4px;
-  transition: color var(--transition);
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 8px; border-radius: 6px;
+  background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
+  font-size: 10px; font-weight: 600; color: #a78bfa;
+  text-decoration: none; vertical-align: middle; margin-left: 6px;
+  transition: all var(--transition);
 }
-.spec-link:hover { color: var(--accent); }
+.spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
 .missing-tbl a { color: var(--accent); text-decoration: none; }
+.task-desc-row td { padding-top: 0 !important; padding-bottom: 10px !important; border-bottom: 1px solid var(--border) !important; font-size: 11px; color: var(--text-muted); font-style: italic; }
+.task-desc-row + tr td { padding-top: 10px !important; }
 .missing-tbl a:hover { text-decoration: underline; }
 
 /* ── Execution Mode Lozenges ── */
