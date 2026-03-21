@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -229,8 +229,12 @@
                   },
                   "category": {
                     "oneOf": [
-                      { "$ref": "#/components/schemas/TaskCategory" },
-                      { "type": "null" }
+                      {
+                        "$ref": "#/components/schemas/TaskCategory"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ],
                     "description": "Category to assign. Null clears the category."
                   }
@@ -346,8 +350,12 @@
                   },
                   "category": {
                     "oneOf": [
-                      { "$ref": "#/components/schemas/TaskCategory" },
-                      { "type": "null" }
+                      {
+                        "$ref": "#/components/schemas/TaskCategory"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ],
                     "description": "Set or clear the task category. Null clears."
                   }
@@ -640,8 +648,12 @@
           },
           "category": {
             "oneOf": [
-              { "$ref": "#/components/schemas/TaskCategory" },
-              { "type": "null" }
+              {
+                "$ref": "#/components/schemas/TaskCategory"
+              },
+              {
+                "type": "null"
+              }
             ],
             "description": "Organizational category. Null means uncategorized.",
             "x-data-classification": "internal"
