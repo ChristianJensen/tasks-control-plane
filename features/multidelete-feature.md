@@ -1,5 +1,5 @@
 ---
-lifecycle: active
+lifecycle: completed
 version: 5
 paused-at: 2026-03-21T01:40:43Z
 paused-by: christianjensen
