@@ -1,0 +1,52 @@
+# Status Page — generates a self-contained HTML dashboard and deploys to GitHub Pages.
+#
+# Prerequisites:
+#   In repo Settings > Pages > Source > "GitHub Actions"
+
+name: Status Page
+
+on:
+  push:
+    branches: [main]
+    paths: ['features/**', 'queue/**']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Status Page
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch open PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr list --state open --json number,title,url,headRefName,labels --limit 100 > pr-data.json
+
+      - name: Generate status page
+        run: node .github/scripts/generate-status-page.mjs --cp-dir . --pr-data pr-data.json --output status-page/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: status-page
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
