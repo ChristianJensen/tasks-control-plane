@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -194,6 +194,75 @@
         }
       }
     },
+    "/tasks/batch-update-category": {
+      "post": {
+        "operationId": "batchUpdateCategory",
+        "summary": "Bulk assign category to multiple tasks",
+        "description": "Updates the category for multiple tasks in one request. Handles partial success: valid tasks are updated even if some IDs are not found. Returns 200 for all valid requests, including when all IDs are not found. Requires X-User-Id header.",
+        "tags": [
+          "tasks"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/XUserId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids",
+                  "category"
+                ],
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "description": "Array of task IDs to update. Duplicates are deduplicated."
+                  },
+                  "category": {
+                    "oneOf": [
+                      { "$ref": "#/components/schemas/TaskCategory" },
+                      { "type": "null" }
+                    ],
+                    "description": "Category to assign. Null clears the category."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch update processed. Check updated and notFound arrays for details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchUpdateCategoryResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body (empty array, exceeds 50 IDs, invalid category, missing X-User-Id, or malformed)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tasks/{taskId}": {
       "get": {
         "operationId": "getTask",
@@ -274,6 +343,13 @@
                   },
                   "status": {
                     "$ref": "#/components/schemas/TaskStatus"
+                  },
+                  "category": {
+                    "oneOf": [
+                      { "$ref": "#/components/schemas/TaskCategory" },
+                      { "type": "null" }
+                    ],
+                    "description": "Set or clear the task category. Null clears."
                   }
                 }
               }
@@ -526,6 +602,16 @@
         ],
         "description": "Task workflow status"
       },
+      "TaskCategory": {
+        "type": "string",
+        "enum": [
+          "work",
+          "personal",
+          "errands"
+        ],
+        "description": "Task organizational category",
+        "x-data-classification": "internal"
+      },
       "Task": {
         "type": "object",
         "required": [
@@ -537,24 +623,38 @@
         ],
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "integer",
+            "x-data-classification": "internal"
           },
           "title": {
-            "type": "string"
+            "type": "string",
+            "x-data-classification": "internal"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "x-data-classification": "internal"
           },
           "status": {
-            "$ref": "#/components/schemas/TaskStatus"
+            "$ref": "#/components/schemas/TaskStatus",
+            "x-data-classification": "internal"
+          },
+          "category": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/TaskCategory" },
+              { "type": "null" }
+            ],
+            "description": "Organizational category. Null means uncategorized.",
+            "x-data-classification": "internal"
           },
           "createdAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "x-data-classification": "internal"
           },
           "updatedAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "x-data-classification": "internal"
           }
         }
       },
@@ -633,6 +733,29 @@
               "type": "integer"
             },
             "description": "IDs of tasks that were successfully deleted"
+          },
+          "notFound": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "IDs that did not match any existing task"
+          }
+        }
+      },
+      "BatchUpdateCategoryResult": {
+        "type": "object",
+        "required": [
+          "updated",
+          "notFound"
+        ],
+        "properties": {
+          "updated": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "IDs of tasks that were successfully updated"
           },
           "notFound": {
             "type": "array",

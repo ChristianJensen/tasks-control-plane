@@ -1,5 +1,5 @@
 ---
-lifecycle: replanning
+lifecycle: active
 version: 4
 paused-at: 2026-03-21T13:34:19Z
 paused-by: christianjensen
@@ -77,6 +77,13 @@ Users need a way to organize their tasks by category (work, personal, errands). 
 **Spec changes:** None — all requirements, acceptance criteria, and scope unchanged.
 **Action:** Completing all five refinement rounds.
 
+## Replan v4
+
+**Trigger:** Resuming — no requirements change. Refinement rounds 3–5 were never completed in prior versions.
+**Completed work:** None.
+**Spec changes:** None — all requirements, acceptance criteria, and scope unchanged.
+**Action:** Completing remaining refinement rounds (3: Scope Boundaries, 4: Architecture, 5: PII/Compliance).
+
 ## Refinement Log
 
 ### Round 1: Assumptions
@@ -102,29 +109,34 @@ _Propose adjacent features and confirm whether they are in or out of scope._
 
 | # | Adjacent Feature | In/Out | Rationale |
 |---|-----------------|--------|-----------|
-| B1 | | | |
+| B1 | Filter/sort tasks by category | Out | Complete shippable unit without it. Adds query params, filter UI, URL state. Natural follow-up feature. |
+| B2 | Category field in task creation form | Out | R8 defaults to null. Users can assign post-creation via PATCH or bulk assign. Keeps create flow simple. |
+| B3 | Category-based visual grouping (sections by category) | Out | Depends on filter/sort (B1). Current spec shows label on card (R7/AC11) which is sufficient. Significant frontend complexity. |
 
 ### Round 4: Architecture Review
 _Challenge architectural implications._
 
 | # | Implication | Impact Area | Resolution |
 |---|------------|-------------|------------|
-| AR1 | | | |
+| AR1 | Adding `category` column to tasks table requires DB migration | infra | N/A — no database currently exists. Column will be part of initial schema or in-memory store. No migration needed. |
+| AR2 | Batch-update-category must mirror batch-delete pattern (validation, partial success, X-User-Id) | API | Low risk. Reuse same validation logic (1–50 IDs, dedup, 400 on violations). Response shape mirrors batch-delete (`updated`/`notFound` vs `deleted`/`notFound`). Shared utility recommended to prevent pattern divergence. |
 
 ### Round 5: PII / Compliance Review
 _Identify PII and sensitive data elements._
 
 | # | Data Element | Classification | Handling Requirement |
 |---|-------------|---------------|---------------------|
-| P1 | | | |
+| P1 | `category` field (nullable enum: work/personal/errands) | Internal | No PII. Fixed enum, not user-generated content. Deleted with task row. No special retention or access controls. |
+| P2 | All existing Task fields (id, title, description, status, createdAt, updatedAt) | Internal | No PII in current context (no real user accounts). Classified via `x-data-classification` in API contract. |
+| P3 | N/A — no PII introduced by this feature | N/A | This feature adds only a fixed enum field. No personal data collected, stored, or transmitted. |
 
 ## Readiness Checklist
 
-- [ ] All High-confidence requirements have acceptance criteria
-- [ ] No unresolved conflicts remain
-- [ ] Open questions are non-blocking or have owners
-- [ ] At least 3 assumptions explicitly challenged and resolved
-- [ ] At least 3 edge cases explicitly addressed
-- [ ] Out of Scope section reviewed via scope boundary probe
-- [ ] At least 2 architectural implications reviewed
-- [ ] PII and sensitive data elements identified with handling requirements (or explicit N/A)
+- [x] All High-confidence requirements have acceptance criteria
+- [x] No unresolved conflicts remain
+- [x] Open questions are non-blocking or have owners
+- [x] At least 3 assumptions explicitly challenged and resolved
+- [x] At least 3 edge cases explicitly addressed
+- [x] Out of Scope section reviewed via scope boundary probe
+- [x] At least 2 architectural implications reviewed
+- [x] PII and sensitive data elements identified with handling requirements (or explicit N/A)
