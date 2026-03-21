@@ -1,5 +1,5 @@
 ---
-lifecycle: draft
+lifecycle: active
 execution: autonomous
 priority: high
 epic: ABC
