@@ -1,11 +1,14 @@
 ---
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 1
 priority: high
 feature: helpcontent
 type: feature
+claimed-by: agent-06-36-06-7A-C3-F6-20379
+claimed-at: 2026-03-21T14:58:30Z
+claimed-on: 06-36-06-7A-C3-F6
 ---
 
 ## Description
