@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 target-repo: frontend
 wave: 2
 priority: high
