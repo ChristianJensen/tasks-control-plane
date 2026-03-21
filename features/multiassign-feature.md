@@ -1,13 +1,12 @@
 ---
 lifecycle: replanning
-version: 2
-paused-at: 2026-03-21T13:15:27Z
+version: 3
+paused-at: 2026-03-21T13:25:28Z
 paused-by: christianjensen
 pause-reason: ""
 deployed-at: ""
 deployed-env: ""
 ---
-
 # Feature Spec: Bulk Assign Category
 
 ## Sources
@@ -63,6 +62,13 @@ Users need a way to organize their tasks by category (work, personal, errands). 
 - User-defined/custom categories
 - Multiple categories per task
 - Category management UI (add/edit/delete categories)
+
+## Replan v2
+
+**Trigger:** Agent crashed due to laptop reboot — no requirements change.
+**Completed work:** None (no tasks were started before crash).
+**Spec changes:** None — all requirements, acceptance criteria, and scope unchanged.
+**Action:** Re-running refinement rounds that were never completed in v1.
 
 ## Refinement Log
 
