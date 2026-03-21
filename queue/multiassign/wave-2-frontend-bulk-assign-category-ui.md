@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -8,6 +8,9 @@ feature: multiassign
 type: feature
 depends-on:
   - wave-2-frontend-display-category-on-task-cards.md
+claimed-by: agent-06-36-06-7A-C3-F6-54628
+claimed-at: 2026-03-21T16:24:39Z
+claimed-on: 06-36-06-7A-C3-F6
 ---
 
 ## Description
