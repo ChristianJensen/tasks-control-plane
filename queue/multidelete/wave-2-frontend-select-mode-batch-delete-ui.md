@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 target-repo: frontend
 wave: 2
 priority: high
@@ -7,6 +7,9 @@ feature: multidelete
 type: feature
 depends-on:
   - wave-1-api-batch-delete-endpoint.md
+claimed-by: agent-06-36-06-7A-C3-F6-58877
+claimed-at: 2026-03-21T02:03:53Z
+claimed-on: 06-36-06-7A-C3-F6
 ---
 
 ## Description
