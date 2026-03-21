@@ -111,6 +111,7 @@ function parseTask(content, filename, featureSlug, isArchived) {
     status: isArchived ? "done" : fields.status || "ready",
     repo: fields["target-repo"] || "", wave: waveMatch ? Number(waveMatch[1]) : 0,
     priority: fields.priority || "normal", type: fields.type || "feature",
+    execution: fields.execution || "",
     claimed_by: fields["claimed-by"] || "", claimed_at: fields["claimed-at"] || "",
     claimed_on: fields["claimed-on"] || "",
   };
@@ -125,6 +126,8 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     const { fields, body } = parseFrontmatter(f.content);
     specs[slug] = {
       slug, type: isBug ? "bug" : "feature", lifecycle: fields.lifecycle || "draft",
+      execution: fields.execution || "supervised",
+      epic: (typeof fields.epic === "string" && fields.epic) ? fields.epic : "",
       title: extractTitle(body, slug), problem: extractProblemStatement(body),
       severity: isBug ? fields.severity || "" : undefined,
     };
@@ -153,7 +156,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
   const summary = { shipped: 0, in_progress: 0, not_started: 0, blocked: 0, bugs: 0 };
 
   for (const slug of allSlugs) {
-    const spec = specs[slug] || { slug, type: "feature", lifecycle: "unknown", title: slug, problem: "" };
+    const spec = specs[slug] || { slug, type: "feature", lifecycle: "unknown", execution: "supervised", epic: "", title: slug, problem: "" };
     const tasks = tasksByFeature[slug] || [];
     const isArchived = tasks.length > 0 && tasks.every((t) =>
       archivedTaskFiles.some((f) => f.path.includes(`/_done/${slug}/`))
@@ -162,6 +165,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
 
     const feature = {
       slug, title: spec.title, type: spec.type, lifecycle: spec.lifecycle, status,
+      execution: spec.execution, epic: spec.epic,
       problem: spec.problem, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
       waves: tasks.length > 0 ? groupByWave(tasks) : [],
       repos: tasks.length > 0 ? groupByRepo(tasks) : {},
@@ -169,6 +173,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
         ? tasks.filter((t) => t.status !== "done").map((t) => ({
             filename: t.filename, status: t.status, priority: t.priority,
             wave: t.wave, claimed_by: t.claimed_by || null,
+            claimed_at: t.claimed_at || null,
           }))
         : [],
     };
@@ -182,10 +187,31 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     features.push(feature);
   }
 
+  // Execution mode counts
+  const execCounts = { autonomous: 0, supervised: 0, guided: 0 };
+  for (const f of features) {
+    if (f.execution && execCounts[f.execution] !== undefined) execCounts[f.execution]++;
+  }
+
+  // Active workers (in-progress tasks)
+  const workerMap = {};
+  for (const slug of Object.keys(tasksByFeature)) {
+    for (const t of tasksByFeature[slug]) {
+      if (t.status === "in-progress" && t.claimed_by) {
+        if (!workerMap[t.claimed_by]) workerMap[t.claimed_by] = { tasks: 0, features: new Set() };
+        workerMap[t.claimed_by].tasks++;
+        workerMap[t.claimed_by].features.add(t.feature);
+      }
+    }
+  }
+  const activeWorkers = Object.entries(workerMap)
+    .sort((a, b) => b[1].tasks - a[1].tasks)
+    .map(([name, info]) => ({ name, tasks: info.tasks, features: [...info.features] }));
+
   const statusOrder = { blocked: 0, "in-progress": 1, "not-started": 2, orphaned: 3, shipped: 4 };
   features.sort((a, b) => (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5));
 
-  return { generated_at: new Date().toISOString(), summary, features };
+  return { generated_at: new Date().toISOString(), summary, execCounts, activeWorkers, features };
 }
 
 // ── CLI args ────────────────────────────────────────────────────
@@ -315,7 +341,28 @@ function workerIcon(claimedBy) {
   return `<span class="worker-icon" title="${escHTML(claimedBy)}">${isBot ? "&#129302;" : "&#128100;"}</span>`;
 }
 
-function renderFeatureRow(feature, prsByFeature, idx) {
+function executionLabel(mode) {
+  return { autonomous: "&#129302; Auto", supervised: "&#128065; Supervised", guided: "&#128100; Guided" }[mode] || mode;
+}
+
+function priorityDot(priority) {
+  const colors = { critical: "var(--red)", high: "var(--orange)", normal: "var(--text-muted)", low: "rgba(107,114,128,0.4)" };
+  const color = colors[priority] || colors.normal;
+  return `<span class="priority-dot" style="background:${color}" title="${priority}"></span>`;
+}
+
+const priorityOrder = { critical: 0, high: 1, normal: 2, low: 3 };
+
+function isStaleTask(t, generatedAt) {
+  if (!t.claimed_at || t.status !== "in-progress") return false;
+  try {
+    const claimed = new Date(t.claimed_at).getTime();
+    const generated = new Date(generatedAt).getTime();
+    return (generated - claimed) > 2 * 60 * 60 * 1000; // 2 hours
+  } catch { return false; }
+}
+
+function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) {
   const tasks = feature.tasks || { total: 0, done: 0 };
   const pct = tasks.total > 0 ? Math.round((tasks.done / tasks.total) * 100) : 0;
   const isBug = feature.type === "bug";
@@ -324,6 +371,27 @@ function renderFeatureRow(feature, prsByFeature, idx) {
   const typeIcon = isBug
     ? `<span class="type-icon type-bug" title="Bug">&#9679;</span>`
     : `<span class="type-icon type-feature" title="Feature">&#9670;</span>`;
+
+  // Jira epic link
+  const jiraLink = (linkContext.jiraBaseUrl && feature.epic)
+    ? `<a href="${escHTML(linkContext.jiraBaseUrl)}/browse/${escHTML(feature.epic)}" target="_blank" rel="noopener" class="jira-link" title="View in Jira">${escHTML(feature.epic)}</a>`
+    : "";
+
+  // SHA-pinned spec link
+  const specFileName = isBug ? `${feature.slug}-bug.md` : `${feature.slug}-feature.md`;
+  const specLink = linkContext.githubBaseUrl
+    ? `<a href="${escHTML(linkContext.githubBaseUrl)}/features/${specFileName}" target="_blank" rel="noopener" class="spec-link" title="View spec @ ${(linkContext.commitSha || "").slice(0, 7)}">&#128279;</a>`
+    : "";
+
+  // Execution mode badge
+  const execBadge = feature.execution
+    ? `<span class="lozenge lozenge-exec-${feature.execution}">${executionLabel(feature.execution)}</span>`
+    : "";
+
+  // Lifecycle badge (only for non-active states)
+  const lifecycleBadge = feature.lifecycle && feature.lifecycle !== "active"
+    ? `<span class="lozenge lozenge-lifecycle-${feature.lifecycle}">${feature.lifecycle}</span>`
+    : "";
 
   const wavesDots = (feature.waves || []).map((w) =>
     `<div class="wave-group"><span class="wave-lbl">W${w.number}</span>${w.tasks.map((t) =>
@@ -339,28 +407,37 @@ function renderFeatureRow(feature, prsByFeature, idx) {
     `<div class="pr-row"><svg width="14" height="14" viewBox="0 0 16 16" fill="var(--accent)"><path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg><a href="${escHTML(pr.url)}" target="_blank" rel="noopener">#${pr.number} ${escHTML(pr.title)}</a></div>`
   ).join("");
 
-  const missingRows = (feature.missing || []).map((t) =>
-    `<tr>
-      <td class="mono">${escHTML(t.filename.replace(".md", ""))}</td>
-      <td><span class="wdot wdot-${t.status}"></span> ${t.status}</td>
-      <td>${t.priority}</td>
+  const sortedMissing = [...(feature.missing || [])].sort((a, b) => (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9));
+  const missingRows = sortedMissing.map((t) => {
+    const taskLink = linkContext.githubBaseUrl
+      ? `<a href="${escHTML(linkContext.githubBaseUrl)}/queue/${escHTML(feature.slug)}/${escHTML(t.filename)}" target="_blank" rel="noopener">${escHTML(t.filename.replace(".md", ""))}</a>`
+      : escHTML(t.filename.replace(".md", ""));
+    const stale = isStaleTask(t, generatedAt);
+    return `<tr class="${stale ? "stale-task" : ""}">
+      <td class="mono">${taskLink}</td>
+      <td><span class="wdot wdot-${t.status}"></span> ${t.status}${stale ? ' <span class="stale-warn" title="In progress for over 2 hours">&#9888;</span>' : ""}</td>
+      <td>${priorityDot(t.priority)} ${t.priority}</td>
       <td class="mono">W${t.wave}</td>
       <td>${workerIcon(t.claimed_by)}</td>
-    </tr>`
-  ).join("");
+    </tr>`;
+  }).join("");
 
   const hasDetails = tasks.total > 0;
 
-  return `<div class="feature-row" data-status="${feature.status}" data-type="${feature.type}" data-title="${escHTML(feature.title.toLowerCase())}" style="animation-delay:${idx * 60}ms">
+  const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
+
+  return `<div class="feature-row${isDimmed ? " feature-dimmed" : ""}" data-status="${feature.status}" data-type="${feature.type}" data-execution="${feature.execution || ""}" data-title="${escHTML(feature.title.toLowerCase())}" style="animation-delay:${idx * 60}ms">
     <div class="feature-header" onclick="this.parentElement.classList.toggle('expanded')">
       <div class="feature-left">
         ${typeIcon}
         <div class="feature-info">
-          <div class="feature-title">${escHTML(feature.title)}</div>
+          <div class="feature-title">${escHTML(feature.title)} ${specLink} ${jiraLink}</div>
           ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem.length > 120 ? feature.problem.slice(0, 120) + "..." : feature.problem)}</div>` : ""}
         </div>
       </div>
       <div class="feature-right">
+        ${lifecycleBadge}
+        ${execBadge}
         ${tasks.total > 0 ? `<span class="task-count mono">${tasks.done}/${tasks.total}</span>` : ""}
         <span class="lozenge lozenge-${feature.status}">${statusLabel(feature.status)}</span>
         ${isBug && feature.severity ? `<span class="lozenge lozenge-sev-${feature.severity}">${feature.severity}</span>` : ""}
@@ -388,15 +465,57 @@ function renderFeatureRow(feature, prsByFeature, idx) {
   </div>`;
 }
 
-function renderHTML(boardState, prsByFeature, title) {
-  const { summary, features, generated_at } = boardState;
+function renderActiveWorkers(workers) {
+  if (workers.length === 0) return "";
+  const rows = workers.map((w) => {
+    const isBot = w.name.startsWith("agent-") || w.name.startsWith("cloud-");
+    const icon = isBot ? "&#129302;" : "&#128100;";
+    return `<div class="worker-row">
+      <span class="worker-icon">${icon}</span>
+      <span class="worker-name">${escHTML(w.name)}</span>
+      <span class="worker-tasks mono">${w.tasks} task${w.tasks > 1 ? "s" : ""}</span>
+      <span class="worker-features">${w.features.map((f) => escHTML(f)).join(", ")}</span>
+    </div>`;
+  }).join("");
+  return `<div class="workers-section">
+    <div class="workers-header" onclick="this.parentElement.classList.toggle('workers-expanded')">
+      <div class="detail-label">Active Workers <span class="section-count">${workers.length}</span></div>
+      <span class="chevron">&#9662;</span>
+    </div>
+    <div class="workers-body">${rows}</div>
+  </div>`;
+}
+
+function renderExecSummary(execCounts) {
+  const total = execCounts.autonomous + execCounts.supervised + execCounts.guided;
+  if (total === 0) return "";
+  const pctAuto = Math.round((execCounts.autonomous / total) * 100);
+  const pctSuper = Math.round((execCounts.supervised / total) * 100);
+  const pctGuided = 100 - pctAuto - pctSuper;
+  return `<div class="exec-summary">
+    <div class="detail-label">Execution Mode</div>
+    <div class="exec-bar">
+      ${pctAuto > 0 ? `<div class="exec-bar-seg exec-bar-autonomous" style="width:${pctAuto}%" title="Autonomous: ${execCounts.autonomous}"></div>` : ""}
+      ${pctSuper > 0 ? `<div class="exec-bar-seg exec-bar-supervised" style="width:${pctSuper}%" title="Supervised: ${execCounts.supervised}"></div>` : ""}
+      ${pctGuided > 0 ? `<div class="exec-bar-seg exec-bar-guided" style="width:${pctGuided}%" title="Guided: ${execCounts.guided}"></div>` : ""}
+    </div>
+    <div class="exec-legend">
+      ${execCounts.autonomous > 0 ? `<span class="exec-leg-item"><span class="exec-dot" style="background:#a78bfa"></span>Auto ${execCounts.autonomous}</span>` : ""}
+      ${execCounts.supervised > 0 ? `<span class="exec-leg-item"><span class="exec-dot" style="background:#818cf8"></span>Supervised ${execCounts.supervised}</span>` : ""}
+      ${execCounts.guided > 0 ? `<span class="exec-leg-item"><span class="exec-dot" style="background:#67e8f9"></span>Guided ${execCounts.guided}</span>` : ""}
+    </div>
+  </div>`;
+}
+
+function renderHTML(boardState, prsByFeature, title, linkContext = {}) {
+  const { summary, execCounts, activeWorkers, features, generated_at } = boardState;
   const featureItems = features.filter((f) => f.type !== "bug");
   const bugItems = features.filter((f) => f.type === "bug");
   const totalTasks = features.reduce((s, f) => s + (f.tasks?.total || 0), 0);
   const doneTasks = features.reduce((s, f) => s + (f.tasks?.done || 0), 0);
   const overallPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
-  const allRows = features.map((f, i) => renderFeatureRow(f, prsByFeature, i)).join("\n");
+  const allRows = features.map((f, i) => renderFeatureRow(f, prsByFeature, i, linkContext, generated_at)).join("\n");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -648,7 +767,7 @@ body::before {
   background: var(--bg-detail); border-top: 1px solid var(--border);
 }
 .feature-row.expanded .feature-detail {
-  max-height: 800px; padding: 20px;
+  max-height: 1200px; padding: 20px;
 }
 .detail-grid { display: grid; grid-template-columns: auto 1fr; gap: 16px 24px; align-items: start; }
 .detail-progress { display: flex; align-items: center; gap: 16px; grid-column: 1 / -1; }
@@ -713,6 +832,92 @@ body::before {
   border-radius: var(--radius); margin-bottom: 6px; font-size: 13px; color: var(--text-secondary);
   border-left: 3px solid var(--text-muted);
 }
+
+/* ── Jira & Spec Links ── */
+.jira-link {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 8px; border-radius: 6px;
+  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+  font-size: 10px; font-weight: 600; color: #60a5fa;
+  text-decoration: none; font-family: var(--font-mono);
+  vertical-align: middle; margin-left: 6px;
+  transition: all var(--transition);
+}
+.jira-link:hover { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.4); }
+.spec-link {
+  font-size: 12px; color: var(--text-muted); text-decoration: none;
+  vertical-align: middle; margin-left: 4px;
+  transition: color var(--transition);
+}
+.spec-link:hover { color: var(--accent); }
+.missing-tbl a { color: var(--accent); text-decoration: none; }
+.missing-tbl a:hover { text-decoration: underline; }
+
+/* ── Execution Mode Lozenges ── */
+.lozenge-exec-autonomous { background: rgba(167,139,250,0.12); color: #a78bfa; }
+.lozenge-exec-supervised { background: rgba(129,140,248,0.12); color: #818cf8; }
+.lozenge-exec-guided { background: rgba(103,232,249,0.12); color: #67e8f9; }
+
+/* ── Lifecycle Lozenges ── */
+.lozenge-lifecycle-draft { background: rgba(107,114,128,0.12); color: var(--text-muted); font-style: italic; }
+.lozenge-lifecycle-paused { background: rgba(251,191,36,0.1); color: var(--amber); }
+.lozenge-lifecycle-cancelled { background: rgba(248,113,113,0.1); color: var(--red); text-decoration: line-through; }
+.lozenge-lifecycle-replanning { background: rgba(251,146,60,0.1); color: var(--orange); }
+.lozenge-lifecycle-completed { background: rgba(52,211,153,0.1); color: var(--green); }
+.feature-dimmed { opacity: 0.55; }
+.feature-dimmed:hover { opacity: 0.85; }
+
+/* ── Priority Dots ── */
+.priority-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  vertical-align: middle; margin-right: 3px;
+}
+
+/* ── Stale Task Highlighting ── */
+.stale-task { background: rgba(248,113,113,0.06); }
+.stale-warn { color: var(--amber); font-size: 13px; }
+
+/* ── Execution Summary Bar ── */
+.exec-summary { margin-left: auto; min-width: 160px; }
+.exec-bar {
+  display: flex; height: 6px; border-radius: 3px; overflow: hidden;
+  background: var(--ring-bg); margin: 6px 0 4px;
+}
+.exec-bar-seg { transition: width 0.8s ease-out; }
+.exec-bar-autonomous { background: #a78bfa; }
+.exec-bar-supervised { background: #818cf8; }
+.exec-bar-guided { background: #67e8f9; }
+.exec-legend { display: flex; gap: 10px; flex-wrap: wrap; }
+.exec-leg-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); }
+.exec-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+/* ── Active Workers ── */
+.workers-section {
+  background: var(--bg-card); backdrop-filter: blur(24px);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  margin-bottom: 24px; overflow: hidden;
+  animation: fadeUp 0.6s ease-out 0.35s both;
+}
+.workers-header {
+  padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.workers-header:hover { background: var(--bg-card-hover); }
+.workers-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
+.workers-section.workers-expanded .workers-body { max-height: 400px; padding: 0 20px 14px; }
+.workers-section.workers-expanded .chevron { transform: rotate(180deg); }
+.worker-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0; font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.worker-row:last-child { border-bottom: none; }
+.worker-name { font-weight: 600; color: var(--text-primary); min-width: 120px; }
+.worker-tasks { color: var(--text-secondary); min-width: 60px; }
+.worker-features { color: var(--text-muted); font-size: 11px; }
+
+/* ── Filter Label ── */
+.filter-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 7px 4px; }
 
 /* ── Theme Toggle (hidden — single theme) ── */
 .theme-toggle { display: none; }
@@ -787,20 +992,30 @@ body::before {
       <div class="overall-bar"><div class="overall-bar-fill" style="width:${overallPct}%"></div></div>
       <div class="overall-meta">${doneTasks} of ${totalTasks} tasks completed across ${features.length} features</div>
     </div>
+    ${renderExecSummary(execCounts)}
   </div>
+
+  ${renderActiveWorkers(activeWorkers)}
 
   <div class="toolbar">
     <div class="search-wrap">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 7a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z"/></svg>
       <input type="text" class="search" placeholder="Search features..." id="searchInput">
     </div>
-    <div class="filters">
+    <div class="filters" id="statusFilters">
       <button class="filter-btn active" data-filter="all">All</button>
       <button class="filter-btn" data-filter="in-progress">In Progress</button>
       <button class="filter-btn" data-filter="not-started">Not Started</button>
       <button class="filter-btn" data-filter="blocked">Blocked</button>
       <button class="filter-btn" data-filter="shipped">Shipped</button>
       <button class="filter-btn" data-filter="bug">Bugs</button>
+    </div>
+    <div class="filters" id="execFilters">
+      <span class="filter-label">Execution:</span>
+      <button class="filter-btn active" data-exec-filter="all">All</button>
+      <button class="filter-btn" data-exec-filter="autonomous">&#129302; Auto</button>
+      <button class="filter-btn" data-exec-filter="supervised">&#128065; Supervised</button>
+      <button class="filter-btn" data-exec-filter="guided">&#128100; Guided</button>
     </div>
   </div>
 
@@ -834,33 +1049,57 @@ document.querySelectorAll('.stat-number[data-count]').forEach(el => {
   requestAnimationFrame(tick);
 });
 
-// ── Filter Tabs ──
-const filterBtns = document.querySelectorAll('.filter-btn');
+// ── Combined Filters (status + execution, intersection logic) ──
 const rows = document.querySelectorAll('.feature-row');
-filterBtns.forEach(btn => {
+const statusBtns = document.querySelectorAll('#statusFilters .filter-btn');
+const execBtns = document.querySelectorAll('#execFilters .filter-btn');
+const searchInput = document.getElementById('searchInput');
+let activeStatus = 'all';
+let activeExec = 'all';
+
+function applyFilters() {
+  const q = searchInput.value.toLowerCase();
+  rows.forEach(row => {
+    let show = true;
+    // Search filter
+    if (q && !(row.dataset.title || '').includes(q)) show = false;
+    // Status filter
+    if (show && activeStatus !== 'all') {
+      if (activeStatus === 'bug') { if (row.dataset.type !== 'bug') show = false; }
+      else { if (row.dataset.status !== activeStatus) show = false; }
+    }
+    // Execution filter
+    if (show && activeExec !== 'all') {
+      if (row.dataset.execution !== activeExec) show = false;
+    }
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+statusBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    filterBtns.forEach(b => b.classList.remove('active'));
+    statusBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const f = btn.dataset.filter;
-    rows.forEach(row => {
-      if (f === 'all') { row.style.display = ''; return; }
-      if (f === 'bug') { row.style.display = row.dataset.type === 'bug' ? '' : 'none'; return; }
-      row.style.display = row.dataset.status === f ? '' : 'none';
-    });
+    activeStatus = btn.dataset.filter;
+    applyFilters();
+  });
+});
+
+execBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    execBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeExec = btn.dataset.execFilter;
+    applyFilters();
   });
 });
 
 // ── Search ──
-const searchInput = document.getElementById('searchInput');
-searchInput.addEventListener('input', () => {
-  const q = searchInput.value.toLowerCase();
-  rows.forEach(row => {
-    const title = row.dataset.title || '';
-    row.style.display = title.includes(q) ? '' : 'none';
-  });
-  // Reset filter buttons
-  if (q) filterBtns.forEach(b => b.classList.remove('active'));
-  else filterBtns[0].classList.add('active');
+searchInput.addEventListener('input', applyFilters);
+
+// ── Workers Toggle ──
+document.querySelectorAll('.workers-header').forEach(h => {
+  h.addEventListener('click', () => h.parentElement.classList.toggle('workers-expanded'));
 });
 </script>
 
@@ -900,6 +1139,18 @@ console.log(`  Active tasks: ${activeTaskFiles.length}, Archived: ${archivedTask
 
 const boardState = buildBoardState({ featureFiles, bugFiles, activeTaskFiles, archivedTaskFiles });
 
+// Link context from environment (GitHub Actions provides GITHUB_* automatically)
+const linkContext = {
+  githubBaseUrl: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_SHA
+    ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/blob/${process.env.GITHUB_SHA}`
+    : null,
+  jiraBaseUrl: process.env.JIRA_BASE_URL ? process.env.JIRA_BASE_URL.replace(/\/$/, "") : null,
+  commitSha: process.env.GITHUB_SHA || null,
+};
+
+if (linkContext.githubBaseUrl) console.log(`  GitHub links: SHA ${linkContext.commitSha.slice(0, 7)}`);
+if (linkContext.jiraBaseUrl) console.log(`  Jira links: ${linkContext.jiraBaseUrl}`);
+
 let prsByFeature = {};
 if (args.prData && existsSync(args.prData)) {
   const prData = JSON.parse(readFileSync(args.prData, "utf8"));
@@ -908,7 +1159,7 @@ if (args.prData && existsSync(args.prData)) {
   console.log(`  PRs loaded: ${prData.length}, matched to features: ${totalMatched}`);
 }
 
-const html = renderHTML(boardState, prsByFeature, args.title);
+const html = renderHTML(boardState, prsByFeature, args.title, linkContext);
 
 const outputPath = resolve(args.output);
 mkdirSync(dirname(outputPath), { recursive: true });

@@ -1,7 +1,10 @@
 # Status Page — generates a self-contained HTML dashboard and deploys to GitHub Pages.
 #
+# This is a standalone workflow copied into each control plane at bootstrap.
+# No cross-repo dependencies — the generator script is also copied locally.
+#
 # Prerequisites:
-#   In repo Settings > Pages > Source > "GitHub Actions"
+#   In the control plane repo: Settings > Pages > Source > "GitHub Actions"
 
 name: Status Page
 
@@ -37,6 +40,8 @@ jobs:
         run: gh pr list --state open --json number,title,url,headRefName,labels --limit 100 > pr-data.json
 
       - name: Generate status page
+        env:
+          JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
         run: node .github/scripts/generate-status-page.mjs --cp-dir . --pr-data pr-data.json --output status-page/index.html
 
       - name: Setup Pages
