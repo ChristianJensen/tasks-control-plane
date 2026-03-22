@@ -7,9 +7,10 @@ version: 1
 paused-at: ""
 paused-by: ""
 pause-reason: ""
+created-at: 2026-03-21T15:54:50+01:00
+completed-at: 2026-03-21T15:54:50Z
 deployed-at: ""
 deployed-env: ""
-completed-at: 2026-03-21T15:54:50Z
 ---
 # Feature Spec: Help Content Drawer
 

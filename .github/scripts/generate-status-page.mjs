@@ -13,6 +13,7 @@
 
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
+import { execSync } from "node:child_process";
 
 // ── Frontmatter parser (inlined from dashboard/worker/lib/frontmatter.js) ───
 
@@ -120,7 +121,7 @@ function deriveTaskTitle(filename) {
     .join(" ");
 }
 
-function parseTask(content, filename, featureSlug, isArchived) {
+function parseTask(content, filename, featureSlug, isArchived, sha) {
   const { fields, body } = parseFrontmatter(content);
   const waveMatch = filename.match(/^wave-(\d+)/);
   return {
@@ -133,6 +134,7 @@ function parseTask(content, filename, featureSlug, isArchived) {
     claimed_on: fields["claimed-on"] || "",
     description: extractTaskDescription(body),
     title: deriveTaskTitle(filename),
+    sha: sha || null,
   };
 }
 
@@ -149,6 +151,9 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       epic: (typeof fields.epic === "string" && fields.epic) ? fields.epic : "",
       title: extractTitle(body, slug), problem: extractProblemStatement(body),
       severity: isBug ? fields.severity || "" : undefined,
+      createdAt: fields["created-at"] || "",
+      completedAt: fields["completed-at"] || "",
+      sha: f.sha || null,
     };
   }
 
@@ -157,7 +162,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     const parts = f.path.split("/");
     const filename = parts.pop();
     const featureSlug = parts.pop();
-    const task = parseTask(f.content, filename, featureSlug, false);
+    const task = parseTask(f.content, filename, featureSlug, false, f.sha);
     if (!tasksByFeature[featureSlug]) tasksByFeature[featureSlug] = [];
     tasksByFeature[featureSlug].push(task);
   }
@@ -165,7 +170,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     const parts = f.path.split("/");
     const filename = parts.pop();
     const featureSlug = parts.pop();
-    const task = parseTask(f.content, filename, featureSlug, true);
+    const task = parseTask(f.content, filename, featureSlug, true, f.sha);
     if (!tasksByFeature[featureSlug]) tasksByFeature[featureSlug] = [];
     tasksByFeature[featureSlug].push(task);
   }
@@ -185,6 +190,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     const feature = {
       slug, title: spec.title, type: spec.type, lifecycle: spec.lifecycle, status,
       execution: spec.execution, epic: spec.epic,
+      createdAt: spec.createdAt || "", completedAt: spec.completedAt || "", specSha: spec.sha || null,
       problem: spec.problem, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
       waves: tasks.length > 0 ? groupByWave(tasks) : [],
       repos: tasks.length > 0 ? groupByRepo(tasks) : {},
@@ -194,6 +200,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
             wave: t.wave, claimed_by: t.claimed_by || null,
             claimed_at: t.claimed_at || null,
             description: t.description || "", title: t.title || "",
+            sha: t.sha || null,
           }))
         : [],
       allTasks: tasks.map((t) => ({
@@ -202,6 +209,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
         claimed_at: t.claimed_at || null,
         description: t.description || "", title: t.title || "",
         repo: t.repo || "",
+        sha: t.sha || null,
       })),
     };
 
@@ -244,7 +252,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
 // ── CLI args ────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { cpDir: ".", output: "status-page/index.html", prData: null, title: "Project Status" };
+  const args = { cpDir: ".", output: "status-page/index.html", prData: null, title: "Task Tracker - Delivery Report" };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case "--cp-dir": args.cpDir = argv[++i]; break;
@@ -266,6 +274,13 @@ function listFiles(dir) {
   return readdirSync(dir).filter((f) => !f.startsWith("."));
 }
 
+function getFileLastCommitSha(cpDir, relativePath) {
+  try {
+    return execSync(`git log -1 --format=%H -- "${relativePath}"`, { cwd: cpDir, encoding: "utf8" }).trim() || null;
+  } catch { return null; }
+}
+
+
 function collectActiveTaskFiles(cpDir) {
   const results = [];
   const queueDir = join(cpDir, "queue");
@@ -276,7 +291,8 @@ function collectActiveTaskFiles(cpDir) {
     if (!statSync(featureDir).isDirectory()) continue;
     for (const file of listFiles(featureDir)) {
       if (file.startsWith("wave-") && file.endsWith(".md")) {
-        results.push({ path: `queue/${feature}/${file}`, content: readFileSync(join(featureDir, file), "utf8") });
+        const relPath = `queue/${feature}/${file}`;
+        results.push({ path: relPath, content: readFileSync(join(featureDir, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
       }
     }
   }
@@ -292,7 +308,8 @@ function collectArchivedTaskFiles(cpDir) {
     if (!statSync(featureDir).isDirectory()) continue;
     for (const file of listFiles(featureDir)) {
       if (file.startsWith("wave-") && file.endsWith(".md")) {
-        results.push({ path: `queue/_done/${feature}/${file}`, content: readFileSync(join(featureDir, file), "utf8") });
+        const relPath = `queue/_done/${feature}/${file}`;
+        results.push({ path: relPath, content: readFileSync(join(featureDir, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
       }
     }
   }
@@ -305,7 +322,8 @@ function collectFeatureFiles(cpDir, suffix) {
   if (!existsSync(featDir)) return results;
   for (const file of listFiles(featDir)) {
     if (file.endsWith(suffix)) {
-      results.push({ path: `features/${file}`, content: readFileSync(join(featDir, file), "utf8") });
+      const relPath = `features/${file}`;
+      results.push({ path: relPath, content: readFileSync(join(featDir, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
     }
   }
   return results;
@@ -338,6 +356,14 @@ function matchPRsToFeatures(prData) {
 
 function escHTML(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return "";
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch { return ""; }
 }
 
 function statusLabel(status) {
@@ -412,8 +438,12 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   // SHA-pinned spec link
   const specFileName = isBug ? `${feature.slug}-bug.md` : `${feature.slug}-feature.md`;
   const specLinkLabel = isBug ? "Bug Report" : "Feature Specification";
-  const specLink = linkContext.githubBaseUrl
-    ? `<a href="${escHTML(linkContext.githubBaseUrl)}/features/${specFileName}" target="_blank" rel="noopener" class="spec-link" title="View spec @ ${(linkContext.commitSha || "").slice(0, 7)}">${specLinkLabel}</a>`
+  const specSha = feature.specSha || linkContext.commitSha;
+  const specUrl = linkContext.githubServerUrl && linkContext.githubRepository && specSha
+    ? `${linkContext.githubServerUrl}/${linkContext.githubRepository}/blob/${specSha}/features/${specFileName}`
+    : null;
+  const specLink = specUrl
+    ? `<a href="${escHTML(specUrl)}" target="_blank" rel="noopener" class="spec-link" title="View spec @ ${specSha.slice(0, 7)}">${specLinkLabel}</a>`
     : "";
 
   // Execution mode badge
@@ -422,7 +452,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     : "";
 
   // Lifecycle badge (only for non-active states)
-  const lifecycleBadge = feature.lifecycle && feature.lifecycle !== "active"
+  const lifecycleBadge = feature.lifecycle && feature.lifecycle !== "active" && feature.lifecycle !== "completed"
     ? `<span class="lozenge lozenge-lifecycle-${feature.lifecycle}">${feature.lifecycle}</span>`
     : "";
 
@@ -450,20 +480,22 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
 
   const taskRows = sortedTaskList.map((t) => {
     const taskPath = isShipped ? `queue/_done/${feature.slug}/${t.filename}` : `queue/${feature.slug}/${t.filename}`;
-    const taskLink = linkContext.githubBaseUrl
-      ? `<a href="${escHTML(linkContext.githubBaseUrl)}/${taskPath}" target="_blank" rel="noopener">${escHTML(t.title || t.filename.replace(".md", ""))}</a>`
-      : escHTML(t.title || t.filename.replace(".md", ""));
+    const taskSha = t.sha || linkContext.commitSha;
+    const taskUrl = linkContext.githubServerUrl && linkContext.githubRepository && taskSha
+      ? `${linkContext.githubServerUrl}/${linkContext.githubRepository}/blob/${taskSha}/${taskPath}`
+      : null;
+    const taskLabel = escHTML(t.filename.replace(".md", ""));
+    const taskLink = taskUrl
+      ? `<a href="${escHTML(taskUrl)}" target="_blank" rel="noopener">${taskLabel}</a>`
+      : taskLabel;
     const stale = isStaleTask(t, generatedAt);
-    const descSnippet = t.description
-      ? escHTML(t.description.length > 120 ? t.description.slice(0, 120) + "..." : t.description)
-      : "";
     return `<tr class="${stale ? "stale-task" : ""}">
       <td class="mono">${taskLink}</td>
       <td><span class="wdot wdot-${t.status}"></span> ${t.status}${stale ? ' <span class="stale-warn" title="In progress for over 2 hours">&#9888;</span>' : ""}</td>
       <td>${priorityDot(t.priority)} ${t.priority}</td>
       <td class="mono">W${t.wave}</td>
-      <td>${workerIcon(t.claimed_by)}</td>
-    </tr>${descSnippet ? `\n    <tr class="task-desc-row"><td colspan="5">${descSnippet}</td></tr>` : ""}`;
+      <td>${executionLabel(feature.execution || "supervised")}</td>
+    </tr>`;
   }).join("");
 
   const hasDetails = tasks.total > 0;
@@ -471,24 +503,23 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
 
   return `<div class="feature-row${isDimmed ? " feature-dimmed" : ""}" data-status="${feature.status}" data-type="${feature.type}" data-execution="${feature.execution || ""}" data-title="${escHTML(feature.title.toLowerCase())}" data-epic="${escHTML(feature.epic)}" style="animation-delay:${idx * 60}ms">
-    <div class="feature-header" onclick="this.parentElement.classList.toggle('expanded')">
+    <div class="feature-header">
       <div class="feature-left">
         ${typeIcon}
         <div class="feature-info">
           <div class="feature-title">${escHTML(feature.title)} ${jiraLink} ${specLink}</div>
-          ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem)}</div>` : ""}
         </div>
       </div>
       <div class="feature-right">
         ${lifecycleBadge}
-        ${execBadge}
         ${tasks.total > 0 ? `<span class="task-count mono">${tasks.done}/${tasks.total}</span>` : ""}
+        ${feature.createdAt || feature.completedAt ? `<span class="feature-dates mono">${feature.createdAt ? formatDate(feature.createdAt) : ""}${feature.createdAt && feature.completedAt ? ` &rarr; ` : ""}${feature.completedAt ? formatDate(feature.completedAt) : ""}</span>` : ""}
         <span class="lozenge lozenge-${feature.status}">${statusLabel(feature.status)}</span>
-        ${isBug && feature.severity ? `<span class="lozenge lozenge-sev-${feature.severity}">${feature.severity}</span>` : ""}
         ${hasDetails ? `<span class="chevron">&#9662;</span>` : ""}
       </div>
     </div>
     ${hasDetails ? `<div class="feature-detail">
+      ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem)}</div>` : ""}
       <div class="detail-grid">
         <div class="detail-progress">
           ${progressRingSVG(pct, color)}
@@ -503,7 +534,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       </div>
       ${taskRows ? `<div class="detail-missing">
         <div class="detail-label">${taskTableLabel} (${sortedTaskList.length})</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Worker</th></tr></thead><tbody>${taskRows}</tbody></table>
+        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody>${taskRows}</tbody></table>
       </div>` : ""}
     </div>` : ""}
   </div>`;
@@ -654,60 +685,6 @@ body::before {
 /* ── Layout ── */
 .layout { max-width: 1200px; margin: 0 auto; padding: 24px; }
 
-/* ── Stat Cards ── */
-.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px; }
-.stat {
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  text-align: center;
-  transition: all var(--transition);
-  position: relative;
-  overflow: hidden;
-  animation: fadeUp 0.6s ease-out both;
-}
-.stat:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
-.stat::after {
-  content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 2px;
-  border-radius: 1px; filter: blur(1px);
-}
-.stat-shipped::after { background: var(--green); box-shadow: 0 0 20px var(--green); }
-.stat-in-progress::after { background: var(--blue); box-shadow: 0 0 20px var(--blue); }
-.stat-not-started::after { background: var(--amber); box-shadow: 0 0 20px var(--amber); }
-.stat-blocked::after { background: var(--red); box-shadow: 0 0 20px var(--red); }
-.stat-bugs::after { background: var(--orange); box-shadow: 0 0 20px var(--orange); }
-.stat-number {
-  font-family: var(--font-mono);
-  font-size: 2.2rem; font-weight: 700; line-height: 1;
-  margin-bottom: 6px;
-}
-.stat-shipped .stat-number { color: var(--green); text-shadow: 0 0 20px rgba(52,211,153,0.4); }
-.stat-in-progress .stat-number { color: var(--blue); text-shadow: 0 0 20px rgba(129,140,248,0.4); }
-.stat-not-started .stat-number { color: var(--amber); text-shadow: 0 0 20px rgba(251,191,36,0.4); }
-.stat-blocked .stat-number { color: var(--red); text-shadow: 0 0 20px rgba(248,113,113,0.4); }
-.stat-bugs .stat-number { color: var(--orange); text-shadow: 0 0 20px rgba(251,146,60,0.4); }
-.stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); font-weight: 600; }
-
-/* ── Overall Progress ── */
-.overall {
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  margin-bottom: 24px;
-  display: flex; align-items: center; gap: 20px;
-  animation: fadeUp 0.6s ease-out 0.3s both;
-}
-.overall-ring { flex-shrink: 0; }
-.overall-info { flex: 1; }
-.overall-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-.overall-bar { height: 4px; background: var(--ring-bg); border-radius: 2px; overflow: hidden; }
-.overall-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--green), var(--blue), #ec4899); box-shadow: 0 0 12px rgba(129,140,248,0.4); transition: width 1s ease-out; }
-.overall-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-family: var(--font-mono); }
-
 /* ── Toolbar ── */
 .toolbar {
   display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
@@ -773,9 +750,10 @@ body::before {
 .feature-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
 .feature-info { min-width: 0; }
 .feature-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.feature-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+.feature-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
 .feature-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .task-count { font-size: 12px; color: var(--text-secondary); }
+.feature-dates { font-size: 11px; color: var(--text-muted); }
 .chevron {
   font-size: 12px; color: var(--text-muted);
   transition: transform 0.2s ease;
@@ -813,9 +791,9 @@ body::before {
 .feature-row.expanded .feature-detail {
   max-height: 3000px; padding: 20px;
 }
-.detail-grid { display: grid; grid-template-columns: auto 1fr; gap: 16px 24px; align-items: start; }
-.detail-progress { display: flex; align-items: center; gap: 16px; grid-column: 1 / -1; }
-.progress-label { flex: 1; }
+.detail-grid { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
+.detail-progress { display: flex; align-items: center; gap: 16px; }
+.progress-label { flex: 1; min-width: 80px; }
 .progress-bar-wrap { margin-bottom: 4px; }
 .pbar { height: 4px; background: var(--ring-bg); border-radius: 2px; overflow: hidden; }
 .pbar-fill { height: 100%; border-radius: 2px; box-shadow: 0 0 8px currentColor; transition: width 0.8s ease-out; }
@@ -823,7 +801,7 @@ body::before {
 .detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px; }
 
 /* Waves */
-.detail-waves, .detail-repos, .detail-prs { grid-column: 1 / -1; }
+.detail-prs { flex-basis: 100%; }
 .waves-wrap { display: flex; flex-wrap: wrap; gap: 12px; }
 .wave-group { display: flex; align-items: center; gap: 3px; }
 .wave-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); margin-right: 2px; }
@@ -864,7 +842,6 @@ body::before {
 }
 .missing-tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
 .missing-tbl tr:last-child td { border-bottom: none; }
-.missing-tbl tr:has(+ .task-desc-row) td { border-bottom: none; }
 .missing-tbl .mono { font-family: var(--font-mono); font-size: 11px; }
 .worker-empty { color: var(--text-muted); }
 .worker-icon { font-size: 14px; }
@@ -892,20 +869,13 @@ body::before {
   transition: all var(--transition); user-select: none;
 }
 .epic-filter-toggle:hover { background: rgba(59,130,246,0.2); }
-.epic-filter-toggle.epic-active { background: rgba(59,130,246,0.35); color: #93bbfd; }
+.epic-filter-toggle.epic-active { background: rgba(59,130,246,0.5); color: #fff; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
 .jira-link-icon {
   padding: 1px 5px; color: #60a5fa; text-decoration: none;
   border-left: 1px solid rgba(59,130,246,0.2);
   transition: all var(--transition); font-size: 11px; line-height: 1;
 }
 .jira-link-icon:hover { background: rgba(59,130,246,0.2); }
-.epic-filter-banner {
-  padding: 6px 14px; margin-bottom: 10px; border-radius: 8px;
-  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
-  font-size: 12px; color: #60a5fa;
-}
-.epic-filter-banner a { color: #93bbfd; text-decoration: none; font-size: 11px; }
-.epic-filter-banner a:hover { text-decoration: underline; }
 .spec-link {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 1px 8px; border-radius: 6px;
@@ -916,8 +886,6 @@ body::before {
 }
 .spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
 .missing-tbl a { color: var(--accent); text-decoration: none; }
-.task-desc-row td { padding-top: 0 !important; padding-bottom: 10px !important; border-bottom: 1px solid var(--border) !important; font-size: 11px; color: var(--text-muted); font-style: italic; }
-.task-desc-row + tr td { padding-top: 10px !important; }
 .missing-tbl a:hover { text-decoration: underline; }
 
 /* ── Execution Mode Lozenges ── */
@@ -1004,16 +972,11 @@ body::before {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .stats { grid-template-columns: repeat(3, 1fr); }
   .layout { padding: 16px; }
-  .detail-grid { grid-template-columns: 1fr; }
-  .feature-desc { display: none; }
+  .detail-grid { flex-direction: column; align-items: stretch; }
   .search-wrap { min-width: 120px; }
 }
 @media (max-width: 480px) {
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .stat { padding: 14px; }
-  .stat-number { font-size: 1.5rem; }
   .navbar { padding: 0 16px; }
   .filters { gap: 2px; }
   .filter-btn { padding: 4px 10px; font-size: 11px; }
@@ -1044,23 +1007,7 @@ body::before {
 
 <div class="layout">
 
-  <div class="stats">
-    <div class="stat stat-shipped" style="animation-delay:0ms"><div class="stat-number" data-count="${summary.shipped}">0</div><div class="stat-label">Shipped</div></div>
-    <div class="stat stat-in-progress" style="animation-delay:60ms"><div class="stat-number" data-count="${summary.in_progress}">0</div><div class="stat-label">In Progress</div></div>
-    <div class="stat stat-not-started" style="animation-delay:120ms"><div class="stat-number" data-count="${summary.not_started}">0</div><div class="stat-label">Not Started</div></div>
-    <div class="stat stat-blocked" style="animation-delay:180ms"><div class="stat-number" data-count="${summary.blocked}">0</div><div class="stat-label">Blocked</div></div>
-    <div class="stat stat-bugs" style="animation-delay:240ms"><div class="stat-number" data-count="${summary.bugs}">0</div><div class="stat-label">Bugs</div></div>
-  </div>
 
-  <div class="overall">
-    <div class="overall-ring">${progressRingSVG(overallPct, "url(#grad)", 56)}</div>
-    <div class="overall-info">
-      <div class="overall-title">Overall Progress</div>
-      <div class="overall-bar"><div class="overall-bar-fill" style="width:${overallPct}%"></div></div>
-      <div class="overall-meta">${doneTasks} of ${totalTasks} tasks completed across ${features.length} features</div>
-    </div>
-    ${renderExecSummary(execCounts)}
-  </div>
 
   ${renderActiveWorkers(activeWorkers)}
 
@@ -1075,7 +1022,6 @@ body::before {
       <button class="filter-btn" data-filter="not-started">Not Started</button>
       <button class="filter-btn" data-filter="blocked">Blocked</button>
       <button class="filter-btn" data-filter="shipped">Shipped</button>
-      <button class="filter-btn" data-filter="bug">Bugs</button>
     </div>
     <div class="filters" id="execFilters">
       <span class="filter-label">Execution:</span>
@@ -1087,7 +1033,6 @@ body::before {
   </div>
 
   ${featureItems.length > 0 ? `<div class="section-hdr"><span>Features</span><span class="section-count">${featureItems.length}</span></div>` : ""}
-  ${bugItems.length > 0 ? `<div class="section-hdr bug-hdr"><span>Bug Fixes</span><span class="section-count">${bugItems.length}</span></div>` : ""}
 
   <div id="featureList">
     ${allRows}
@@ -1095,27 +1040,11 @@ body::before {
 
   ${renderOrphaned(features)}
 
-  <div class="page-footer">RELAY STATUS PAGE</div>
 </div>
 
 <svg width="0" height="0"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="var(--green)"/><stop offset="100%" stop-color="var(--blue)"/></linearGradient></defs></svg>
 
 <script>
-// ── Animated Counters ──
-document.querySelectorAll('.stat-number[data-count]').forEach(el => {
-  const target = parseInt(el.dataset.count);
-  if (target === 0) return;
-  const dur = 800;
-  const start = performance.now();
-  function tick(now) {
-    const p = Math.min((now - start) / dur, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(target * ease);
-    if (p < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-});
-
 // ── Combined Filters (status + execution, intersection logic) ──
 const rows = document.querySelectorAll('.feature-row');
 const statusBtns = document.querySelectorAll('#statusFilters .filter-btn');
@@ -1133,8 +1062,7 @@ function applyFilters() {
     if (q && !(row.dataset.title || '').includes(q) && !(row.dataset.epic || '').toLowerCase().includes(q)) show = false;
     // Status filter
     if (show && activeStatus !== 'all') {
-      if (activeStatus === 'bug') { if (row.dataset.type !== 'bug') show = false; }
-      else { if (row.dataset.status !== activeStatus) show = false; }
+      if (row.dataset.status !== activeStatus) show = false;
     }
     // Execution filter
     if (show && activeExec !== 'all') {
@@ -1168,6 +1096,15 @@ execBtns.forEach(btn => {
 
 // ── Search ──
 searchInput.addEventListener('input', applyFilters);
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== searchInput) {
+    e.preventDefault();
+    searchInput.focus();
+  }
+  if (e.key === 'Escape' && document.activeElement === searchInput) {
+    searchInput.blur();
+  }
+});
 
 // ── Epic Filtering ──
 function setEpicFilter(epicKey) {
@@ -1175,17 +1112,6 @@ function setEpicFilter(epicKey) {
   document.querySelectorAll('.epic-filter-toggle').forEach(el => {
     el.classList.toggle('epic-active', el.dataset.epic === epicKey);
   });
-  let banner = document.querySelector('.epic-filter-banner');
-  if (epicKey) {
-    if (!banner) {
-      banner = document.createElement('div');
-      banner.className = 'epic-filter-banner';
-      document.querySelector('.controls').appendChild(banner);
-    }
-    banner.innerHTML = 'Filtered by epic: <strong>' + epicKey + '</strong> <a href="#" onclick="setEpicFilter(null);return false">Clear</a>';
-  } else if (banner) {
-    banner.remove();
-  }
   applyFilters();
 }
 
@@ -1196,6 +1122,11 @@ document.addEventListener('click', e => {
     e.stopPropagation();
     const epic = toggle.dataset.epic;
     setEpicFilter(activeEpic === epic ? null : epic);
+    return;
+  }
+  const header = e.target.closest('.feature-header');
+  if (header && !e.target.closest('a')) {
+    header.parentElement.classList.toggle('expanded');
   }
 });
 
@@ -1250,6 +1181,8 @@ const linkContext = {
   githubBaseUrl: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_SHA
     ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/blob/${process.env.GITHUB_SHA}`
     : null,
+  githubServerUrl: process.env.GITHUB_SERVER_URL || null,
+  githubRepository: process.env.GITHUB_REPOSITORY || null,
   jiraBaseUrl: process.env.JIRA_BASE_URL ? process.env.JIRA_BASE_URL.replace(/\/$/, "") : null,
   commitSha: process.env.GITHUB_SHA || null,
 };

@@ -4,9 +4,10 @@ version: 4
 paused-at: 2026-03-21T13:34:19Z
 paused-by: christianjensen
 pause-reason: ""
+created-at: 2026-03-21T14:14:45+01:00
+completed-at: 2026-03-21T16:35:12Z
 deployed-at: ""
 deployed-env: ""
-completed-at: 2026-03-21T16:35:12Z
 ---
 # Feature Spec: Bulk Assign Category
 
