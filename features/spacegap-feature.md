@@ -1,5 +1,5 @@
 ---
-lifecycle: draft
+lifecycle: active
 execution: autonomous
 priority: medium
 epic: TASK-5
