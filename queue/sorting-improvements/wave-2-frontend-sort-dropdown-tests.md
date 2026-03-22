@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 2
@@ -8,6 +8,9 @@ feature: sorting-improvements
 type: feature
 depends-on:
   - wave-1-frontend-sort-dropdown-polish.md
+claimed-by: agent-Mac-60732
+claimed-at: 2026-03-22T00:46:07Z
+claimed-on: Mac
 ---
 
 ## Description
