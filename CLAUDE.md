@@ -40,15 +40,6 @@ When the user's request matches a workflow below, you MUST read and follow that 
 | Push tasks, hand off to agents, relay work | **Relay** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/relay.md` and follow every step |
 | Status report, progress report | **Status Report** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/status-report.md` and follow every step |
 
-## Roadmap
-
-`features/ROADMAP.md` is a numbered list of feature slugs that PMs maintain to set build priority. Top = build first. PMs edit this via GitHub's web UI.
-
-- Workflows read the roadmap when choosing what to work on next
-- The watcher uses roadmap position as a sort key (wave ASC → roadmap position ASC → priority ASC)
-- Features not listed default to position 9999 (lowest priority)
-- During task archival, also remove the completed feature from ROADMAP.md
-
 ## Reference: Queue Format
 
 Task files live in `queue/<feature>/` and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/task-queue-item.md`:
@@ -272,8 +263,7 @@ When all tasks in a feature reach `status: done`:
    ```bash
    git mv queue/<feature>/ queue/_done/<feature>/
    ```
-2. Remove the feature from `features/ROADMAP.md`
-3. Commit: `chore: archive completed <feature> tasks`
+2. Commit: `chore: archive completed <feature> tasks`
 
 ## Conventions
 
