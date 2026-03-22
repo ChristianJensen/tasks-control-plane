@@ -1,11 +1,14 @@
 ---
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 1
 priority: high
 feature: sorting-improvements
 type: feature
+claimed-by: agent-Mac-56076
+claimed-at: 2026-03-22T00:36:35Z
+claimed-on: Mac
 ---
 
 ## Description
