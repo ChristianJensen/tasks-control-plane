@@ -1,11 +1,14 @@
 ---
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 1
 priority: high
 feature: spacegap
 type: feature
+claimed-by: agent-Mac-89053
+claimed-at: 2026-03-22T05:55:41Z
+claimed-on: Mac
 ---
 
 ## Description
