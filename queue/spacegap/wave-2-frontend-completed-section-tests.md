@@ -1,5 +1,5 @@
 ---
-status: done
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 2
@@ -9,7 +9,7 @@ type: feature
 depends-on:
   - wave-1-frontend-collapsible-completed-section.md
 claimed-by: agent-Mac-17395
-claimed-at: 2026-03-22T12:09:54Z
+claimed-at: 2026-03-22T15:23:53Z
 claimed-on: Mac
 ---
 
