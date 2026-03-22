@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 2
@@ -8,6 +8,9 @@ feature: spacegap
 type: feature
 depends-on:
   - wave-1-frontend-collapsible-completed-section.md
+claimed-by: agent-Mac-17395
+claimed-at: 2026-03-22T12:09:54Z
+claimed-on: Mac
 ---
 
 ## Description
