@@ -476,8 +476,8 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
 
   // Jira epic link — split pill: left = filter toggle, right = external Jira link
   const epicDisplay = feature.epicTitle
-    ? `Jira: ${feature.epic}: ${feature.epicTitle}`
-    : `Jira: ${feature.epic}`;
+    ? `${feature.epic}: ${feature.epicTitle}`
+    : feature.epic;
   const jiraLink = feature.epic
     ? `<span class="jira-pill">`
       + `<span class="epic-filter-toggle" data-epic="${escHTML(feature.epic)}" title="Filter by epic ${escHTML(feature.epic)}">${escHTML(epicDisplay)}</span>`
@@ -672,24 +672,22 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
     for (const [key, group] of epicGroups) {
       const label = key === "__ungrouped__"
         ? "Other Features"
-        : (group.epicTitle ? `Jira: ${group.epicKey}: ${group.epicTitle}` : `Jira: ${group.epicKey}`);
+        : (group.epicTitle ? `${group.epicKey}: ${group.epicTitle}` : group.epicKey);
       const jiraUrl = key !== "__ungrouped__" && linkContext.jiraBaseUrl
         ? `${linkContext.jiraBaseUrl}/browse/${group.epicKey}`
         : null;
       const jiraIcon = jiraUrl
         ? ` <a href="${escHTML(jiraUrl)}" target="_blank" rel="noopener" class="epic-group-jira" title="Open in Jira">&#8599;</a>`
         : "";
-      featureRowsHTML += `<div class="epic-group epic-expanded" data-epic-group="${escHTML(group.epicKey)}">`;
-      featureRowsHTML += `<div class="epic-group-hdr" onclick="this.parentElement.classList.toggle('epic-expanded')">`
-        + `<span class="epic-group-chevron">&#9662;</span>`
+      featureRowsHTML += `<div class="epic-group" data-epic-group="${escHTML(group.epicKey)}">`;
+      featureRowsHTML += `<div class="epic-group-hdr">`
         + `<span class="epic-group-label">${escHTML(label)}</span>${jiraIcon}`
         + `<span class="section-count">${group.items.length}</span>`
         + `</div>`;
-      featureRowsHTML += `<div class="epic-group-body">`;
       for (const f of group.items) {
         featureRowsHTML += renderFeatureRow(f, prsByFeature, rowIndex++, linkContext, generated_at);
       }
-      featureRowsHTML += `</div></div>`;
+      featureRowsHTML += `</div>`;
     }
   }
 
@@ -967,16 +965,7 @@ body::before {
   color: var(--text-secondary); margin: 20px 0 8px; padding: 6px 0;
   display: flex; align-items: center; gap: 8px;
   border-bottom: 1px solid var(--border);
-  cursor: pointer; user-select: none;
 }
-.epic-group-hdr:hover { color: var(--text-primary); }
-.epic-group-chevron {
-  font-size: 10px; transition: transform 0.2s ease;
-  display: inline-block;
-}
-.epic-group:not(.epic-expanded) .epic-group-chevron { transform: rotate(-90deg); }
-.epic-group-body { overflow: hidden; }
-.epic-group:not(.epic-expanded) .epic-group-body { display: none; }
 .epic-group-hdr .epic-group-label { color: #60a5fa; }
 .epic-group-hdr .section-count {
   background: var(--bg-input); border-radius: 10px; padding: 1px 8px;
@@ -1216,8 +1205,7 @@ function applyFilters() {
   });
   // Hide epic groups with no visible rows
   document.querySelectorAll('.epic-group').forEach(g => {
-    const body = g.querySelector('.epic-group-body') || g;
-    const visible = body.querySelectorAll('.feature-row:not([style*="display: none"])');
+    const visible = g.querySelectorAll('.feature-row:not([style*="display: none"])');
     g.style.display = visible.length > 0 ? '' : 'none';
   });
 }
