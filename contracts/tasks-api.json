@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -28,13 +28,14 @@
             "name": "sort",
             "in": "query",
             "required": false,
-            "description": "Field to sort by. Defaults to createdAt. Status sort uses workflow order: todo=0, in-progress=1, done=2.",
+            "description": "Field to sort by. Defaults to createdAt. Status sort uses workflow order: todo=0, in-progress=1, done=2. Category sort uses alphabetical order: errands=0, personal=1, work=2. Null categories sort last (asc) or first (desc).",
             "schema": {
               "type": "string",
               "enum": [
                 "createdAt",
                 "title",
-                "status"
+                "status",
+                "category"
               ],
               "default": "createdAt"
             }
