@@ -15,7 +15,7 @@ deployed-env: ""
 
 | # | Type | File | Contributor | Date |
 |---|------|------|-------------|------|
-| S1 | conversation | features/multiassign-feature.md | Christian Jensen | 2026-03-21 |
+| S1 | conversation | features/completed/multiassign-feature.md | Christian Jensen | 2026-03-21 |
 
 ## Problem Statement
 

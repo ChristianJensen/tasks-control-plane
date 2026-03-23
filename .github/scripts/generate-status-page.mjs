@@ -149,6 +149,7 @@ function parseTask(content, filename, featureSlug, isArchived, sha, relPath) {
     description: extractTaskDescription(body),
     title: deriveTaskTitle(filename),
     sha: sha || null,
+    relPath: relPath || "",
   };
 }
 
@@ -169,6 +170,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       createdAt: fields["created-at"] || "",
       completedAt: fields["completed-at"] || "",
       sha: f.sha || null,
+      specPath: f.path || "",
     };
   }
 
@@ -207,7 +209,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     const feature = {
       slug, title: spec.title, type: spec.type, lifecycle: spec.lifecycle, status,
       execution: spec.execution, epic: spec.epic, epicTitle: spec.epicTitle,
-      createdAt: spec.createdAt || "", completedAt: spec.completedAt || "", specSha: spec.sha || null,
+      createdAt: spec.createdAt || "", completedAt: spec.completedAt || "", specSha: spec.sha || null, specPath: spec.specPath || "",
       problem: spec.problem, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
       waves: tasks.length > 0 ? groupByWave(tasks) : [],
       repos: tasks.length > 0 ? groupByRepo(tasks) : {},
@@ -488,11 +490,10 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     : "";
 
   // SHA-pinned spec link
-  const specFileName = isBug ? `${feature.slug}-bug.md` : `${feature.slug}-feature.md`;
   const specLinkLabel = isBug ? "Bug Report" : "Feature Specification";
   const specSha = feature.specSha || linkContext.commitSha;
-  const specUrl = linkContext.githubServerUrl && linkContext.githubRepository && specSha
-    ? `${linkContext.githubServerUrl}/${linkContext.githubRepository}/blob/${specSha}/features/${specFileName}`
+  const specUrl = linkContext.githubServerUrl && linkContext.githubRepository && specSha && feature.specPath
+    ? `${linkContext.githubServerUrl}/${linkContext.githubRepository}/blob/${specSha}/${feature.specPath}`
     : null;
   const specLink = specUrl
     ? `<a href="${escHTML(specUrl)}" target="_blank" rel="noopener" class="spec-link" title="View spec @ ${specSha.slice(0, 7)}">${specLinkLabel}</a>`
@@ -531,10 +532,9 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   const taskTableLabel = isShipped ? "All Tasks" : "Remaining Tasks";
 
   const taskRows = sortedTaskList.map((t) => {
-    const taskPath = isShipped ? `queue/_done/${feature.slug}/${t.filename}` : `queue/${feature.slug}/${t.filename}`;
     const taskSha = t.sha || linkContext.commitSha;
-    const taskUrl = linkContext.githubServerUrl && linkContext.githubRepository && taskSha
-      ? `${linkContext.githubServerUrl}/${linkContext.githubRepository}/blob/${taskSha}/${taskPath}`
+    const taskUrl = linkContext.githubServerUrl && linkContext.githubRepository && taskSha && t.relPath
+      ? `${linkContext.githubServerUrl}/${linkContext.githubRepository}/blob/${taskSha}/${t.relPath}`
       : null;
     const taskLabel = escHTML(t.filename.replace(".md", ""));
     const taskLink = taskUrl

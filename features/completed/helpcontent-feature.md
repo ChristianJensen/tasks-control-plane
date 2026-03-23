@@ -18,7 +18,7 @@ deployed-env: ""
 
 | # | Type | File | Contributor | Date |
 |---|------|------|-------------|------|
-| 1 | conversation | features/helpcontent-feature.md | PM interview | 2026-03-21 |
+| 1 | conversation | features/completed/helpcontent-feature.md | PM interview | 2026-03-21 |
 
 ## Problem Statement
 
