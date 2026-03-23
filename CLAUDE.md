@@ -10,7 +10,7 @@ This is a **Relay control plane** — a Git-native coordination hub for multi-re
 | Frontend | `ChristianJensen/agentic-sdlc-frontend` | `/Users/christianjensen/src/agentic-sdlc-demo/frontend/` |
 | Control Plane | `ChristianJensen/tasks-control-plane` | `/Users/christianjensen/src/agentic-sdlc-demo/tasks-control-plane` |
 
-See `service-catalog.md` for tech stacks, contracts, and purposes.
+See `.relay/service-catalog.md` for tech stacks, contracts, and purposes.
 
 ## Relay Framework
 
@@ -22,11 +22,11 @@ Process files (scripts, templates, workflows) live in the Relay framework repo a
 
 ## Constitution
 
-Rules from Relay (corporate) and this control plane (app-level) are compiled into each code repo's `.relay/constitution.md`. This control plane also has its own `constitution.md` with merged rules.
+Rules from Relay (corporate) and this control plane (app-level) are compiled into each code repo's `.relay/constitution.md`. This control plane also has its own `.relay/constitution.md` with merged rules.
 
 - **Propagate rules:** `relay upgrade --repos` recompiles constitutions for all repos
 - **Check freshness:** `relay check-rules` from any repo to detect stale rules
-- **Add app rules:** Edit `manifest.md` and add files to `rules/` in this control plane
+- **Add app rules:** Edit `.relay/manifest.md` and add files to `rules/` in this control plane
 
 ## Workflows (MANDATORY)
 
