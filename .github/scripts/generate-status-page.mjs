@@ -249,10 +249,24 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
   return { generated_at: new Date().toISOString(), summary, execCounts, activeWorkers, features };
 }
 
+// ── Config ───────────────────────────────────────────────────────
+
+function parseRelayConfig(cpDir) {
+  const configPath = join(cpDir, ".relay-config");
+  const config = {};
+  if (!existsSync(configPath)) return config;
+  const content = readFileSync(configPath, "utf8");
+  for (const line of content.split("\n")) {
+    const m = line.match(/^(status-page-\S+):\s*(.+)/);
+    if (m) config[m[1]] = m[2].trim();
+  }
+  return config;
+}
+
 // ── CLI args ────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { cpDir: ".", output: "status-page/index.html", prData: null, title: "Task Tracker - Delivery Report" };
+  const args = { cpDir: ".", output: "status-page/index.html", prData: null, title: null };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case "--cp-dir": args.cpDir = argv[++i]; break;
@@ -582,7 +596,7 @@ function renderExecSummary(execCounts) {
   </div>`;
 }
 
-function renderHTML(boardState, prsByFeature, title, linkContext = {}) {
+function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding = {}) {
   const { summary, execCounts, activeWorkers, features, generated_at } = boardState;
   const featureItems = features.filter((f) => f.type !== "bug");
   const bugItems = features.filter((f) => f.type === "bug");
@@ -997,7 +1011,7 @@ body::before {
 
 <nav class="navbar">
   <div class="nav-left">
-    <div class="nav-logo">R</div>
+    <div class="nav-logo">${escHTML(branding.logo || "R")}</div>
     <span class="nav-title">${escHTML(title)}</span>
   </div>
   <div class="nav-right">
@@ -1040,6 +1054,7 @@ body::before {
 
   ${renderOrphaned(features)}
 
+  ${branding.footer ? `<div class="page-footer">${escHTML(branding.footer)}</div>` : ""}
 </div>
 
 <svg width="0" height="0"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="var(--green)"/><stop offset="100%" stop-color="var(--blue)"/></linearGradient></defs></svg>
@@ -1163,6 +1178,14 @@ function renderOrphaned(features) {
 
 const args = parseArgs(process.argv);
 const cpDir = resolve(args.cpDir);
+const relayConfig = parseRelayConfig(cpDir);
+
+// CLI args override config, config overrides defaults
+const title = args.title || relayConfig["status-page-title"] || "Task Tracker - Delivery Report";
+const branding = {
+  logo: relayConfig["status-page-logo"] || "R",
+  footer: relayConfig["status-page-footer"] || "",
+};
 
 console.log(`Generating status page from: ${cpDir}`);
 
@@ -1198,7 +1221,7 @@ if (args.prData && existsSync(args.prData)) {
   console.log(`  PRs loaded: ${prData.length}, matched to features: ${totalMatched}`);
 }
 
-const html = renderHTML(boardState, prsByFeature, args.title, linkContext);
+const html = renderHTML(boardState, prsByFeature, title, linkContext, branding);
 
 const outputPath = resolve(args.output);
 mkdirSync(dirname(outputPath), { recursive: true });
