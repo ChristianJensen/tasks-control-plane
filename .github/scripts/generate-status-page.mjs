@@ -121,12 +121,26 @@ function deriveTaskTitle(filename) {
     .join(" ");
 }
 
-function parseTask(content, filename, featureSlug, isArchived, sha) {
+const TASK_STATUSES = new Set(["pending", "ready", "in-progress", "done", "blocked", "paused", "cancelled"]);
+const FEATURE_PHASES = new Set(["draft", "active", "completed", "cancelled"]);
+
+function statusFromPath(relPath) {
+  const parts = relPath.split("/");
+  // e.g. queue/feature/ready/wave-1-api-foo.md → "ready"
+  if (parts.length >= 2) {
+    const parent = parts[parts.length - 2];
+    if (TASK_STATUSES.has(parent) || FEATURE_PHASES.has(parent)) return parent;
+  }
+  return "";
+}
+
+function parseTask(content, filename, featureSlug, isArchived, sha, relPath) {
   const { fields, body } = parseFrontmatter(content);
   const waveMatch = filename.match(/^wave-(\d+)/);
+  const dirStatus = relPath ? statusFromPath(relPath) : "";
   return {
     filename, feature: fields.feature || featureSlug,
-    status: isArchived ? "done" : fields.status || "ready",
+    status: isArchived ? "done" : dirStatus || "ready",
     repo: fields["target-repo"] || "", wave: waveMatch ? Number(waveMatch[1]) : 0,
     priority: fields.priority || "normal", type: fields.type || "feature",
     execution: fields.execution || "",
@@ -160,17 +174,19 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
   const tasksByFeature = {};
   for (const f of activeTaskFiles) {
     const parts = f.path.split("/");
-    const filename = parts.pop();
-    const featureSlug = parts.pop();
-    const task = parseTask(f.content, filename, featureSlug, false, f.sha);
+    const filename = parts.pop();       // wave-*.md
+    parts.pop();                         // status dir
+    const featureSlug = parts[parts.length - 1];
+    const task = parseTask(f.content, filename, featureSlug, false, f.sha, f.path);
     if (!tasksByFeature[featureSlug]) tasksByFeature[featureSlug] = [];
     tasksByFeature[featureSlug].push(task);
   }
   for (const f of archivedTaskFiles) {
     const parts = f.path.split("/");
-    const filename = parts.pop();
-    const featureSlug = parts.pop();
-    const task = parseTask(f.content, filename, featureSlug, true, f.sha);
+    const filename = parts.pop();       // wave-*.md
+    parts.pop();                         // status dir
+    const featureSlug = parts[parts.length - 1];
+    const task = parseTask(f.content, filename, featureSlug, true, f.sha, f.path);
     if (!tasksByFeature[featureSlug]) tasksByFeature[featureSlug] = [];
     tasksByFeature[featureSlug].push(task);
   }
@@ -303,10 +319,16 @@ function collectActiveTaskFiles(cpDir) {
     if (feature.startsWith("_")) continue;
     const featureDir = join(queueDir, feature);
     if (!statSync(featureDir).isDirectory()) continue;
-    for (const file of listFiles(featureDir)) {
-      if (file.startsWith("wave-") && file.endsWith(".md")) {
-        const relPath = `queue/${feature}/${file}`;
-        results.push({ path: relPath, content: readFileSync(join(featureDir, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
+    // New layout: queue/<feature>/<status>/wave-*.md
+    for (const entry of listFiles(featureDir)) {
+      const entryPath = join(featureDir, entry);
+      if (statSync(entryPath).isDirectory() && TASK_STATUSES.has(entry)) {
+        for (const file of listFiles(entryPath)) {
+          if (file.startsWith("wave-") && file.endsWith(".md")) {
+            const relPath = `queue/${feature}/${entry}/${file}`;
+            results.push({ path: relPath, content: readFileSync(join(entryPath, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
+          }
+        }
       }
     }
   }
@@ -320,10 +342,16 @@ function collectArchivedTaskFiles(cpDir) {
   for (const feature of listFiles(doneDir)) {
     const featureDir = join(doneDir, feature);
     if (!statSync(featureDir).isDirectory()) continue;
-    for (const file of listFiles(featureDir)) {
-      if (file.startsWith("wave-") && file.endsWith(".md")) {
-        const relPath = `queue/_done/${feature}/${file}`;
-        results.push({ path: relPath, content: readFileSync(join(featureDir, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
+    // New layout: queue/_done/<feature>/<status>/wave-*.md
+    for (const entry of listFiles(featureDir)) {
+      const entryPath = join(featureDir, entry);
+      if (statSync(entryPath).isDirectory() && TASK_STATUSES.has(entry)) {
+        for (const file of listFiles(entryPath)) {
+          if (file.startsWith("wave-") && file.endsWith(".md")) {
+            const relPath = `queue/_done/${feature}/${entry}/${file}`;
+            results.push({ path: relPath, content: readFileSync(join(entryPath, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
+          }
+        }
       }
     }
   }
@@ -334,10 +362,16 @@ function collectFeatureFiles(cpDir, suffix) {
   const results = [];
   const featDir = join(cpDir, "features");
   if (!existsSync(featDir)) return results;
-  for (const file of listFiles(featDir)) {
-    if (file.endsWith(suffix)) {
-      const relPath = `features/${file}`;
-      results.push({ path: relPath, content: readFileSync(join(featDir, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
+  // New layout: features/<phase>/*-feature.md
+  for (const entry of listFiles(featDir)) {
+    const entryPath = join(featDir, entry);
+    if (existsSync(entryPath) && statSync(entryPath).isDirectory() && FEATURE_PHASES.has(entry)) {
+      for (const file of listFiles(entryPath)) {
+        if (file.endsWith(suffix)) {
+          const relPath = `features/${entry}/${file}`;
+          results.push({ path: relPath, content: readFileSync(join(entryPath, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
+        }
+      }
     }
   }
   return results;
