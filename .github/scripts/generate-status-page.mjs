@@ -219,7 +219,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
             wave: t.wave, claimed_by: t.claimed_by || null,
             claimed_at: t.claimed_at || null,
             description: t.description || "", title: t.title || "",
-            sha: t.sha || null,
+            sha: t.sha || null, relPath: t.relPath || "",
           }))
         : [],
       allTasks: tasks.map((t) => ({
@@ -228,7 +228,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
         claimed_at: t.claimed_at || null,
         description: t.description || "", title: t.title || "",
         repo: t.repo || "",
-        sha: t.sha || null,
+        sha: t.sha || null, relPath: t.relPath || "",
       })),
     };
 
