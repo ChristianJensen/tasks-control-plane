@@ -1,0 +1,39 @@
+%% Task Tracker — System Architecture
+%% Updated: 2026-03-23
+%% Render: paste into https://mermaid.live or view in any Mermaid-compatible viewer
+
+graph TB
+    subgraph Users
+        user["End User<br/><i>Browser</i>"]
+    end
+
+    subgraph System ["Task Tracker"]
+        frontend["Frontend<br/><i>React + Vite</i><br/><i>Single-file SPA (App.jsx)</i>"]
+        api["API<br/><i>Express.js</i><br/><i>Single-file server (app.js)</i>"]
+        store[("In-Memory Store<br/><i>Map() objects</i><br/><i>tasks, comments, subtasks</i>")]
+    end
+
+    subgraph DevOps ["Delivery Infrastructure"]
+        cp["Control Plane<br/><i>tasks-control-plane</i><br/><i>Specs, queue, contracts</i>"]
+        relay["Relay Framework<br/><i>Process, workflows, scripts</i>"]
+        gh_pages["GitHub Pages<br/><i>Status page</i>"]
+    end
+
+    user -->|"HTTPS"| frontend
+    frontend -->|"REST API<br/>contracts/tasks-api.json"| api
+    api -->|"Read/Write"| store
+
+    cp -->|"relay upgrade"| frontend
+    cp -->|"relay upgrade"| api
+    relay -->|"relay upgrade"| cp
+    cp -->|"GitHub Actions"| gh_pages
+
+    classDef system fill:#1a1a2e,stroke:#818cf8,color:#e8ecf4
+    classDef store fill:#1a1a2e,stroke:#fbbf24,color:#e8ecf4
+    classDef devops fill:#0a0e27,stroke:#34d399,color:#94a3b8
+    classDef user fill:#0a0e27,stroke:#60a5fa,color:#e8ecf4
+
+    class frontend,api system
+    class store store
+    class cp,relay,gh_pages devops
+    class user user
