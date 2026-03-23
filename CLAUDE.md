@@ -42,7 +42,7 @@ When the user's request matches a workflow below, you MUST read and follow that 
 
 ## Reference: Queue Format
 
-Task files live in `queue/<feature>/` and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/task-queue-item.md`:
+Task files live in `queue/<feature>/<status>/` (where status is one of: pending, ready, in-progress, done, blocked, paused, cancelled) and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/task-queue-item.md`. The directory is authoritative for task state; the `status:` frontmatter field is kept in sync for readability.
 
 ```yaml
 ---
@@ -64,10 +64,12 @@ Followed by: Description, Why, Implementation Notes, Contract References, and Ac
 ## Reference: Task Status State Machine
 
 ```
-pending → ready → in-progress → done (or blocked)
-                              → paused (human chose to stop)
-                              → cancelled (feature dropped)
+pending/ → ready/ → in-progress/ → done/ (or blocked/)
+                                 → paused/ (human chose to stop)
+                                 → cancelled/ (feature dropped)
 ```
+
+State transitions are performed via `git mv` between status directories.
 
 | Status | Meaning |
 |--------|---------|
@@ -81,7 +83,7 @@ pending → ready → in-progress → done (or blocked)
 
 ## Reference: Feature Lifecycle
 
-Feature specs and bug reports share a lifecycle managed via YAML frontmatter:
+Feature specs and bug reports share a lifecycle managed via phase directories under `features/`. The phase directory (draft, active, completed, cancelled) is authoritative for lifecycle state; YAML frontmatter echoes it for readability.
 
 ```yaml
 ---
@@ -93,12 +95,12 @@ pause-reason: ""
 ---
 ```
 
-**State transitions:**
+**State transitions (via `git mv` between phase directories):**
 ```
-draft ──→ active ──→ paused ──→ active (resume)
-                  ──→ cancelled (terminal)
-                  ──→ replanning ──→ active (new tasks created)
-                  ──→ completed
+features/draft/ ──→ features/active/ ──→ (paused via frontmatter) ──→ features/active/ (resume)
+                                      ──→ features/cancelled/ (terminal)
+                                      ──→ (replanning via frontmatter) ──→ features/active/ (new tasks created)
+                                      ──→ features/completed/
 ```
 
 | State | Meaning |
@@ -110,7 +112,7 @@ draft ──→ active ──→ paused ──→ active (resume)
 | `replanning` | Paused for re-architecture; replan doc generated |
 | `completed` | All tasks done, queue archived |
 
-**Watcher gate:** The agent watcher skips tasks for any feature whose lifecycle is not `active`. In-flight agents are not killed — they finish naturally.
+**Watcher gate:** The agent watcher skips tasks for any feature whose spec is not in `features/active/`. In-flight agents are not killed — they finish naturally.
 
 **Tooling:** Use `relay feature-lifecycle <command> <feature-name> [--reason "..."]` with subcommands: `status`, `pause`, `resume`, `cancel`, `replan`, `complete`.
 
@@ -132,8 +134,8 @@ Agent branches use `git push` as an atomic distributed lock — first push wins,
 Derive the branch name from the queue file path:
 
 ```
-queue/add-due-dates/wave-1-api-create-endpoints.md
-      └─ feature ─┘  └─────── filename ────────┘
+queue/add-due-dates/ready/wave-1-api-create-endpoints.md
+      └─ feature ─┘        └─────── filename ────────┘
 
 Feature branch: agent/add-due-dates-w1-create-endpoints
 Bug fix branch: fix/add-due-dates-w1-create-endpoints
@@ -150,17 +152,17 @@ where task-slug is the filename with the `wave-N-<repo>-` prefix stripped and `.
 
 ```
 1. git pull --ff-only                             # refresh queue
-2. Scan queue/*.md → filter target-repo + status:ready
+2. Scan queue/*/ready/wave-*.md → filter target-repo
 3. git ls-remote origin 'refs/heads/agent/*' 'refs/heads/fix/*'  # what's already claimed?
 4. For each unclaimed candidate (wave ASC, priority DESC):
    a. Determine prefix: fix/ for type:bug tasks, agent/ for features
    b. git checkout -b <prefix>/<slug> origin/main
    c. git commit --allow-empty -m "claim: <agent-id>"
    d. git push origin <prefix>/<slug>
-   e. If push succeeds → CLAIMED, run agent
+   e. If push succeeds → CLAIMED; git mv ready/task.md in-progress/task.md, run agent
    f. If push fails → skip, try next candidate
-5. On success → create PR (squash merge), mark task done
-6. On failure → mark task blocked
+5. On success → create PR (squash merge), git mv in-progress/task.md done/task.md
+6. On failure → git mv in-progress/task.md blocked/task.md
 ```
 
 ### Claim Commit Cleanup
@@ -189,7 +191,7 @@ Integrated into the watcher poll loop:
 - Before scanning for new tasks, check existing `agent/*` and `fix/*` branches
 - If last commit is older than 5 minutes AND no open PR → stale
 - Delete remote branch (`git push origin --delete <prefix>/<slug>`)
-- Reset task file status back to `ready`
+- Move task file back to `ready/` (`git mv in-progress/task.md ready/task.md`)
 
 ## Reference: PR Linking Conventions
 
@@ -237,9 +239,9 @@ When Claude creates a PR for a task, it must include both human-readable links a
 
 ## Reference: Bug Workflow
 
-Bugs are treated as lightweight features. Bug reports live in `features/` with a `-bug.md` suffix and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/bug-report.md`.
+Bugs are treated as lightweight features. Bug reports live in `features/<phase>/` (same phase directories as feature specs) with a `-bug.md` suffix and use the template at `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/templates/bug-report.md`.
 
-**Single-task bugs** (one repo, <50 lines): create one task file in `queue/<slug>/` with `type: bug`. Agent claims using `fix/` branch prefix.
+**Single-task bugs** (one repo, <50 lines): create one task file in `queue/<slug>/ready/` with `type: bug`. Agent claims using `fix/` branch prefix.
 
 **Complex bugs** (multi-repo or multi-step): decompose into waves like a feature — same queue structure, validation gate, wave promotion.
 
@@ -258,7 +260,7 @@ Bugs are treated as lightweight features. Bug reports live in `features/` with a
 
 ## Reference: Task Archival
 
-When all tasks in a feature reach `status: done`:
+When all tasks in a feature are in the `done/` directory:
 1. Move the entire feature directory to the archive:
    ```bash
    git mv queue/<feature>/ queue/_done/<feature>/

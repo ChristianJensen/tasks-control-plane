@@ -163,6 +163,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       slug, type: isBug ? "bug" : "feature", lifecycle: fields.lifecycle || "draft",
       execution: fields.execution || "supervised",
       epic: (typeof fields.epic === "string" && fields.epic) ? fields.epic : "",
+      epicTitle: (typeof fields["epic-title"] === "string" && fields["epic-title"]) ? fields["epic-title"] : "",
       title: extractTitle(body, slug), problem: extractProblemStatement(body),
       severity: isBug ? fields.severity || "" : undefined,
       createdAt: fields["created-at"] || "",
@@ -196,7 +197,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
   const summary = { shipped: 0, in_progress: 0, not_started: 0, blocked: 0, bugs: 0 };
 
   for (const slug of allSlugs) {
-    const spec = specs[slug] || { slug, type: "feature", lifecycle: "unknown", execution: "supervised", epic: "", title: slug, problem: "" };
+    const spec = specs[slug] || { slug, type: "feature", lifecycle: "unknown", execution: "supervised", epic: "", epicTitle: "", title: slug, problem: "" };
     const tasks = tasksByFeature[slug] || [];
     const isArchived = tasks.length > 0 && tasks.every((t) =>
       archivedTaskFiles.some((f) => f.path.includes(`/_done/${slug}/`))
@@ -205,7 +206,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
 
     const feature = {
       slug, title: spec.title, type: spec.type, lifecycle: spec.lifecycle, status,
-      execution: spec.execution, epic: spec.epic,
+      execution: spec.execution, epic: spec.epic, epicTitle: spec.epicTitle,
       createdAt: spec.createdAt || "", completedAt: spec.completedAt || "", specSha: spec.sha || null,
       problem: spec.problem, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
       waves: tasks.length > 0 ? groupByWave(tasks) : [],
@@ -474,9 +475,12 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     : `<span class="type-icon type-feature" title="Feature">&#9670;</span>`;
 
   // Jira epic link — split pill: left = filter toggle, right = external Jira link
+  const epicDisplay = feature.epicTitle
+    ? `${feature.epic}: ${feature.epicTitle}`
+    : feature.epic;
   const jiraLink = feature.epic
     ? `<span class="jira-pill">`
-      + `<span class="epic-filter-toggle" data-epic="${escHTML(feature.epic)}" title="Filter by epic ${escHTML(feature.epic)}">${escHTML(feature.epic)}</span>`
+      + `<span class="epic-filter-toggle" data-epic="${escHTML(feature.epic)}" title="Filter by epic ${escHTML(feature.epic)}">${escHTML(epicDisplay)}</span>`
       + (linkContext.jiraBaseUrl
         ? `<a href="${escHTML(linkContext.jiraBaseUrl)}/browse/${escHTML(feature.epic)}" target="_blank" rel="noopener" class="jira-link-icon" title="Open in Jira">&#8599;</a>`
         : "")
@@ -550,7 +554,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
 
   const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
 
-  return `<div class="feature-row${isDimmed ? " feature-dimmed" : ""}" data-status="${feature.status}" data-type="${feature.type}" data-execution="${feature.execution || ""}" data-title="${escHTML(feature.title.toLowerCase())}" data-epic="${escHTML(feature.epic)}" style="animation-delay:${idx * 60}ms">
+  return `<div class="feature-row${isDimmed ? " feature-dimmed" : ""}" data-status="${feature.status}" data-type="${feature.type}" data-execution="${feature.execution || ""}" data-title="${escHTML(feature.title.toLowerCase())}" data-epic="${escHTML(feature.epic)}" data-epic-title="${escHTML((feature.epicTitle || '').toLowerCase())}" style="animation-delay:${idx * 60}ms">
     <div class="feature-header">
       <div class="feature-left">
         ${typeIcon}
@@ -632,13 +636,64 @@ function renderExecSummary(execCounts) {
 
 function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding = {}) {
   const { summary, execCounts, activeWorkers, features, generated_at } = boardState;
-  const featureItems = features.filter((f) => f.type !== "bug");
-  const bugItems = features.filter((f) => f.type === "bug");
+  const featureItems = features.filter((f) => f.type !== "bug" && f.status !== "orphaned");
+  const bugItems = features.filter((f) => f.type === "bug" && f.status !== "orphaned");
   const totalTasks = features.reduce((s, f) => s + (f.tasks?.total || 0), 0);
   const doneTasks = features.reduce((s, f) => s + (f.tasks?.done || 0), 0);
   const overallPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
-  const allRows = features.map((f, i) => renderFeatureRow(f, prsByFeature, i, linkContext, generated_at)).join("\n");
+  // Group features by epic
+  function groupByEpic(items) {
+    const groups = new Map();
+    for (const f of items) {
+      const key = f.epic || "__ungrouped__";
+      if (!groups.has(key)) {
+        groups.set(key, { epicKey: f.epic, epicTitle: f.epicTitle || "", items: [] });
+      }
+      if (f.epicTitle && !groups.get(key).epicTitle) {
+        groups.get(key).epicTitle = f.epicTitle;
+      }
+      groups.get(key).items.push(f);
+    }
+    return groups;
+  }
+
+  const epicGroups = groupByEpic(featureItems);
+  const hasAnyEpic = [...epicGroups.keys()].some((k) => k !== "__ungrouped__");
+  let rowIndex = 0;
+  let featureRowsHTML = "";
+
+  if (!hasAnyEpic) {
+    // No epics — render flat like before
+    featureRowsHTML = featureItems.map((f, i) =>
+      renderFeatureRow(f, prsByFeature, i, linkContext, generated_at)
+    ).join("\n");
+  } else {
+    for (const [key, group] of epicGroups) {
+      const label = key === "__ungrouped__"
+        ? "Other Features"
+        : (group.epicTitle ? `${group.epicKey}: ${group.epicTitle}` : group.epicKey);
+      const jiraUrl = key !== "__ungrouped__" && linkContext.jiraBaseUrl
+        ? `${linkContext.jiraBaseUrl}/browse/${group.epicKey}`
+        : null;
+      const jiraIcon = jiraUrl
+        ? ` <a href="${escHTML(jiraUrl)}" target="_blank" rel="noopener" class="epic-group-jira" title="Open in Jira">&#8599;</a>`
+        : "";
+      featureRowsHTML += `<div class="epic-group" data-epic-group="${escHTML(group.epicKey)}">`;
+      featureRowsHTML += `<div class="epic-group-hdr">`
+        + `<span class="epic-group-label">${escHTML(label)}</span>${jiraIcon}`
+        + `<span class="section-count">${group.items.length}</span>`
+        + `</div>`;
+      for (const f of group.items) {
+        featureRowsHTML += renderFeatureRow(f, prsByFeature, rowIndex++, linkContext, generated_at);
+      }
+      featureRowsHTML += `</div>`;
+    }
+  }
+
+  const bugRowsHTML = bugItems.map((f, i) =>
+    renderFeatureRow(f, prsByFeature, featureItems.length + i, linkContext, generated_at)
+  ).join("\n");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -903,6 +958,25 @@ body::before {
   border-left: 3px solid var(--text-muted);
 }
 
+/* ── Epic Groups ── */
+.epic-group { margin-bottom: 4px; }
+.epic-group-hdr {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--text-secondary); margin: 20px 0 8px; padding: 6px 0;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.epic-group-hdr .epic-group-label { color: #60a5fa; }
+.epic-group-hdr .section-count {
+  background: var(--bg-input); border-radius: 10px; padding: 1px 8px;
+  font-size: 10px; font-family: var(--font-mono);
+}
+.epic-group-jira {
+  color: #60a5fa; text-decoration: none; font-size: 11px;
+  transition: all var(--transition);
+}
+.epic-group-jira:hover { color: #93bbfc; }
+
 /* ── Jira & Spec Links ── */
 .jira-pill {
   display: inline-flex; align-items: center;
@@ -1083,7 +1157,13 @@ body::before {
   ${featureItems.length > 0 ? `<div class="section-hdr"><span>Features</span><span class="section-count">${featureItems.length}</span></div>` : ""}
 
   <div id="featureList">
-    ${allRows}
+    ${featureRowsHTML}
+  </div>
+
+  ${bugItems.length > 0 ? `<div class="section-hdr bug-hdr"><span>Bugs</span><span class="section-count">${bugItems.length}</span></div>` : ""}
+
+  <div id="bugList">
+    ${bugRowsHTML}
   </div>
 
   ${renderOrphaned(features)}
@@ -1107,8 +1187,8 @@ function applyFilters() {
   const q = searchInput.value.toLowerCase();
   rows.forEach(row => {
     let show = true;
-    // Search filter (matches title and epic key)
-    if (q && !(row.dataset.title || '').includes(q) && !(row.dataset.epic || '').toLowerCase().includes(q)) show = false;
+    // Search filter (matches title, epic key, and epic title)
+    if (q && !(row.dataset.title || '').includes(q) && !(row.dataset.epic || '').toLowerCase().includes(q) && !(row.dataset.epicTitle || '').includes(q)) show = false;
     // Status filter
     if (show && activeStatus !== 'all') {
       if (row.dataset.status !== activeStatus) show = false;
@@ -1122,6 +1202,11 @@ function applyFilters() {
       if ((row.dataset.epic || '') !== activeEpic) show = false;
     }
     row.style.display = show ? '' : 'none';
+  });
+  // Hide epic groups with no visible rows
+  document.querySelectorAll('.epic-group').forEach(g => {
+    const visible = g.querySelectorAll('.feature-row:not([style*="display: none"])');
+    g.style.display = visible.length > 0 ? '' : 'none';
   });
 }
 
