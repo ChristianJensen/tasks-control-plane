@@ -964,14 +964,18 @@ body::before {
 .epic-group { margin-bottom: 4px; }
 .epic-group-hdr {
   font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
-  color: var(--text-secondary); margin: 20px 0 8px; padding: 6px 0;
-  display: flex; align-items: center; gap: 8px;
-  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary); margin: 20px 0 8px; padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-card); backdrop-filter: blur(24px);
+  border: 1px solid var(--border); border-left: 3px solid #60a5fa;
+  border-radius: var(--radius);
   cursor: pointer; user-select: none;
+  transition: all var(--transition);
 }
-.epic-group-hdr:hover { color: var(--text-primary); }
+.epic-group-hdr:hover { background: var(--bg-card-hover); border-color: var(--border-hover); border-left-color: #93bbfc; }
 .epic-group-chevron {
-  font-size: 10px; transition: transform 0.2s ease;
+  font-size: 12px; color: var(--text-muted);
+  transition: transform 0.2s ease;
   display: inline-block;
 }
 .epic-group:not(.epic-expanded) .epic-group-chevron { transform: rotate(-90deg); }
