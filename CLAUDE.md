@@ -39,6 +39,7 @@ When the user's request matches a workflow below, you MUST read and follow that 
 | Report a bug, file a bug | **Report Bug** | Run `relay report-bug` (script-orchestrated) |
 | Push tasks, hand off to agents, relay work | **Relay** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/relay.md` and follow every step |
 | Status report, progress report | **Status Report** | Read `/Users/christianjensen/src/agentic-sdlc-demo/relay/process/workflows/status-report.md` and follow every step |
+| Sync merged PRs, update task status | **Sync** | Run `relay sync [feature]` |
 
 ## Reference: Queue Format
 
@@ -54,6 +55,8 @@ feature: <feature>     # matches directory name in queue/
 type: feature          # feature | bug
 contracts:
   - contracts/tasks-api.json
+pr-url: ""
+pr-number: ""
 ---
 ```
 
@@ -80,6 +83,8 @@ State transitions are performed via `git mv` between status directories.
 | `blocked` | Agent failed, needs human attention |
 | `paused` | Human chose to stop; may resume (distinct from `blocked`) |
 | `cancelled` | Feature dropped; terminal |
+
+**Done requires merged PR:** Tasks are only moved to `done/` when their PR is merged (detected by the watcher every ~10s or manually via `relay sync`). Exception: `relay done --no-pr` marks done immediately.
 
 ## Reference: Feature Lifecycle
 
@@ -161,8 +166,9 @@ where task-slug is the filename with the `wave-N-<repo>-` prefix stripped and `.
    d. git push origin <prefix>/<slug>
    e. If push succeeds → CLAIMED; git mv ready/task.md in-progress/task.md, run agent
    f. If push fails → skip, try next candidate
-5. On success → create PR (squash merge), git mv in-progress/task.md done/task.md
-6. On failure → git mv in-progress/task.md blocked/task.md
+5. On success → create PR, record pr-url/pr-number in frontmatter (task stays in-progress)
+6. On PR merge → watcher or relay sync detects merge, git mv in-progress/task.md done/task.md
+7. On failure → git mv in-progress/task.md blocked/task.md
 ```
 
 ### Claim Commit Cleanup
