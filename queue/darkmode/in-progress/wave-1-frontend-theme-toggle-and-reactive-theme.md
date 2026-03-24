@@ -1,11 +1,14 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: darkmode
 type: feature
+claimed-by: agent-Christians-MacBook-Air-43632
+claimed-at: 2026-03-24T14:50:32Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
