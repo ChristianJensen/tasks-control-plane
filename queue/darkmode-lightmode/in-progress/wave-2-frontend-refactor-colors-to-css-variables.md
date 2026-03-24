@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -8,6 +8,9 @@ feature: darkmode-lightmode
 type: feature
 depends-on:
   - wave-1-frontend-theme-infrastructure-and-toggle.md
+claimed-by: agent-Christians-MacBook-Air-52853
+claimed-at: 2026-03-24T21:20:37Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
