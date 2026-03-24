@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 2
@@ -8,6 +8,9 @@ feature: darkmode
 type: feature
 depends-on:
   - wave-1-frontend-theme-system-toggle-and-light-mode.md
+claimed-by: agent-Christians-MacBook-Air-93588
+claimed-at: 2026-03-24T18:15:29Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
