@@ -9,6 +9,8 @@ type: feature
 claimed-by: agent-Christians-MacBook-Air-52853
 claimed-at: 2026-03-24T20:19:40Z
 claimed-on: Christians-MacBook-Air
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/54
+pr-number: 54
 ---
 
 ## Description
