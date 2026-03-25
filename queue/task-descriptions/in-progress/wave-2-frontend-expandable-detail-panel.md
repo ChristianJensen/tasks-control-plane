@@ -8,8 +8,8 @@ feature: task-descriptions
 type: feature
 depends-on:
   - wave-1-api-add-description-field.md
-claimed-by: agent-Christians-MacBook-Air-3595
-claimed-at: 2026-03-25T20:41:58Z
+claimed-by: agent-Christians-MacBook-Air-78247
+claimed-at: 2026-03-25T20:49:54Z
 claimed-on: Christians-MacBook-Air
 ---
 
