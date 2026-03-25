@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -8,6 +8,9 @@ feature: darkmode
 type: feature
 depends-on:
   - wave-1-frontend-css-variables-and-theme-infrastructure.md
+claimed-by: agent-Christians-MacBook-Air-85407
+claimed-at: 2026-03-25T01:17:31Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
