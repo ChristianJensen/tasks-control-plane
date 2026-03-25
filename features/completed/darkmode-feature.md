@@ -4,8 +4,8 @@ execution: supervised
 priority: medium
 budget: ""
 total-budget: 50.00
-total-cost-usd: ""
-total-tokens: ""
+total-cost-usd: 0.6459
+total-tokens: 43120
 epic: TASK-5
 epic-title: ""
 version: 1

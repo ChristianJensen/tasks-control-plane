@@ -11,7 +11,7 @@ depends-on:
 claimed-by: agent-Christians-MacBook-Air-85407
 claimed-at: 2026-03-25T01:17:31Z
 claimed-on: Christians-MacBook-Air
-cost-usd: 0
+cost-usd: 0.1452
 input-tokens: 33
 output-tokens: 9676
 duration-ms: 235618
