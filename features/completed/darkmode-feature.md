@@ -1,5 +1,5 @@
 ---
-lifecycle: active
+lifecycle: completed
 execution: supervised
 priority: medium
 budget: ""
@@ -13,7 +13,7 @@ paused-at: ""
 paused-by: ""
 pause-reason: ""
 created-at: "2026-03-25"
-completed-at: ""
+completed-at: 2026-03-25T01:22:32Z
 deployed-at: ""
 deployed-env: ""
 ---
