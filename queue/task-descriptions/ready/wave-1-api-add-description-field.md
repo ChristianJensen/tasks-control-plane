@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: ready
 execution: supervised
 target-repo: api
 wave: 1
