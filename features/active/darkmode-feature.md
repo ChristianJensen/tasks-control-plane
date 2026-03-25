@@ -3,7 +3,7 @@ lifecycle: active
 execution: supervised
 priority: medium
 budget: ""
-total-budget: 2.00
+total-budget: 50.00
 total-cost-usd: ""
 total-tokens: ""
 epic: TASK-5
