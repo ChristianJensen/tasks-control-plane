@@ -146,6 +146,9 @@ function parseTask(content, filename, featureSlug, isArchived, sha, relPath) {
     execution: fields.execution || "",
     claimed_by: fields["claimed-by"] || "", claimed_at: fields["claimed-at"] || "",
     claimed_on: fields["claimed-on"] || "",
+    cost_usd: parseFloat(fields["cost-usd"]) || 0,
+    input_tokens: parseInt(fields["input-tokens"]) || 0,
+    output_tokens: parseInt(fields["output-tokens"]) || 0,
     description: extractTaskDescription(body),
     title: deriveTaskTitle(filename),
     sha: sha || null,
@@ -206,11 +209,18 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     );
     const status = tasks.length > 0 ? deriveFeatureStatus(tasks, isArchived) : "orphaned";
 
+    const cost = {
+      usd: tasks.reduce((s, t) => s + (t.cost_usd || 0), 0),
+      input_tokens: tasks.reduce((s, t) => s + (t.input_tokens || 0), 0),
+      output_tokens: tasks.reduce((s, t) => s + (t.output_tokens || 0), 0),
+    };
+    cost.tokens = cost.input_tokens + cost.output_tokens;
+
     const feature = {
       slug, title: spec.title, type: spec.type, lifecycle: spec.lifecycle, status,
       execution: spec.execution, epic: spec.epic, epicTitle: spec.epicTitle,
       createdAt: spec.createdAt || "", completedAt: spec.completedAt || "", specSha: spec.sha || null, specPath: spec.specPath || "",
-      problem: spec.problem, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
+      problem: spec.problem, cost, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
       waves: tasks.length > 0 ? groupByWave(tasks) : [],
       repos: tasks.length > 0 ? groupByRepo(tasks) : {},
       missing: status !== "shipped"
@@ -240,6 +250,10 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
 
     features.push(feature);
   }
+
+  // Grand total cost
+  summary.total_cost_usd = features.reduce((s, f) => s + (f.cost?.usd || 0), 0);
+  summary.total_tokens = features.reduce((s, f) => s + (f.cost?.tokens || 0), 0);
 
   // Execution mode counts
   const execCounts = { autonomous: 0, supervised: 0, guided: 0 };
@@ -457,6 +471,16 @@ function priorityDot(priority) {
 
 const priorityOrder = { critical: 0, high: 1, normal: 2, low: 3 };
 
+function fmtTokens(n) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+  return String(n);
+}
+
+function fmtCost(usd) {
+  return usd >= 1 ? `$${usd.toFixed(2)}` : `$${usd.toFixed(4)}`;
+}
+
 function isStaleTask(t, generatedAt) {
   if (!t.claimed_at || t.status !== "in-progress") return false;
   try {
@@ -565,6 +589,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       <div class="feature-right">
         ${lifecycleBadge}
         ${tasks.total > 0 ? `<span class="task-count mono">${tasks.done}/${tasks.total}</span>` : ""}
+        ${feature.cost && feature.cost.usd > 0 ? `<span class="cost-chip mono">${fmtCost(feature.cost.usd)} &middot; ${fmtTokens(feature.cost.tokens)}</span>` : ""}
         ${feature.createdAt || feature.completedAt ? `<span class="feature-dates mono">${feature.createdAt ? formatDate(feature.createdAt) : ""}${feature.createdAt && feature.completedAt ? ` &rarr; ` : ""}${feature.completedAt ? formatDate(feature.completedAt) : ""}</span>` : ""}
         <span class="lozenge lozenge-${feature.status}">${statusLabel(feature.status)}</span>
         ${hasDetails ? `<span class="chevron">&#9662;</span>` : ""}
@@ -859,6 +884,8 @@ body::before {
 .feature-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .task-count { font-size: 12px; color: var(--text-secondary); }
 .feature-dates { font-size: 11px; color: var(--text-muted); }
+.cost-chip { font-size: 11px; color: var(--green); opacity: 0.8; }
+.cost-summary { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; font-family: var(--font-mono); }
 .chevron {
   font-size: 12px; color: var(--text-muted);
   transition: transform 0.2s ease;
@@ -1168,6 +1195,8 @@ body::before {
       <button class="filter-btn" data-exec-filter="guided">&#128100; Guided</button>
     </div>
   </div>
+
+  ${summary.total_cost_usd > 0 ? `<div class="cost-summary">Total AI spend: <strong>${fmtCost(summary.total_cost_usd)}</strong> &middot; ${fmtTokens(summary.total_tokens)} tokens</div>` : ""}
 
   ${featureItems.length > 0 ? `<div class="section-hdr"><span>Features</span><span class="section-count">${featureItems.length}</span></div>` : ""}
 
