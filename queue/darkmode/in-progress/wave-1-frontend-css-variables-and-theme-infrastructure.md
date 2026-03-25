@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -13,6 +13,8 @@ cost-usd: 0
 input-tokens: 23
 output-tokens: 9845
 duration-ms: 164074
+claimed-by: agent-Christians-MacBook-Air-85407
+claimed-at: 2026-03-25T01:02:28Z
 ---
 
 ## Description
