@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -11,6 +11,10 @@ claimed-at: 2026-03-25T00:52:00Z
 claimed-on: Christians-MacBook-Air
 pr-url: ""
 pr-number: ""
+cost-usd: 0
+input-tokens: 23
+output-tokens: 9845
+duration-ms: 164074
 ---
 
 ## Description
