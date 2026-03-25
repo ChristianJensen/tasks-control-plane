@@ -1,5 +1,5 @@
 ---
-lifecycle: active
+lifecycle: cancelled
 execution: supervised
 priority: medium
 budget: 1.00
@@ -15,6 +15,7 @@ created-at: "2026-03-24T23:42:08Z"
 completed-at: ""
 deployed-at: ""
 deployed-env: ""
+cancelled-at: 2026-03-25T00:03:02Z
 ---
 # Feature Spec: Dark Mode / Light Mode Toggle
 

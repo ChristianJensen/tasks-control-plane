@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: cancelled
 execution: supervised
 target-repo: frontend
 wave: 1
