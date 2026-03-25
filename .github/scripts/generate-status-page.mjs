@@ -589,7 +589,6 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       <div class="feature-right">
         ${lifecycleBadge}
         ${tasks.total > 0 ? `<span class="task-count mono">${tasks.done}/${tasks.total}</span>` : ""}
-        ${feature.cost && feature.cost.usd > 0 ? `<span class="cost-chip mono">${fmtCost(feature.cost.usd)} &middot; ${fmtTokens(feature.cost.tokens)}</span>` : ""}
         ${feature.createdAt || feature.completedAt ? `<span class="feature-dates mono">${feature.createdAt ? formatDate(feature.createdAt) : ""}${feature.createdAt && feature.completedAt ? ` &rarr; ` : ""}${feature.completedAt ? formatDate(feature.completedAt) : ""}</span>` : ""}
         <span class="lozenge lozenge-${feature.status}">${statusLabel(feature.status)}</span>
         ${hasDetails ? `<span class="chevron">&#9662;</span>` : ""}
@@ -606,7 +605,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
           </div>
         </div>
         ${wavesDots ? `<div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap">${wavesDots}</div></div>` : ""}
-        ${repoChips ? `<div class="detail-repos"><div class="detail-label">Repositories</div><div class="repo-chips">${repoChips}</div></div>` : ""}
+        ${repoChips || (feature.cost && feature.cost.usd > 0) ? `<div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row">${repoChips ? `<div class="repo-chips">${repoChips}</div>` : ""}${feature.cost && feature.cost.usd > 0 ? `<span class="cost-chip mono">&#128176; ${fmtCost(feature.cost.usd)} &middot; ${fmtTokens(feature.cost.tokens)}</span>` : ""}</div></div>` : ""}
         ${prRows ? `<div class="detail-prs"><div class="detail-label">Pull Requests</div>${prRows}</div>` : ""}
       </div>
       ${taskRows ? `<div class="detail-missing">
@@ -884,7 +883,8 @@ body::before {
 .feature-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .task-count { font-size: 12px; color: var(--text-secondary); }
 .feature-dates { font-size: 11px; color: var(--text-muted); }
-.cost-chip { font-size: 11px; color: var(--green); opacity: 0.8; }
+.cost-chip { font-size: 12px; color: var(--amber); margin-left: auto; white-space: nowrap; }
+.repos-cost-row { display: flex; align-items: center; gap: 6px; width: 100%; }
 .cost-summary { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; font-family: var(--font-mono); }
 .chevron {
   font-size: 12px; color: var(--text-muted);
