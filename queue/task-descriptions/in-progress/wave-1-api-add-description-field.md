@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: api
 wave: 1
@@ -7,6 +7,8 @@ priority: high
 feature: task-descriptions
 type: feature
 claimed-on: Christians-MacBook-Air
+claimed-by: agent-Christians-MacBook-Air-91682
+claimed-at: 2026-03-25T18:00:23Z
 ---
 
 ## Description
