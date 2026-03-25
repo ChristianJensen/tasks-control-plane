@@ -1,5 +1,5 @@
 ---
-status: blocked
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -7,7 +7,7 @@ priority: high
 feature: darkmode
 type: feature
 claimed-by: agent-Christians-MacBook-Air-75067
-claimed-at: 2026-03-25T00:52:00Z
+claimed-at: 2026-03-25T00:57:13Z
 claimed-on: Christians-MacBook-Air
 pr-url: ""
 pr-number: ""
