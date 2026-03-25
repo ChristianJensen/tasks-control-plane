@@ -1,16 +1,16 @@
 ---
-status: in-progress
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: darkmode
 type: feature
-claimed-by: agent-Christians-MacBook-Air-64812
-claimed-at: 2026-03-25T00:40:07Z
-claimed-on: Christians-MacBook-Air
-pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/56
-pr-number: 56
+claimed-by: ""
+claimed-at: ""
+claimed-on: ""
+pr-url: ""
+pr-number: ""
 ---
 
 ## Description
