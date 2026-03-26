@@ -863,11 +863,17 @@
             ],
             "properties": {
               "todo": {
-                "type": ["number", "null"],
+                "type": [
+                  "number",
+                  "null"
+                ],
                 "description": "Average hours tasks spent in todo status. Null if no completed transitions exist."
               },
               "inProgress": {
-                "type": ["number", "null"],
+                "type": [
+                  "number",
+                  "null"
+                ],
                 "description": "Average hours tasks spent in in-progress status. Null if no completed transitions exist."
               }
             },
