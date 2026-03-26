@@ -9,6 +9,12 @@ type: feature
 claimed-by: agent-Christians-MacBook-Air-88821
 claimed-at: 2026-03-26T10:58:20Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.5521812
+input-tokens: 23
+output-tokens: 9087
+duration-ms: 156867
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-api/pull/26
+pr-number: 26
 ---
 
 ## Description
