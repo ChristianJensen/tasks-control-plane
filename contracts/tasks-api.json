@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -132,6 +132,28 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/analytics": {
+      "get": {
+        "operationId": "getTaskAnalytics",
+        "summary": "Get aggregate task analytics",
+        "description": "Returns aggregate analytics: task counts by status, daily completions for the last 7 days, and average time spent in each status. Average time is computed from completed status transitions only (tasks that have moved out of a status). Empty states return zero counts and null averages.",
+        "tags": [
+          "analytics"
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAnalytics"
                 }
               }
             }
@@ -776,6 +798,80 @@
               "type": "integer"
             },
             "description": "IDs that did not match any existing task"
+          }
+        }
+      },
+      "TaskAnalytics": {
+        "type": "object",
+        "required": [
+          "countsByStatus",
+          "completedPerDay",
+          "avgTimeInStatus"
+        ],
+        "properties": {
+          "countsByStatus": {
+            "type": "object",
+            "required": [
+              "todo",
+              "in-progress",
+              "done"
+            ],
+            "properties": {
+              "todo": {
+                "type": "integer",
+                "description": "Number of tasks in todo status"
+              },
+              "in-progress": {
+                "type": "integer",
+                "description": "Number of tasks in in-progress status"
+              },
+              "done": {
+                "type": "integer",
+                "description": "Number of tasks in done status"
+              }
+            },
+            "x-data-classification": "internal"
+          },
+          "completedPerDay": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "date",
+                "count"
+              ],
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Date in YYYY-MM-DD format"
+                },
+                "count": {
+                  "type": "integer",
+                  "description": "Number of tasks marked done on this date"
+                }
+              }
+            },
+            "description": "Daily completion counts for the last 7 days, ordered oldest to newest",
+            "x-data-classification": "internal"
+          },
+          "avgTimeInStatus": {
+            "type": "object",
+            "required": [
+              "todo",
+              "inProgress"
+            ],
+            "properties": {
+              "todo": {
+                "type": ["number", "null"],
+                "description": "Average hours tasks spent in todo status. Null if no completed transitions exist."
+              },
+              "inProgress": {
+                "type": ["number", "null"],
+                "description": "Average hours tasks spent in in-progress status. Null if no completed transitions exist."
+              }
+            },
+            "x-data-classification": "internal"
           }
         }
       },
