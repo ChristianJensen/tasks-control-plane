@@ -617,7 +617,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
 
   const bugDigestHTML = hasBugDigest ? feature.bugDigest.map((s) =>
     `<div class="bug-digest-section"><div class="bug-digest-heading">${escHTML(s.heading)}</div><div class="bug-digest-body">${escHTML(s.content).replace(/\n/g, "<br>")}</div></div>`
-  ).join("") : "";
+  ).join("") + `<div class="bug-digest-actions"><button class="dispatch-btn" onclick="dispatchAgentFix('${escHTML(feature.slug)}')">&#129302; Dispatch Agent</button><button class="dismiss-btn" onclick="alert('Dismiss not yet implemented')">Dismiss</button></div>` : "";
 
   const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
 
@@ -872,6 +872,22 @@ body::before {
 .bug-digest-section { margin-bottom: 16px; }
 .bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
 .bug-digest-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; font-family: var(--font-mono); white-space: pre-wrap; }
+.settings-btn { background: none; border: none; color: var(--text-secondary); font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition); }
+.settings-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; max-width: 90vw; }
+.modal-title { font-weight: 700; font-size: 16px; margin-bottom: 16px; }
+.modal-label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px; }
+.modal-input { width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px; }
+.modal-input:focus { outline: none; border-color: var(--accent); }
+.modal-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+.modal-btn { padding: 6px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
+.modal-btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+.dispatch-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; }
+.dispatch-btn:hover { background: rgba(129,140,248,0.2); }
+.dismiss-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; margin-left: 8px; }
+.dismiss-btn:hover { background: rgba(255,255,255,0.08); }
 
 /* ── Layout ── */
 .layout { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -1232,9 +1248,23 @@ body::before {
     ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts <span class="triage-badge">${triageItems.length}</span></button>` : ""}
   </div>
   <div class="nav-right">
+    <button class="settings-btn" onclick="document.getElementById('settingsModal').style.display='flex'" title="Settings">&#9881;</button>
     <span class="nav-time">${new Date(generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
   </div>
 </nav>
+
+<div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-title">Settings</div>
+    <label class="modal-label">GitHub Personal Access Token</label>
+    <input type="password" id="patInput" class="modal-input" placeholder="ghp_..." value="">
+    <p class="modal-hint">Required for Dispatch Agent. Stored in browser only.</p>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="localStorage.setItem('gh_pat',document.getElementById('patInput').value);document.getElementById('settingsModal').style.display='none'">Save</button>
+      <button class="modal-btn modal-btn-secondary" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <div class="layout tab-content" id="featuresTab">
 
@@ -1305,6 +1335,30 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
     if (triageTab) triageTab.style.display = tab === 'triage' ? '' : 'none';
   });
 });
+
+// ── Dispatch Agent Fix ──
+function dispatchAgentFix(slug) {
+  const pat = localStorage.getItem('gh_pat');
+  if (!pat) {
+    document.getElementById('settingsModal').style.display = 'flex';
+    alert('Please configure your GitHub PAT first.');
+    return;
+  }
+  if (!confirm('Dispatch an agent to fix "' + slug + '"?')) return;
+  const repo = document.querySelector('meta[name="relay-nwo"]')?.content || 'ChristianJensen/tasks-control-plane';
+  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/dispatch-agent-fix.yml/dispatches', {
+    method: 'POST',
+    headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
+    body: JSON.stringify({ ref: 'main', inputs: { bug_slug: slug } })
+  }).then(r => {
+    if (r.ok || r.status === 204) alert('Agent dispatched for ' + slug + '. Check GitHub Actions for progress.');
+    else r.text().then(t => alert('Failed: ' + t));
+  }).catch(e => alert('Error: ' + e.message));
+}
+
+// Load saved PAT into settings input
+const savedPat = localStorage.getItem('gh_pat');
+if (savedPat) document.getElementById('patInput').value = savedPat;
 
 // ── Combined Filters (status + execution, intersection logic) ──
 const rows = document.querySelectorAll('.feature-row');
