@@ -17,8 +17,19 @@ echo ""
 
 gh api "repos/${GH_REPO}/dispatches" \
   --method POST \
-  -f event_type=telemetry_alert \
-  --raw-field 'client_payload={"error_message":"TypeError: Cannot read properties of undefined (reading id)","file":"src/app.js","service":"api","severity":"critical","user_impact":"Task creation and listing failing for all users — 47 errors in last 15 minutes","stack_trace":"TypeError: Cannot read properties of undefined (reading id)\n    at taskWithCount (src/app.js:34:30)\n    at GET /tasks (src/app.js:109:25)"}'
+  --input - <<'JSON'
+{
+  "event_type": "telemetry_alert",
+  "client_payload": {
+    "error_message": "TypeError: Cannot read properties of undefined (reading id)",
+    "file": "src/app.js",
+    "service": "api",
+    "severity": "critical",
+    "user_impact": "Task creation and listing failing for all users — 47 errors in last 15 minutes",
+    "stack_trace": "TypeError: Cannot read properties of undefined (reading id)\n    at taskWithCount (src/app.js:34:30)\n    at GET /tasks (src/app.js:109:25)"
+  }
+}
+JSON
 
 echo "Alert dispatched to ${GH_REPO}."
 echo "Watch pipeline: https://github.com/${GH_REPO}/actions"
