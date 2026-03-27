@@ -16,6 +16,7 @@ jobs:
         with:
           repository: ChristianJensen/Relay
           path: _relay
+          token: ${{ secrets.DISPATCH_PAT }}
 
       - name: Write payload to file
         run: echo '${{ toJSON(github.event.client_payload) }}' > /tmp/payload.json
