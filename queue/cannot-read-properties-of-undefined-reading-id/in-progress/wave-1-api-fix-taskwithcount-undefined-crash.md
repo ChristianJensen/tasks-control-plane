@@ -9,6 +9,12 @@ type: bug
 claimed-by: agent-Christians-MacBook-Air-54381
 claimed-at: 2026-03-27T17:31:39Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.6574797000000002
+input-tokens: 28
+output-tokens: 8379
+duration-ms: 192702
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-api/pull/28
+pr-number: 28
 ---
 
 ## Description
