@@ -66,6 +66,18 @@ function extractProblemStatement(body) {
   return m[1].trim().split(/\n\n/)[0].replace(/^_|_$/g, "").trim();
 }
 
+function extractBugDigest(body) {
+  const sections = ["Observed Behavior", "Root Cause Analysis", "Affected Code Paths", "Fix Strategy", "Reproduction Steps", "Acceptance Criteria"];
+  const parts = [];
+  for (const name of sections) {
+    const m = body.match(new RegExp(`##+ ${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n+([\\s\\S]*?)(?=\\n##|$)`));
+    if (m && m[1].trim() && !m[1].trim().startsWith("_")) {
+      parts.push({ heading: name, content: m[1].trim() });
+    }
+  }
+  return parts;
+}
+
 function groupByWave(tasks) {
   const waves = {};
   for (const t of tasks) {
@@ -169,6 +181,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       epic: (typeof fields.epic === "string" && fields.epic) ? fields.epic : "",
       epicTitle: (typeof fields["epic-title"] === "string" && fields["epic-title"]) ? fields["epic-title"] : "",
       title: extractTitle(body, slug), problem: extractProblemStatement(body),
+      bugDigest: isBug ? extractBugDigest(body) : undefined,
       severity: isBug ? fields.severity || "" : undefined,
       reportedBy: isBug ? fields["reported-by"] || "" : undefined,
       createdAt: fields["created-at"] || "",
@@ -246,6 +259,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     if (spec.type === "bug") {
       feature.severity = spec.severity;
       feature.reportedBy = spec.reportedBy;
+      feature.bugDigest = spec.bugDigest;
       if (spec.reportedBy === "telemetry" && feature.status === "orphaned") feature.status = "needs-review";
       summary.bugs++;
     }
@@ -598,7 +612,12 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     </tr>`;
   }).join("");
 
-  const hasDetails = tasks.total > 0;
+  const hasBugDigest = isBug && feature.bugDigest && feature.bugDigest.length > 0;
+  const hasDetails = tasks.total > 0 || hasBugDigest;
+
+  const bugDigestHTML = hasBugDigest ? feature.bugDigest.map((s) =>
+    `<div class="bug-digest-section"><div class="bug-digest-heading">${escHTML(s.heading)}</div><div class="bug-digest-body">${escHTML(s.content).replace(/\n/g, "<br>")}</div></div>`
+  ).join("") : "";
 
   const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
 
@@ -619,6 +638,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       </div>
     </div>
     ${hasDetails ? `<div class="feature-detail">
+      ${hasBugDigest && tasks.total === 0 ? `<div class="bug-digest">${bugDigestHTML}</div>` : `
       ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem)}</div>` : ""}
       <div class="detail-grid">
         <div class="detail-progress">
@@ -636,6 +656,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
         <div class="detail-label">${taskTableLabel} (${sortedTaskList.length})</div>
         <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody>${taskRows}</tbody></table>
       </div>` : ""}
+      `}
     </div>` : ""}
   </div>`;
 }
@@ -847,6 +868,10 @@ body::before {
 .triage-hdr span:first-child { color: var(--red); }
 .triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
 .empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
+.bug-digest { padding: 4px 0; }
+.bug-digest-section { margin-bottom: 16px; }
+.bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.bug-digest-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; font-family: var(--font-mono); white-space: pre-wrap; }
 
 /* ── Layout ── */
 .layout { max-width: 1200px; margin: 0 auto; padding: 24px; }
