@@ -400,6 +400,24 @@ function collectFeatureFiles(cpDir, suffix) {
   return results;
 }
 
+function collectBugFiles(cpDir) {
+  const results = [];
+  const bugsDir = join(cpDir, "bugs");
+  if (!existsSync(bugsDir)) return results;
+  for (const entry of listFiles(bugsDir)) {
+    const entryPath = join(bugsDir, entry);
+    if (existsSync(entryPath) && statSync(entryPath).isDirectory() && FEATURE_PHASES.has(entry)) {
+      for (const file of listFiles(entryPath)) {
+        if (file.endsWith("-bug.md")) {
+          const relPath = `bugs/${entry}/${file}`;
+          results.push({ path: relPath, content: readFileSync(join(entryPath, file), "utf8"), sha: getFileLastCommitSha(cpDir, relPath) });
+        }
+      }
+    }
+  }
+  return results;
+}
+
 // ── PR matching ─────────────────────────────────────────────────
 
 function matchPRsToFeatures(prData) {
@@ -1399,7 +1417,7 @@ const branding = {
 console.log(`Generating status page from: ${cpDir}`);
 
 const featureFiles = collectFeatureFiles(cpDir, "-feature.md");
-const bugFiles = collectFeatureFiles(cpDir, "-bug.md");
+const bugFiles = [...collectFeatureFiles(cpDir, "-bug.md"), ...collectBugFiles(cpDir)];
 const activeTaskFiles = collectActiveTaskFiles(cpDir);
 const archivedTaskFiles = collectArchivedTaskFiles(cpDir);
 

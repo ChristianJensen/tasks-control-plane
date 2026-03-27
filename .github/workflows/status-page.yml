@@ -11,7 +11,7 @@ name: Status Page
 on:
   push:
     branches: [main]
-    paths: ['features/**', 'queue/**']
+    paths: ['features/**', 'bugs/**', 'queue/**']
   workflow_dispatch: {}
 
 permissions:
