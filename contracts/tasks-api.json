@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -143,7 +143,7 @@
       "get": {
         "operationId": "getTaskAnalytics",
         "summary": "Get aggregate task analytics",
-        "description": "Returns aggregate analytics: task counts by status, daily completions for the last 7 days, and average time spent in each status. Average time is computed from completed status transitions only (tasks that have moved out of a status). Empty states return zero counts and null averages.",
+        "description": "Returns aggregate analytics: task counts by status, daily completions for the last 7 days, average time spent in each status, and distribution of completed tasks by category. Average time is computed from completed status transitions only (tasks that have moved out of a status). Empty states return zero counts and null averages.",
         "tags": [
           "analytics"
         ],
@@ -543,7 +543,7 @@
             "description": "Comment deleted successfully"
           },
           "403": {
-            "description": "Forbidden \u2014 caller is not the comment author",
+            "description": "Forbidden — caller is not the comment author",
             "content": {
               "application/json": {
                 "schema": {
@@ -806,7 +806,8 @@
         "required": [
           "countsByStatus",
           "completedPerDay",
-          "avgTimeInStatus"
+          "avgTimeInStatus",
+          "completedTasksByCategory"
         ],
         "properties": {
           "countsByStatus": {
@@ -877,6 +878,35 @@
                 "description": "Average hours tasks spent in in-progress status. Null if no completed transitions exist."
               }
             },
+            "x-data-classification": "internal"
+          },
+          "completedTasksByCategory": {
+            "type": "object",
+            "required": [
+              "work",
+              "personal",
+              "errands",
+              "uncategorized"
+            ],
+            "properties": {
+              "work": {
+                "type": "integer",
+                "description": "Number of completed tasks in work category"
+              },
+              "personal": {
+                "type": "integer",
+                "description": "Number of completed tasks in personal category"
+              },
+              "errands": {
+                "type": "integer",
+                "description": "Number of completed tasks in errands category"
+              },
+              "uncategorized": {
+                "type": "integer",
+                "description": "Number of completed tasks with no category assigned"
+              }
+            },
+            "description": "Distribution of completed tasks by category for pie chart display",
             "x-data-classification": "internal"
           }
         }
