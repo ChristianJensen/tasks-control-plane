@@ -1,5 +1,5 @@
 ---
-lifecycle: active
+lifecycle: completed
 type: bug
 version: 1
 severity: critical
@@ -9,6 +9,9 @@ reported-by: telemetry
 paused-at: ""
 paused-by: ""
 pause-reason: ""
+total-cost-usd: 1.201211
+total-tokens: 24490
+completed-at: 2026-03-27T16:07:53Z
 ---
 
 # Bug Report: TypeError in taskWithCount Crashes GET /tasks for All Users
