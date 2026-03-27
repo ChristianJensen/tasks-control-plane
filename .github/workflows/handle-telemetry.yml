@@ -34,10 +34,18 @@ jobs:
         run: |
           python3 _relay/process/scripts/handle-telemetry.py \
             --payload-file /tmp/payload.json \
-            --cp-dir "$GITHUB_WORKSPACE"
+            --cp-dir "$GITHUB_WORKSPACE" \
+            --no-commit
 
-      - name: Push bug spec
+      - name: Commit and push bug spec
         run: |
           git config user.name "relay-bot[bot]"
           git config user.email "relay-bot[bot]@users.noreply.github.com"
+          echo "=== Files in bugs/active/ ==="
+          ls -la bugs/active/
+          echo "=== Git status ==="
+          git status --short
+          git add bugs/
+          git diff --cached --stat
+          git commit -m "fix: telemetry bug report (auto-triaged)" || echo "Nothing to commit"
           git push
