@@ -790,6 +790,7 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escHTML(title)}</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%2334d399'/><stop offset='50%25' stop-color='%23818cf8'/><stop offset='100%25' stop-color='%23ec4899'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='18' fill='white'>${escHTML(branding.logo || 'R')}</text></svg>">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 
@@ -1225,6 +1226,87 @@ body::before {
 /* ── Theme Toggle (hidden — single theme) ── */
 .theme-toggle { display: none; }
 
+/* ── New Feature Button + Modal ── */
+.new-feature-btn {
+  padding: 6px 16px; border-radius: 8px; border: none;
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 600; font-family: var(--font-body);
+  cursor: pointer; transition: all var(--transition);
+  box-shadow: 0 0 20px rgba(129,140,248,0.2);
+}
+.new-feature-btn:hover {
+  box-shadow: 0 0 30px rgba(129,140,248,0.4);
+  transform: translateY(-1px);
+}
+.nf-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+}
+.nf-modal {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px;
+  width: 480px; max-width: 90vw;
+  animation: fadeUp 0.3s ease-out;
+}
+.nf-modal h2 {
+  font-size: 16px; font-weight: 700; color: var(--text-primary);
+  margin: 0 0 8px;
+}
+.nf-modal p {
+  font-size: 13px; color: var(--text-secondary);
+  margin: 0 0 20px; line-height: 1.5;
+}
+.nf-options { display: flex; flex-direction: column; gap: 12px; }
+.nf-option {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  cursor: pointer; transition: all var(--transition);
+  text-decoration: none;
+}
+.nf-option:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+}
+.nf-option-icon {
+  font-size: 20px; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; background: rgba(129,140,248,0.1);
+  flex-shrink: 0;
+}
+.nf-option-text h3 {
+  font-size: 14px; font-weight: 600; color: var(--text-primary);
+  margin: 0 0 2px;
+}
+.nf-option-text p {
+  font-size: 12px; color: var(--text-secondary);
+  margin: 0;
+}
+.nf-status {
+  font-size: 11px; color: var(--text-muted);
+  margin-top: 16px; text-align: center;
+  font-family: var(--font-mono);
+}
+.nf-status.nf-connected { color: var(--green); }
+.nf-copy-wrap {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 12px;
+}
+.nf-copy-cmd {
+  flex: 1; padding: 8px 12px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text-primary);
+  font-family: var(--font-mono); font-size: 12px;
+}
+.nf-copy-btn {
+  padding: 8px 12px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.08); color: var(--text-secondary);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all var(--transition);
+}
+.nf-copy-btn:hover { background: rgba(255,255,255,0.14); color: var(--text-primary); }
+
 /* ── Footer ── */
 .page-footer {
   text-align: center; padding: 32px 0 16px;
@@ -1273,6 +1355,7 @@ body::before {
     ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts${needsReviewCount > 0 ? ` <span class="triage-badge">${needsReviewCount}</span>` : ""}</button>` : ""}
   </div>
   <div class="nav-right">
+    <button class="new-feature-btn" id="newFeatureBtn">+ New Feature</button>
     <button class="settings-btn" onclick="document.getElementById('settingsModal').style.display='flex'" title="Settings">&#9881;</button>
     <span class="nav-time">${new Date(generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
   </div>
@@ -1288,6 +1371,36 @@ body::before {
       <button class="modal-btn" onclick="localStorage.setItem('gh_pat',document.getElementById('patInput').value);document.getElementById('settingsModal').style.display='none'">Save</button>
       <button class="modal-btn modal-btn-secondary" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
     </div>
+  </div>
+</div>
+
+<div id="nfOverlay" class="nf-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="nf-modal">
+    <h2>Start a New Feature</h2>
+    <p>Define a feature through an AI-guided interview that produces a validated spec.</p>
+    <div class="nf-options">
+      <div class="nf-option" id="nfBrowserOption" onclick="nfLaunchBrowser()">
+        <div class="nf-option-icon">&#127760;</div>
+        <div class="nf-option-text">
+          <h3>Browser Interview</h3>
+          <p>Step-by-step wizard with live AI chat</p>
+        </div>
+      </div>
+      <div class="nf-option" onclick="nfShowTerminal()">
+        <div class="nf-option-icon">&#9000;</div>
+        <div class="nf-option-text">
+          <h3>Terminal</h3>
+          <p>Run the interview in your terminal</p>
+        </div>
+      </div>
+    </div>
+    <div id="nfTerminalInstructions" style="display:none">
+      <div class="nf-copy-wrap">
+        <code class="nf-copy-cmd">relay new</code>
+        <button class="nf-copy-btn" onclick="navigator.clipboard.writeText('relay new');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+      </div>
+    </div>
+    <div id="nfServerStatus" class="nf-status"></div>
   </div>
 </div>
 
@@ -1503,6 +1616,44 @@ if (epicParam) setEpicFilter(epicParam);
 document.querySelectorAll('.workers-header').forEach(h => {
   h.addEventListener('click', () => h.parentElement.classList.toggle('workers-expanded'));
 });
+
+// ── New Feature Modal ──
+document.getElementById('newFeatureBtn').addEventListener('click', function() {
+  document.getElementById('nfOverlay').style.display = 'flex';
+  document.getElementById('nfTerminalInstructions').style.display = 'none';
+  nfCheckServer();
+});
+
+function nfCheckServer() {
+  var statusEl = document.getElementById('nfServerStatus');
+  var browserOption = document.getElementById('nfBrowserOption');
+  statusEl.textContent = 'Checking for local server...';
+  statusEl.className = 'nf-status';
+
+  fetch('http://localhost:7433/api/health', { mode: 'cors' })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      statusEl.textContent = '\\u25cf relay serve is running';
+      statusEl.className = 'nf-status nf-connected';
+      browserOption.style.opacity = '1';
+      browserOption.style.pointerEvents = 'auto';
+    })
+    .catch(function() {
+      statusEl.textContent = 'Server not running \\u2014 start with: relay serve';
+      statusEl.className = 'nf-status';
+      browserOption.style.opacity = '0.4';
+      browserOption.style.pointerEvents = 'none';
+    });
+}
+
+function nfLaunchBrowser() {
+  window.open('http://localhost:7433/interview', '_blank');
+  document.getElementById('nfOverlay').style.display = 'none';
+}
+
+function nfShowTerminal() {
+  document.getElementById('nfTerminalInstructions').style.display = 'block';
+}
 </script>
 
 </body>
