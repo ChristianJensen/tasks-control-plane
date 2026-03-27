@@ -616,15 +616,18 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   const hasDetails = tasks.total > 0 || hasBugDigest;
 
   const bugDigestHTML = hasBugDigest ?
-    `<div class="dispatch-modes">
-      <button class="mode-btn mode-autonomous" onclick="dispatchWithMode('${escHTML(feature.slug)}','autonomous')" title="Agent fixes the bug and auto-merges when CI passes. No human review needed.">&#129302; Autonomous</button>
-      <button class="mode-btn mode-supervised" onclick="dispatchWithMode('${escHTML(feature.slug)}','supervised')" title="Agent fixes the bug and opens a PR. You review and merge.">&#128065; Supervised</button>
-      <button class="mode-btn mode-guided" onclick="dispatchWithMode('${escHTML(feature.slug)}','guided')" title="You fix the bug locally using relay start. Agent assists interactively.">&#128100; Guided</button>
+    `<div class="dispatch-wrap">
+      <button class="dispatch-trigger" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('open')">Dispatch Agent &#9662;</button>
+      <div class="dispatch-dropdown">
+        <button onclick="event.stopPropagation();dispatchWithMode('${escHTML(feature.slug)}','autonomous')" title="Agent fixes, tests pass, auto-merges. No human review."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button>
+        <button onclick="event.stopPropagation();dispatchWithMode('${escHTML(feature.slug)}','supervised')" title="Agent fixes and opens a PR. You review before merge."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button>
+        <button onclick="event.stopPropagation();dispatchWithMode('${escHTML(feature.slug)}','guided')" title="You run relay start locally. Agent assists interactively."><span class="dd-color" style="background:var(--amber)"></span> Guided</button>
+      </div>
     </div>` +
     feature.bugDigest.map((s) =>
       `<div class="bug-digest-section"><div class="bug-digest-heading">${escHTML(s.heading)}</div><div class="bug-digest-body">${escHTML(s.content).replace(/\n/g, "<br>")}</div></div>`
     ).join("") +
-    `<div class="bug-digest-actions"><button class="dismiss-btn" onclick="alert('Dismiss not yet implemented')">Dismiss</button></div>`
+    `<div class="bug-digest-actions"><button class="dismiss-btn" onclick="event.stopPropagation();showToast('Dismiss not yet implemented','warn')">Dismiss</button></div>`
     : "";
 
   const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
@@ -775,6 +778,8 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
     renderFeatureRow(f, prsByFeature, featureItems.length + i, linkContext, generated_at)
   ).join("\n");
 
+  const needsReviewCount = triageItems.filter(f => f.status === "needs-review").length;
+
   const triageRowsHTML = triageItems.map((f, i) =>
     renderFeatureRow(f, prsByFeature, featureItems.length + bugItems.length + i, linkContext, generated_at)
   ).join("\n");
@@ -892,12 +897,20 @@ body::before {
 .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
 .modal-btn { padding: 6px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
 .modal-btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
-.dispatch-modes { display: flex; gap: 8px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-.mode-btn { flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); text-align: center; }
-.mode-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-hover); }
-.mode-autonomous:hover { border-color: var(--green); color: var(--green); }
-.mode-supervised:hover { border-color: var(--accent); color: var(--accent); }
-.mode-guided:hover { border-color: var(--amber); color: var(--amber); }
+.dispatch-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
+.dispatch-trigger { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); }
+.dispatch-trigger:hover { background: rgba(129,140,248,0.2); }
+.dispatch-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 50; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.dispatch-dropdown.open { display: block; }
+.dispatch-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: none; background: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: var(--transition); font-family: var(--font-body); }
+.dispatch-dropdown button:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
+.toast-show { transform: translateY(0); opacity: 1; }
+.toast-info { background: rgba(129,140,248,0.9); backdrop-filter: blur(8px); }
+.toast-success { background: rgba(52,211,153,0.9); backdrop-filter: blur(8px); }
+.toast-warn { background: rgba(251,191,36,0.9); color: #1a1a2e; backdrop-filter: blur(8px); }
+.toast-error { background: rgba(248,113,113,0.9); backdrop-filter: blur(8px); }
 .dismiss-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; margin-left: 8px; }
 .dismiss-btn:hover { background: rgba(255,255,255,0.08); }
 
@@ -1257,7 +1270,7 @@ body::before {
   </div>
   <div class="nav-tabs" id="navTabs">
     <button class="nav-tab active" data-tab="features">Features</button>
-    ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts <span class="triage-badge">${triageItems.length}</span></button>` : ""}
+    ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts${needsReviewCount > 0 ? ` <span class="triage-badge">${needsReviewCount}</span>` : ""}</button>` : ""}
   </div>
   <div class="nav-right">
     <button class="settings-btn" onclick="document.getElementById('settingsModal').style.display='flex'" title="Settings">&#9881;</button>
@@ -1348,25 +1361,43 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
   });
 });
 
+// ── Close dropdowns on outside click ──
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.dispatch-wrap')) {
+    document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ── Toast notifications ──
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + (type || 'info');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('toast-show'));
+  setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 4000);
+}
+
 // ── Dispatch with Execution Mode ──
 function dispatchWithMode(slug, mode) {
   const pat = localStorage.getItem('gh_pat');
   if (!pat) {
     document.getElementById('settingsModal').style.display = 'flex';
-    alert('Please configure your GitHub PAT first.');
+    showToast('Configure your GitHub PAT first', 'warn');
     return;
   }
   const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised', guided: 'Guided'};
-  if (!confirm('Dispatch agent in ' + modeLabels[mode] + ' mode for "' + slug + '"?')) return;
+  document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
   const repo = 'ChristianJensen/tasks-control-plane';
+  showToast('Dispatching agent in ' + modeLabels[mode] + ' mode...', 'info');
   fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
     method: 'POST',
     headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
     body: JSON.stringify({ ref: 'main', inputs: { bug_slug: slug, execution_mode: mode } })
   }).then(r => {
-    if (r.ok || r.status === 204) alert('Agent dispatched in ' + modeLabels[mode] + ' mode. Check GitHub Actions for progress.');
-    else r.text().then(t => alert('Failed: ' + t));
-  }).catch(e => alert('Error: ' + e.message));
+    if (r.ok || r.status === 204) showToast('Agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
+    else r.text().then(t => showToast('Failed: ' + t, 'error'));
+  }).catch(e => showToast('Error: ' + e.message, 'error'));
 }
 
 // Load saved PAT into settings input
