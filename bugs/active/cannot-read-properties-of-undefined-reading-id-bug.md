@@ -1,7 +1,3 @@
-<!-- LIFECYCLE NOTE: Bug reports live in bugs/<phase>/ (draft, active, completed,
-     cancelled). The parent directory is authoritative for lifecycle phase.
-     The lifecycle field below is kept in sync for human readability.
-     When directory and frontmatter diverge, the directory wins. -->
 ---
 lifecycle: active
 type: bug
