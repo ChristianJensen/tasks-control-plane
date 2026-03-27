@@ -3,8 +3,8 @@ feature: cannot-read-properties-of-undefined-reading-id
 completed: 2026-03-27
 tasks: 1
 waves: 1
-total-cost-usd: 1.2012
-total-tokens: 24490
+total-cost-usd: 0.6575
+total-tokens: 8407
 ---
 
 ## Overview
@@ -24,30 +24,39 @@ total-tokens: 24490
 **Investigation steps (must be done by the implementing agent):**
 1. Read `taskWithCount` (lines 33-42) and the `GET /tasks` handler (lines 57-110)
 2. Determine WHY `undefined` elements appear in the `result` array. The array comes from `[...tasks.values()]` at line 71, then filtered by `category` and `search`, then sorted. Investigate whether:
-   - A task in the `tasks` Map is stored as `undefined` (check all `.set()` calls)
-   - A filter or map operation introduces `undefined` values
-   - The sort comparator has a subtle bug that corrupts the array
-   - A recent feature (e.g., multiassign's category filter) introduced the issue
-3. Also check if the `status` query parameter from the contract (comma-separated status filter) has a broken implementation that produces undefined rows — the contract defines it but the current code at line 59 does NOT destructure `status` from `req.query`
+   - A filter step uses `.map()` where `.filter()` is required (map returns `undefined` for non-matching elements)
+   - A sort comparator has a subtle bug that corrupts the array
+   - A recent feature (e.g., multiassign's category-filter logic) introduced the issue
+3. Also check if the `status` query parameter from the contract (comma-separated status filter) is not destructured from `req.query` at line 59 — the contract defines it but current code may silently ignore it or produce undefined rows
 
-**Fix strategy:**
-1. **Root cause fix (required):** Fix the code path that produces `undefined` elements — do NOT just suppress with `.filter(Boolean)`
-2. **Defensive guard (also required):** Add `.filter(Boolean)` before `.map(taskWithCount)` at line 109 as defense-in-depth, so `taskWithCount` never receives `undefined` even if a future bug reintroduces the issue
-3. **Harden `taskWithCount`:** Add an early return or guard at the top of `taskWithCount` for `undefined`/`null` input
+**Fix strategy (all four layers required):**
+1. **Root cause fix (required):** Identify the filter/sort step that introduces `undefined` into `result`. Replace any `.map()`-based filtering with `.filter()`, fix any sort comparator that corrupts array entries. Do NOT use `.filter(Boolean)` alone as a substitute.
+2. **Defensive guard (also required):** Add `.filter(Boolean)` before `.map(taskWithCount)` at line 109 as defense-in-depth:
+   ```js
+   res.json(result.filter(Boolean).map(taskWithCount));
+   ```
+3. **Harden `taskWithCount`:** Add early guard at the top of the function:
+   ```js
+   const taskWithCount = (task) => {
+     if (!task) return null;
+     // ... existing logic
+   };
+   ```
+4. **Fix the status filter:** Destructure `status` from `req.query` at line 59 and implement the comma-separated filter per contract spec (`?status=todo,in-progress` should filter by multiple statuses).
 
-**Test file:** `tests/tasks.test.js` (append to existing file). Use existing patterns: `supertest`, `app._resetStore()` in `beforeEach`.
+**Test file:** `tests/tasks.test.js` — append to existing file using existing patterns (`supertest`, `app._resetStore()` in `beforeEach`).
 
 ## Contracts Affected
 
-- contracts/tasks-api.json
+(No contracts referenced)
 
 ## Cost Summary
 
-**Total: $1.2012** (24,490 tokens, 489s)
+**Total: $0.6575** (8,407 tokens, 193s)
 
 | Wave | Task | Cost | Tokens |
 |------|------|------|--------|
-| W1 | wave-1-api-fix-taskwithcount-undefined-crash | $1.2012 | 24,490 |
+| W1 | wave-1-api-fix-taskwithcount-undefined-crash | $0.6575 | 8,407 |
 
 ## Retrospective Notes
 
