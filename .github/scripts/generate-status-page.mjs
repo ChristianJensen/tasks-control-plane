@@ -615,9 +615,17 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   const hasBugDigest = isBug && feature.bugDigest && feature.bugDigest.length > 0;
   const hasDetails = tasks.total > 0 || hasBugDigest;
 
-  const bugDigestHTML = hasBugDigest ? feature.bugDigest.map((s) =>
-    `<div class="bug-digest-section"><div class="bug-digest-heading">${escHTML(s.heading)}</div><div class="bug-digest-body">${escHTML(s.content).replace(/\n/g, "<br>")}</div></div>`
-  ).join("") + `<div class="bug-digest-actions"><button class="dispatch-btn" onclick="dispatchAgentFix('${escHTML(feature.slug)}')">&#129302; Dispatch Agent</button><button class="dismiss-btn" onclick="alert('Dismiss not yet implemented')">Dismiss</button></div>` : "";
+  const bugDigestHTML = hasBugDigest ?
+    `<div class="dispatch-modes">
+      <button class="mode-btn mode-autonomous" onclick="dispatchWithMode('${escHTML(feature.slug)}','autonomous')" title="Agent fixes the bug and auto-merges when CI passes. No human review needed.">&#129302; Autonomous</button>
+      <button class="mode-btn mode-supervised" onclick="dispatchWithMode('${escHTML(feature.slug)}','supervised')" title="Agent fixes the bug and opens a PR. You review and merge.">&#128065; Supervised</button>
+      <button class="mode-btn mode-guided" onclick="dispatchWithMode('${escHTML(feature.slug)}','guided')" title="You fix the bug locally using relay start. Agent assists interactively.">&#128100; Guided</button>
+    </div>` +
+    feature.bugDigest.map((s) =>
+      `<div class="bug-digest-section"><div class="bug-digest-heading">${escHTML(s.heading)}</div><div class="bug-digest-body">${escHTML(s.content).replace(/\n/g, "<br>")}</div></div>`
+    ).join("") +
+    `<div class="bug-digest-actions"><button class="dismiss-btn" onclick="alert('Dismiss not yet implemented')">Dismiss</button></div>`
+    : "";
 
   const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
 
@@ -884,8 +892,12 @@ body::before {
 .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
 .modal-btn { padding: 6px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
 .modal-btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
-.dispatch-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; }
-.dispatch-btn:hover { background: rgba(129,140,248,0.2); }
+.dispatch-modes { display: flex; gap: 8px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.mode-btn { flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); text-align: center; }
+.mode-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-hover); }
+.mode-autonomous:hover { border-color: var(--green); color: var(--green); }
+.mode-supervised:hover { border-color: var(--accent); color: var(--accent); }
+.mode-guided:hover { border-color: var(--amber); color: var(--amber); }
 .dismiss-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; margin-left: 8px; }
 .dismiss-btn:hover { background: rgba(255,255,255,0.08); }
 
@@ -1336,22 +1348,23 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
   });
 });
 
-// ── Dispatch Agent Fix ──
-function dispatchAgentFix(slug) {
+// ── Dispatch with Execution Mode ──
+function dispatchWithMode(slug, mode) {
   const pat = localStorage.getItem('gh_pat');
   if (!pat) {
     document.getElementById('settingsModal').style.display = 'flex';
     alert('Please configure your GitHub PAT first.');
     return;
   }
-  if (!confirm('Dispatch an agent to fix "' + slug + '"?')) return;
-  const repo = document.querySelector('meta[name="relay-nwo"]')?.content || 'ChristianJensen/tasks-control-plane';
-  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/dispatch-agent-fix.yml/dispatches', {
+  const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised', guided: 'Guided'};
+  if (!confirm('Dispatch agent in ' + modeLabels[mode] + ' mode for "' + slug + '"?')) return;
+  const repo = 'ChristianJensen/tasks-control-plane';
+  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
     method: 'POST',
     headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({ ref: 'main', inputs: { bug_slug: slug } })
+    body: JSON.stringify({ ref: 'main', inputs: { bug_slug: slug, execution_mode: mode } })
   }).then(r => {
-    if (r.ok || r.status === 204) alert('Agent dispatched for ' + slug + '. Check GitHub Actions for progress.');
+    if (r.ok || r.status === 204) alert('Agent dispatched in ' + modeLabels[mode] + ' mode. Check GitHub Actions for progress.');
     else r.text().then(t => alert('Failed: ' + t));
   }).catch(e => alert('Error: ' + e.message));
 }

@@ -1,0 +1,48 @@
+name: Set Execution Mode
+
+on:
+  workflow_dispatch:
+    inputs:
+      bug_slug:
+        description: 'Bug slug (e.g., cannot-read-properties-of-undefined-reading-id)'
+        required: true
+      execution_mode:
+        description: 'Execution mode: autonomous, supervised, or guided'
+        required: true
+        type: choice
+        options:
+          - autonomous
+          - supervised
+          - guided
+
+jobs:
+  update-and-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DISPATCH_PAT }}
+
+      - name: Update execution mode on queue tasks
+        run: |
+          SLUG="${{ inputs.bug_slug }}"
+          MODE="${{ inputs.execution_mode }}"
+          echo "Setting execution mode to '$MODE' for bug '$SLUG'"
+
+          # Find all queue task files for this bug
+          for task_file in queue/"$SLUG"/*/wave-*.md; do
+            [ -f "$task_file" ] || continue
+            echo "  Updating: $task_file"
+            # Replace execution field in frontmatter
+            sed -i "s/^execution:.*/execution: $MODE/" "$task_file"
+          done
+
+      - name: Commit and push
+        run: |
+          git config user.name "relay-bot[bot]"
+          git config user.email "relay-bot[bot]@users.noreply.github.com"
+          git add queue/
+          git diff --cached --stat
+          git commit -m "fix: set execution mode to ${{ inputs.execution_mode }} for ${{ inputs.bug_slug }}" || echo "Nothing to commit"
+          git push
