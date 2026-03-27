@@ -11,6 +11,12 @@ contracts:
 claimed-by: agent-Christians-MacBook-Air-54381
 claimed-at: 2026-03-27T15:54:32Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.2012110999999996
+input-tokens: 37
+output-tokens: 24453
+duration-ms: 489081
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-api/pull/27
+pr-number: 27
 ---
 
 ## Description
