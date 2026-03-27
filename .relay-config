@@ -3,7 +3,7 @@ relay-repo: ChristianJensen/Relay
 relay-path: /Users/christianjensen/src/agentic-sdlc-demo/relay
 github-org: ChristianJensen
 execution-mode: local
-status-page-title: Task Tracker - Delivery Report
+status-page-title: Task Tracker - Command Center
 status-page-logo: R
 repos:
   api: ChristianJensen/agentic-sdlc-api

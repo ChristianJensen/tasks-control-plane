@@ -170,6 +170,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       epicTitle: (typeof fields["epic-title"] === "string" && fields["epic-title"]) ? fields["epic-title"] : "",
       title: extractTitle(body, slug), problem: extractProblemStatement(body),
       severity: isBug ? fields.severity || "" : undefined,
+      reportedBy: isBug ? fields["reported-by"] || "" : undefined,
       createdAt: fields["created-at"] || "",
       completedAt: fields["completed-at"] || "",
       sha: f.sha || null,
@@ -242,7 +243,12 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       })),
     };
 
-    if (spec.type === "bug") { feature.severity = spec.severity; summary.bugs++; }
+    if (spec.type === "bug") {
+      feature.severity = spec.severity;
+      feature.reportedBy = spec.reportedBy;
+      if (spec.reportedBy === "telemetry" && feature.status === "orphaned") feature.status = "needs-review";
+      summary.bugs++;
+    }
     else if (status === "shipped") summary.shipped++;
     else if (status === "blocked") summary.blocked++;
     else if (status === "in-progress") summary.in_progress++;
@@ -432,11 +438,11 @@ function formatDate(isoStr) {
 }
 
 function statusLabel(status) {
-  return { shipped: "Shipped", "in-progress": "In Progress", "not-started": "Not Started", blocked: "Blocked", orphaned: "Orphaned" }[status] || status;
+  return { shipped: "Shipped", "in-progress": "In Progress", "not-started": "Not Started", blocked: "Blocked", orphaned: "Orphaned", "needs-review": "Needs Review" }[status] || status;
 }
 
 function statusColor(status) {
-  return { shipped: "#10b981", "in-progress": "#3b82f6", "not-started": "#f59e0b", blocked: "#ef4444", orphaned: "#6b7280" }[status] || "#6b7280";
+  return { shipped: "#10b981", "in-progress": "#3b82f6", "not-started": "#f59e0b", blocked: "#ef4444", orphaned: "#6b7280", "needs-review": "#f59e0b" }[status] || "#6b7280";
 }
 
 function progressRingSVG(pct, color, size = 48) {
@@ -661,7 +667,8 @@ function renderExecSummary(execCounts) {
 function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding = {}) {
   const { summary, execCounts, activeWorkers, features, generated_at } = boardState;
   const featureItems = features.filter((f) => f.type !== "bug" && f.status !== "orphaned");
-  const bugItems = features.filter((f) => f.type === "bug" && f.status !== "orphaned");
+  const triageItems = features.filter((f) => f.type === "bug" && f.reportedBy === "telemetry");
+  const bugItems = features.filter((f) => f.type === "bug" && f.status !== "orphaned" && f.reportedBy !== "telemetry");
   const totalTasks = features.reduce((s, f) => s + (f.tasks?.total || 0), 0);
   const doneTasks = features.reduce((s, f) => s + (f.tasks?.done || 0), 0);
   const overallPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
@@ -719,6 +726,10 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
 
   const bugRowsHTML = bugItems.map((f, i) =>
     renderFeatureRow(f, prsByFeature, featureItems.length + i, linkContext, generated_at)
+  ).join("\n");
+
+  const triageRowsHTML = triageItems.map((f, i) =>
+    renderFeatureRow(f, prsByFeature, featureItems.length + bugItems.length + i, linkContext, generated_at)
   ).join("\n");
 
   return `<!DOCTYPE html>
@@ -799,7 +810,7 @@ body::before {
   height: 56px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .nav-logo {
   width: 28px; height: 28px; border-radius: 10px;
   background: linear-gradient(135deg, var(--green), var(--blue), #ec4899);
@@ -808,8 +819,16 @@ body::before {
   box-shadow: 0 0 20px rgba(129,140,248,0.3);
 }
 .nav-title { font-weight: 700; font-size: 15px; }
+.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
+.nav-tab { background: none; border: none; color: var(--text-secondary); font-family: var(--font-body); font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: 8px; transition: var(--transition); }
+.nav-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.nav-tab.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+.triage-badge { display: inline-block; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
 .nav-right { display: flex; align-items: center; gap: 16px; }
 .nav-time { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
+.triage-hdr span:first-child { color: var(--red); }
+.triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
+.empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
 
 /* ── Layout ── */
 .layout { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -909,6 +928,7 @@ body::before {
 .lozenge-not-started { background: rgba(251,191,36,0.1); color: var(--amber); }
 .lozenge-blocked { background: rgba(248,113,113,0.12); color: var(--red); box-shadow: 0 0 12px rgba(248,113,113,0.1); }
 .lozenge-orphaned { background: rgba(107,114,128,0.12); color: var(--text-muted); }
+.lozenge-needs-review { background: rgba(245,158,11,0.15); color: var(--amber); }
 .lozenge-sev-critical { background: rgba(248,113,113,0.12); color: var(--red); }
 .lozenge-sev-high { background: rgba(251,146,60,0.12); color: var(--orange); }
 .lozenge-sev-medium { background: rgba(251,191,36,0.1); color: var(--amber); }
@@ -1164,14 +1184,16 @@ body::before {
     <div class="nav-logo">${escHTML(branding.logo || "R")}</div>
     <span class="nav-title">${escHTML(title)}</span>
   </div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-tab="features">Features</button>
+    ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts <span class="triage-badge">${triageItems.length}</span></button>` : ""}
+  </div>
   <div class="nav-right">
     <span class="nav-time">${new Date(generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
   </div>
 </nav>
 
-<div class="layout">
-
-
+<div class="layout tab-content" id="featuresTab">
 
   ${renderActiveWorkers(activeWorkers)}
 
@@ -1209,7 +1231,18 @@ body::before {
   <div id="bugList">
     ${bugRowsHTML}
   </div>
+</div>
 
+<div class="layout tab-content" id="triageTab" style="display:none">
+  <div class="section-hdr triage-hdr"><span>&#128680; Production Alerts</span><span class="section-count">${triageItems.length}</span></div>
+  <p class="triage-desc">Issues auto-detected from production telemetry. Review the diagnosis, then decide: plan a fix, dispatch an agent, or dismiss.</p>
+  <div id="triageList">
+    ${triageRowsHTML}
+  </div>
+  ${triageItems.length === 0 ? `<div class="empty-triage">No production alerts pending. All clear.</div>` : ""}
+</div>
+
+<div class="layout">
   ${renderOrphaned(features)}
 
   ${branding.footer ? `<div class="page-footer">${escHTML(branding.footer)}</div>` : ""}
@@ -1218,6 +1251,18 @@ body::before {
 <svg width="0" height="0"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="var(--green)"/><stop offset="100%" stop-color="var(--blue)"/></linearGradient></defs></svg>
 
 <script>
+// ── Tab Navigation ──
+document.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.getElementById('featuresTab').style.display = tab === 'features' ? '' : 'none';
+    const triageTab = document.getElementById('triageTab');
+    if (triageTab) triageTab.style.display = tab === 'triage' ? '' : 'none';
+  });
+});
+
 // ── Combined Filters (status + execution, intersection logic) ──
 const rows = document.querySelectorAll('.feature-row');
 const statusBtns = document.querySelectorAll('#statusFilters .filter-btn');
@@ -1325,7 +1370,7 @@ document.querySelectorAll('.workers-header').forEach(h => {
 
 function renderOrphaned(features) {
   const orphanedFeatures = features.filter((f) => f.status === "orphaned" && f.type !== "bug");
-  const orphanedBugs = features.filter((f) => f.status === "orphaned" && f.type === "bug");
+  const orphanedBugs = features.filter((f) => f.status === "orphaned" && f.type === "bug" && f.reportedBy !== "telemetry");
   let html = "";
   if (orphanedFeatures.length > 0) {
     html += `<div class="orphaned-section"><div class="section-hdr"><span>Orphaned Features</span><span class="section-count">${orphanedFeatures.length}</span></div>
