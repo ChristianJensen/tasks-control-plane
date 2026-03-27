@@ -1,5 +1,5 @@
 ---
-status: ready
+status: in-progress
 execution: supervised
 target-repo: api
 wave: 1
@@ -8,6 +8,9 @@ feature: cannot-read-properties-of-undefined-reading-id
 type: feature
 contracts:
   - contracts/tasks-api.json
+claimed-by: agent-Christians-MacBook-Air-54381
+claimed-at: 2026-03-27T15:54:32Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
