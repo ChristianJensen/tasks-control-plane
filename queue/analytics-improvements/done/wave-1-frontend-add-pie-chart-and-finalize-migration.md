@@ -1,6 +1,6 @@
 ---
 task-id: add-pie-chart-and-finalize-migration
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
