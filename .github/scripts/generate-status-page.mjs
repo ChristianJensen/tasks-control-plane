@@ -288,15 +288,21 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
   for (const slug of Object.keys(tasksByFeature)) {
     for (const t of tasksByFeature[slug]) {
       if (t.status === "in-progress" && t.claimed_by) {
-        if (!workerMap[t.claimed_by]) workerMap[t.claimed_by] = { tasks: 0, features: new Set() };
+        if (!workerMap[t.claimed_by]) workerMap[t.claimed_by] = { tasks: 0, features: new Set(), taskDetails: [] };
         workerMap[t.claimed_by].tasks++;
         workerMap[t.claimed_by].features.add(t.feature);
+        workerMap[t.claimed_by].taskDetails.push({
+          title: t.title || t.filename.replace(".md", ""),
+          feature: t.feature,
+          claimed_at: t.claimed_at || "",
+          repo: t.repo || "",
+        });
       }
     }
   }
   const activeWorkers = Object.entries(workerMap)
     .sort((a, b) => b[1].tasks - a[1].tasks)
-    .map(([name, info]) => ({ name, tasks: info.tasks, features: [...info.features] }));
+    .map(([name, info]) => ({ name, tasks: info.tasks, features: [...info.features], taskDetails: info.taskDetails }));
 
   const statusOrder = { blocked: 0, "in-progress": 1, "not-started": 2, orphaned: 3, shipped: 4 };
   features.sort((a, b) => (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5));
@@ -530,18 +536,18 @@ function isStaleTask(t, generatedAt) {
   } catch { return false; }
 }
 
+function ddToggle(cls) {
+  return `onclick="event.stopPropagation();this.parentElement.querySelectorAll('.${cls}').forEach(b=>b.classList.remove('active'));this.classList.add('active')"`;
+}
 function renderDispatchDropdown(slug) {
-  const modeBtn = (mode, label, color, title) =>
-    `<button class="dd-mode-btn" data-mode="${mode}" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown'),t=dd.querySelector('.dd-target-btn.active').dataset.target,n=+(dd.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}','${mode}',t,n)" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
   return `<div class="dispatch-wrap">
     <button class="dispatch-trigger" onclick="event.stopPropagation();openDispatchDropdown(this)">Dispatch Agent &#9662;</button>
     <div class="dispatch-dropdown">
-      <div class="dd-row"><span class="dd-group-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown');dd.querySelectorAll('.dd-target-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');dd.querySelector('[data-mode=guided]').style.display='none'" title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown');dd.querySelectorAll('.dd-target-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');dd.querySelector('[data-mode=guided]').style.display=''" title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
-      <div class="dd-row"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">1</button><button class="dd-par-btn" data-n="2" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">2</button><button class="dd-par-btn" data-n="3" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">3</button><button class="dd-par-btn" data-n="4" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">4</button></div></div>
+      <div class="dd-row"><span class="dd-group-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" ${ddToggle("dd-target-btn")} title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" ${ddToggle("dd-target-btn")} title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
+      <div class="dd-row"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" ${ddToggle("dd-par-btn")}>1</button><button class="dd-par-btn" data-n="2" ${ddToggle("dd-par-btn")}>2</button><button class="dd-par-btn" data-n="3" ${ddToggle("dd-par-btn")}>3</button><button class="dd-par-btn" data-n="4" ${ddToggle("dd-par-btn")}>4</button></div></div>
+      <div class="dd-row"><span class="dd-group-label">Mode</span><div class="dd-toggle"><button class="dd-mode-btn active" data-mode="supervised" ${ddToggle("dd-mode-btn")} title="Agent opens a PR. You review before merge."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button><button class="dd-mode-btn" data-mode="autonomous" ${ddToggle("dd-mode-btn")} title="Agent auto-merges. No human review."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button></div></div>
       <div class="dd-divider"></div>
-      ${modeBtn("autonomous", "Autonomous", "green", "Agent auto-merges. No human review.")}
-      ${modeBtn("supervised", "Supervised", "accent", "Agent opens a PR. You review before merge.")}
-      <button class="dd-mode-btn" data-mode="guided" style="display:none" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown'),t=dd.querySelector('.dd-target-btn.active').dataset.target,n=+(dd.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}','guided',t,n)" title="You run locally. Agent assists interactively."><span class="dd-color" style="background:var(--amber)"></span> Guided</button>
+      <div class="dd-row dd-go-row"><button class="dd-go-btn" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown'),t=dd.querySelector('.dd-target-btn.active').dataset.target,m=dd.querySelector('.dd-mode-btn.active').dataset.mode,n=+(dd.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}',m,t,n)">&#9654; Dispatch</button></div>
     </div>
   </div>`;
 }
@@ -688,24 +694,51 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   </div>`;
 }
 
-function renderActiveWorkers(workers) {
-  if (workers.length === 0) return "";
-  const rows = workers.map((w) => {
-    const isBot = w.name.startsWith("agent-") || w.name.startsWith("cloud-");
-    const icon = isBot ? "&#129302;" : "&#128100;";
-    return `<div class="worker-row">
-      <span class="worker-icon">${icon}</span>
-      <span class="worker-name">${escHTML(w.name)}</span>
-      <span class="worker-tasks mono">${w.tasks} task${w.tasks > 1 ? "s" : ""}</span>
-      <span class="worker-features">${w.features.map((f) => escHTML(f)).join(", ")}</span>
+function formatDuration(claimedAt, generatedAt) {
+  if (!claimedAt) return "";
+  const diffMs = new Date(generatedAt) - new Date(claimedAt);
+  if (diffMs < 0) return "";
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ${mins % 60}m`;
+}
+
+function renderAgentsPanel(workers, generatedAt) {
+  const cloudIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>';
+  const localIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+
+  const cards = workers.map((w) => {
+    const isCloud = w.name.startsWith("cloud-");
+    const icon = isCloud ? cloudIcon : localIcon;
+    const typeLabel = isCloud ? "Cloud" : "Local";
+    const taskRows = (w.taskDetails || []).map((td) =>
+      `<div class="ap-task-row">
+        <span class="ap-task-name">${escHTML(td.title)}</span>
+        <span class="ap-task-feature">${escHTML(td.feature)}</span>
+        <span class="ap-task-duration mono">${formatDuration(td.claimed_at, generatedAt)}</span>
+      </div>`
+    ).join("");
+    return `<div class="ap-card">
+      <div class="ap-card-header">
+        <span class="ap-type-icon" title="${typeLabel}">${icon}</span>
+        <span class="ap-agent-name">${escHTML(w.name)}</span>
+        <span class="ap-task-count mono">${w.tasks} task${w.tasks !== 1 ? "s" : ""}</span>
+      </div>
+      ${taskRows}
     </div>`;
   }).join("");
-  return `<div class="workers-section">
-    <div class="workers-header" onclick="this.parentElement.classList.toggle('workers-expanded')">
-      <div class="detail-label">Active Workers <span class="section-count">${workers.length}</span></div>
-      <span class="chevron">&#9662;</span>
+
+  const empty = workers.length === 0
+    ? `<div class="ap-empty">No agents currently running.</div>`
+    : "";
+
+  return `<div class="agents-panel" id="agentsPanel">
+    <div class="ap-header">
+      <span class="ap-title">Active Agents</span>
+      <button class="ap-close" onclick="toggleAgentsPanel()">&times;</button>
     </div>
-    <div class="workers-body">${rows}</div>
+    <div class="ap-body">${cards}${empty}</div>
   </div>`;
 }
 
@@ -893,6 +926,25 @@ body::before {
 .nav-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
 .nav-tab.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
 .triage-badge { display: inline-block; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
+.agents-badge { display: inline-block; background: var(--green); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
+.agents-panel { position: fixed; top: 0; right: 0; width: 360px; height: 100vh; background: var(--bg); border-left: 1px solid var(--border); z-index: 150; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: -8px 0 24px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+.agents-panel.open { transform: translateX(0); }
+.ap-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.ap-title { font-weight: 700; font-size: 15px; color: var(--text-primary); }
+.ap-close { background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: var(--transition); line-height: 1; }
+.ap-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.ap-body { flex: 1; overflow-y: auto; padding: 12px 0; }
+.ap-card { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.ap-card:last-child { border-bottom: none; }
+.ap-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ap-type-icon { color: var(--text-muted); display: flex; align-items: center; flex-shrink: 0; }
+.ap-agent-name { font-weight: 600; font-size: 13px; color: var(--text-primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap-task-count { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+.ap-task-row { display: flex; align-items: center; gap: 8px; padding: 4px 0 4px 22px; font-size: 12px; }
+.ap-task-name { color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap-task-feature { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+.ap-task-duration { color: var(--accent); font-size: 11px; flex-shrink: 0; }
+.ap-empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
 .nav-right { display: flex; align-items: center; gap: 16px; }
 .nav-time { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
 .triage-hdr span:first-child { color: var(--red); }
@@ -920,8 +972,6 @@ body::before {
 .dispatch-trigger:hover { background: rgba(129,140,248,0.2); }
 .dispatch-dropdown { display: none; position: fixed; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 200; overflow: visible; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .dispatch-dropdown.open { display: block; }
-.dispatch-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: none; background: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: var(--transition); font-family: var(--font-body); }
-.dispatch-dropdown button:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
 .dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
 .dd-group-label { padding: 8px 14px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 .dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
@@ -936,6 +986,13 @@ body::before {
 .dd-par-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
 .dd-par-btn:hover { border-color: var(--accent); color: var(--text-primary); }
 .dd-par-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd-mode-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
+.dd-mode-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.dd-mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd-mode-btn .dd-color { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+.dd-go-row { justify-content: flex-end; padding-top: 4px; padding-bottom: 8px; }
+.dd-go-btn { padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: var(--font-body); letter-spacing: 0.02em; }
+.dd-go-btn:hover { background: #6366f1; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
 .toast-show { transform: translateY(0); opacity: 1; }
 .toast-info { background: rgba(129,140,248,0.9); backdrop-filter: blur(8px); }
@@ -1226,30 +1283,6 @@ body::before {
 .exec-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
 /* ── Active Workers ── */
-.workers-section {
-  background: var(--bg-card); backdrop-filter: blur(24px);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  margin-bottom: 24px; overflow: hidden;
-  animation: fadeUp 0.6s ease-out 0.35s both;
-}
-.workers-header {
-  padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; user-select: none;
-}
-.workers-header:hover { background: var(--bg-card-hover); }
-.workers-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
-.workers-section.workers-expanded .workers-body { max-height: 400px; padding: 0 20px 14px; }
-.workers-section.workers-expanded .chevron { transform: rotate(180deg); }
-.worker-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 0; font-size: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.worker-row:last-child { border-bottom: none; }
-.worker-name { font-weight: 600; color: var(--text-primary); min-width: 120px; }
-.worker-tasks { color: var(--text-secondary); min-width: 60px; }
-.worker-features { color: var(--text-muted); font-size: 11px; }
-
 /* ── Filter Label ── */
 .filter-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 7px 4px; }
 
@@ -1444,6 +1477,7 @@ body::before {
   <div class="nav-tabs" id="navTabs">
     <button class="nav-tab active" data-tab="features">Features</button>
     ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts${needsReviewCount > 0 ? ` <span class="triage-badge">${needsReviewCount}</span>` : ""}</button>` : ""}
+    <button class="nav-tab" onclick="event.stopPropagation();toggleAgentsPanel()">Agents${activeWorkers.length > 0 ? ` <span class="agents-badge">${activeWorkers.reduce((s, w) => s + w.tasks, 0)}</span>` : ""}</button>
   </div>
   <div class="nav-right">
     <button class="new-feature-btn" id="newFeatureBtn">+ New Feature</button>
@@ -1452,6 +1486,8 @@ body::before {
     <span class="nav-time">${new Date(generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
   </div>
 </nav>
+
+${renderAgentsPanel(activeWorkers, generated_at)}
 
 <div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box">
@@ -1498,7 +1534,6 @@ body::before {
 
 <div class="layout tab-content" id="featuresTab">
 
-  ${renderActiveWorkers(activeWorkers)}
 
   <div class="toolbar">
     <div class="search-wrap">
@@ -1584,6 +1619,12 @@ function showToast(msg, type) {
 }
 
 // ── Dispatch Dropdown Positioning ──
+// ── Agents Panel ──
+function toggleAgentsPanel() {
+  var panel = document.getElementById('agentsPanel');
+  if (panel) panel.classList.toggle('open');
+}
+
 function openDispatchDropdown(btn) {
   var dd = btn.nextElementSibling;
   // Close if already open
@@ -1747,9 +1788,6 @@ const epicParam = new URLSearchParams(window.location.search).get('epic');
 if (epicParam) setEpicFilter(epicParam);
 
 // ── Workers Toggle ──
-document.querySelectorAll('.workers-header').forEach(h => {
-  h.addEventListener('click', () => h.parentElement.classList.toggle('workers-expanded'));
-});
 
 // ── New Feature Modal ──
 document.getElementById('newFeatureBtn').addEventListener('click', function() {
