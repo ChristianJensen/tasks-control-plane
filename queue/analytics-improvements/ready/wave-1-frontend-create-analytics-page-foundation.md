@@ -1,14 +1,11 @@
 ---
-status: in-progress
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: analytics-improvements
 type: feature
-claimed-by: agent-Christians-MacBook-Air-24366
-claimed-at: 2026-03-28T03:21:08Z
-claimed-on: Christians-MacBook-Air
 cost-usd: 0.43301115
 input-tokens: 21
 output-tokens: 4052
