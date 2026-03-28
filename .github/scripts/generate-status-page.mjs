@@ -761,8 +761,33 @@ function renderExecSummary(execCounts) {
   </div>`;
 }
 
+function loadAgentDefs() {
+  const scriptDir = dirname(new URL(import.meta.url).pathname);
+  const agentsDir = join(scriptDir, "..", "agents");
+  const defs = [];
+  if (!existsSync(agentsDir)) return defs;
+  for (const fname of readdirSync(agentsDir).sort()) {
+    if (!fname.endsWith(".md")) continue;
+    const type = fname.slice(0, -3);
+    const content = readFileSync(join(agentsDir, fname), "utf8");
+    const fm = {};
+    if (content.startsWith("---")) {
+      const parts = content.split("---", 3);
+      if (parts.length >= 3) {
+        for (const line of parts[1].trim().split("\n")) {
+          const idx = line.indexOf(":");
+          if (idx > 0) fm[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+        }
+      }
+    }
+    defs.push({ type, name: fm.name || type, description: fm.description || "" });
+  }
+  return defs;
+}
+
 function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding = {}) {
   const { summary, execCounts, activeWorkers, features, generated_at } = boardState;
+  const agentDefs = loadAgentDefs();
   const featureItems = features.filter((f) => f.type !== "bug" && f.status !== "orphaned");
   const triageItems = features.filter((f) => f.type === "bug" && f.reportedBy === "telemetry");
   const bugItems = features.filter((f) => f.type === "bug" && f.status !== "orphaned" && f.reportedBy !== "telemetry");
@@ -1283,6 +1308,18 @@ body::before {
 /* ── Theme Toggle (hidden — single theme) ── */
 .theme-toggle { display: none; }
 
+/* ── Agent Buttons ── */
+.agent-btn {
+  padding: 6px 16px; border-radius: 8px; border: 1px solid rgba(52,211,153,0.3);
+  background: rgba(52,211,153,0.1); color: #34d399;
+  font-size: 13px; font-weight: 600; font-family: var(--font-body);
+  cursor: pointer; transition: all var(--transition);
+}
+.agent-btn:hover {
+  background: rgba(52,211,153,0.2); border-color: rgba(52,211,153,0.5);
+  transform: translateY(-1px);
+}
+
 /* ── New Feature Button + Modal ── */
 .new-feature-btn {
   padding: 6px 16px; border-radius: 8px; border: none;
@@ -1423,6 +1460,7 @@ body::before {
   .nav-tabs.mobile-open { display: flex; }
   .nav-tab { padding: 10px 16px; font-size: 14px; text-align: left; }
   .nav-title { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agent-btn { padding: 6px 10px; font-size: 11px; }
   .new-feature-btn { padding: 6px 10px; font-size: 11px; }
   .filters { gap: 4px; }
   .filter-btn { padding: 8px 12px; font-size: 11px; min-height: 36px; }
@@ -1474,6 +1512,7 @@ body::before {
     <button class="nav-tab nav-tab-agents" onclick="event.stopPropagation();toggleAgentsPanel()">Agents${activeWorkers.length > 0 ? ` <span class="agents-badge">${activeWorkers.reduce((s, w) => s + w.tasks, 0)}</span>` : ""}</button>
   </div>
   <div class="nav-right">
+    ${agentDefs.map(a => `<button class="agent-btn" onclick="window.open('/agent/${a.type}','_blank')" title="${escHTML(a.description)}">${escHTML(a.name)}</button>`).join("\n    ")}
     <button class="new-feature-btn" id="newFeatureBtn">+ New Feature</button>
     <button class="settings-btn" onclick="document.getElementById('settingsModal').style.display='flex'" title="Settings">&#9881;</button>
     <button class="hamburger-btn" aria-label="Menu" onclick="document.getElementById('navTabs').classList.toggle('mobile-open')">&#9776;</button>
