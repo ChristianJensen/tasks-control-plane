@@ -534,7 +534,7 @@ function renderDispatchDropdown(slug) {
   const modeBtn = (mode, label, color, title) =>
     `<button class="dd-mode-btn" data-mode="${mode}" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown'),t=dd.querySelector('.dd-target-btn.active').dataset.target,n=+(dd.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}','${mode}',t,n)" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
   return `<div class="dispatch-wrap">
-    <button class="dispatch-trigger" onclick="event.stopPropagation();var dd=this.nextElementSibling;if(dd.classList.contains('open')){dd.classList.remove('open');return;}var r=this.getBoundingClientRect();dd.style.left=r.left+'px';dd.style.top='auto';dd.style.bottom='auto';dd.classList.add('open');var dh=dd.offsetHeight;if(r.bottom+dh+8>window.innerHeight){dd.style.bottom=(window.innerHeight-r.top+4)+'px';dd.style.top='auto'}else{dd.style.top=(r.bottom+4)+'px';dd.style.bottom='auto'}">Dispatch Agent &#9662;</button>
+    <button class="dispatch-trigger" onclick="event.stopPropagation();openDispatchDropdown(this)">Dispatch Agent &#9662;</button>
     <div class="dispatch-dropdown">
       <div class="dd-row"><span class="dd-group-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown');dd.querySelectorAll('.dd-target-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');dd.querySelector('[data-mode=guided]').style.display='none'" title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown');dd.querySelectorAll('.dd-target-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');dd.querySelector('[data-mode=guided]').style.display=''" title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
       <div class="dd-row"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">1</button><button class="dd-par-btn" data-n="2" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">2</button><button class="dd-par-btn" data-n="3" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">3</button><button class="dd-par-btn" data-n="4" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">4</button></div></div>
@@ -918,7 +918,7 @@ body::before {
 .dispatch-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
 .dispatch-trigger { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); }
 .dispatch-trigger:hover { background: rgba(129,140,248,0.2); }
-.dispatch-dropdown { display: none; position: fixed; margin-top: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 200; overflow: visible; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.dispatch-dropdown { display: none; position: fixed; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 200; overflow: visible; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .dispatch-dropdown.open { display: block; }
 .dispatch-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: none; background: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: var(--transition); font-family: var(--font-body); }
 .dispatch-dropdown button:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
@@ -1568,7 +1568,7 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
 
 // ── Close dropdowns on outside click ──
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.dispatch-wrap')) {
+  if (!e.target.closest('.dispatch-wrap') && !e.target.closest('.dispatch-dropdown')) {
     document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
   }
 });
@@ -1581,6 +1581,31 @@ function showToast(msg, type) {
   document.body.appendChild(t);
   requestAnimationFrame(() => t.classList.add('toast-show'));
   setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 4000);
+}
+
+// ── Dispatch Dropdown Positioning ──
+function openDispatchDropdown(btn) {
+  var dd = btn.nextElementSibling;
+  // Close if already open
+  if (dd.classList.contains('open')) { dd.classList.remove('open'); return; }
+  // Close any other open dropdowns
+  document.querySelectorAll('.dispatch-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+  // Move dropdown to body so it escapes all overflow:hidden ancestors
+  if (dd.parentElement !== document.body) {
+    document.body.appendChild(dd);
+    btn._dd = dd;
+  }
+  // Position relative to button
+  var r = btn.getBoundingClientRect();
+  dd.classList.add('open');
+  var dh = dd.offsetHeight;
+  dd.style.left = r.left + 'px';
+  // Open upward if not enough space below
+  if (r.bottom + dh + 8 > window.innerHeight) {
+    dd.style.top = Math.max(8, r.top - dh - 4) + 'px';
+  } else {
+    dd.style.top = (r.bottom + 4) + 'px';
+  }
 }
 
 // ── Dispatch Agent (cloud or local) ──
