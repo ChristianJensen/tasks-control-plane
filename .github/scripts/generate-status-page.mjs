@@ -221,7 +221,9 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     const isArchived = tasks.length > 0 && tasks.every((t) =>
       archivedTaskFiles.some((f) => f.path.includes(`/_done/${slug}/`))
     );
-    const status = tasks.length > 0 ? deriveFeatureStatus(tasks, isArchived) : "orphaned";
+    const status = tasks.length > 0
+      ? deriveFeatureStatus(tasks, isArchived)
+      : (spec.lifecycle === "draft" ? "not-started" : "orphaned");
 
     const cost = {
       usd: tasks.reduce((s, t) => s + (t.cost_usd || 0), 0),
