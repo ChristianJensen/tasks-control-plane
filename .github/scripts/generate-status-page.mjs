@@ -615,7 +615,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   }).join("");
 
   const hasBugDigest = isBug && feature.bugDigest && feature.bugDigest.length > 0;
-  const hasDetails = tasks.total > 0 || hasBugDigest;
+  const hasDetails = tasks.total > 0 || hasBugDigest || feature.problem;
 
   const bugDigestHTML = hasBugDigest ?
     `<div class="dispatch-wrap">
@@ -646,7 +646,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
         ${lifecycleBadge}
         ${tasks.total > 0 ? `<span class="task-count mono">${tasks.done}/${tasks.total}</span>` : ""}
         ${feature.createdAt || feature.completedAt ? `<span class="feature-dates mono">${feature.createdAt ? formatDate(feature.createdAt) : ""}${feature.createdAt && feature.completedAt ? ` &rarr; ` : ""}${feature.completedAt ? formatDate(feature.completedAt) : ""}</span>` : ""}
-        ${feature.lifecycle === "draft" && tasks.total === 0 ? `<button class="plan-btn" onclick="event.stopPropagation();nfPlanFeature('${escHTML(feature.slug)}')" title="Plan this feature">Plan</button>` : ""}
+        ${feature.lifecycle === "draft" && tasks.total === 0 ? `<button class="plan-btn plan-btn-check" disabled onclick="event.stopPropagation();nfPlanFeature('${escHTML(feature.slug)}')" title="Start relay serve to enable">Plan</button>` : ""}
         <span class="lozenge lozenge-${feature.status}">${statusLabel(feature.status)}</span>
         ${hasDetails ? `<span class="chevron">&#9662;</span>` : ""}
       </div>
@@ -763,7 +763,7 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
       const jiraIcon = jiraUrl
         ? ` <a href="${escHTML(jiraUrl)}" target="_blank" rel="noopener" class="epic-group-jira" title="Open in Jira">&#8599;</a>`
         : "";
-      featureRowsHTML += `<div class="epic-group epic-expanded" data-epic-group="${escHTML(group.epicKey)}">`;
+      featureRowsHTML += `<div class="epic-group" data-epic-group="${escHTML(group.epicKey)}">`;
       featureRowsHTML += `<div class="epic-group-hdr" onclick="this.parentElement.classList.toggle('epic-expanded')">`
         + `<span class="epic-group-chevron">&#9662;</span>`
         + `<span class="epic-group-label">${escHTML(label)}</span>${jiraIcon}`
@@ -1317,9 +1317,12 @@ body::before {
   font-size: 11px; font-weight: 600; font-family: var(--font-body);
   cursor: pointer; transition: all var(--transition);
 }
-.plan-btn:hover {
+.plan-btn:hover:not(:disabled) {
   background: rgba(129,140,248,0.2);
   box-shadow: 0 0 12px rgba(129,140,248,0.2);
+}
+.plan-btn:disabled {
+  opacity: 0.3; cursor: not-allowed;
 }
 
 /* ── Footer ── */
@@ -1669,6 +1672,17 @@ function nfLaunchBrowser() {
 function nfShowTerminal() {
   document.getElementById('nfTerminalInstructions').style.display = 'block';
 }
+
+// Check if relay serve is running — enable plan buttons if so
+fetch('http://localhost:7433/api/health', { mode: 'cors' })
+  .then(function(r) { return r.json(); })
+  .then(function() {
+    document.querySelectorAll('.plan-btn-check').forEach(function(btn) {
+      btn.disabled = false;
+      btn.title = 'Plan this feature';
+    });
+  })
+  .catch(function() {});
 
 function nfPlanFeature(slug) {
   fetch('http://localhost:7433/api/health', { mode: 'cors' })
