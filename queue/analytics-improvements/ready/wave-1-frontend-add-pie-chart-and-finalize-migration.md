@@ -1,4 +1,5 @@
 ---
+task-id: add-pie-chart-and-finalize-migration
 status: ready
 execution: supervised
 target-repo: frontend
@@ -7,7 +8,7 @@ priority: high
 feature: analytics-improvements
 type: feature
 depends-on:
-  - migrate-existing-analytics-visualizations.md
+  - migrate-existing-analytics-visualization
 ---
 
 ## Description

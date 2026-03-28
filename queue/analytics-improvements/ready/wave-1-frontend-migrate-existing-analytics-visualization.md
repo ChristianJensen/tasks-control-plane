@@ -1,4 +1,5 @@
 ---
+task-id: migrate-existing-analytics-visualization
 status: ready
 execution: supervised
 target-repo: frontend
@@ -7,7 +8,7 @@ priority: high
 feature: analytics-improvements
 type: feature
 depends-on:
-  - create-analytics-page-foundation.md
+  - create-analytics-page-foundation
 ---
 
 ## Description
