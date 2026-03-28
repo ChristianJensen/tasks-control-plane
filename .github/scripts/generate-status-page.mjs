@@ -606,11 +606,11 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       : taskLabel;
     const stale = isStaleTask(t, generatedAt);
     return `<tr class="${stale ? "stale-task" : ""}">
-      <td class="mono">${taskLink}</td>
-      <td><span class="wdot wdot-${t.status}"></span> ${t.status}${stale ? ' <span class="stale-warn" title="In progress for over 2 hours">&#9888;</span>' : ""}</td>
-      <td>${priorityDot(t.priority)} ${t.priority}</td>
-      <td class="mono">W${t.wave}</td>
-      <td>${executionLabel(feature.execution || "supervised")}</td>
+      <td class="mono" data-label="Task">${taskLink}</td>
+      <td data-label="Status"><span class="wdot wdot-${t.status}"></span> ${t.status}${stale ? ' <span class="stale-warn" title="In progress for over 2 hours">&#9888;</span>' : ""}</td>
+      <td data-label="Priority">${priorityDot(t.priority)} ${t.priority}</td>
+      <td class="mono" data-label="Wave">W${t.wave}</td>
+      <td data-label="Execution">${executionLabel(feature.execution || "supervised")}</td>
     </tr>`;
   }).join("");
 
@@ -1339,16 +1339,62 @@ body::before {
 }
 
 /* ── Responsive ── */
+
+/* Hamburger (hidden on desktop) */
+.hamburger-btn {
+  display: none; background: none; border: 1px solid var(--border);
+  color: var(--text-primary); font-size: 20px; padding: 4px 10px;
+  border-radius: 8px; cursor: pointer; line-height: 1;
+}
+
 @media (max-width: 768px) {
   .layout { padding: 16px; }
   .detail-grid { flex-direction: column; align-items: stretch; }
-  .search-wrap { min-width: 120px; }
+  .search-wrap { flex-basis: 100%; min-width: unset; }
+  .filters { flex-basis: 100%; }
+  .navbar { height: auto; min-height: 48px; flex-wrap: wrap; padding: 8px 16px; gap: 8px; }
+  .nav-time { display: none; }
+  .nav-title { font-size: 13px; }
+  .feature-header { flex-wrap: wrap; padding: 12px 16px; }
+  .feature-left { flex-basis: 100%; }
+  .feature-right { flex-basis: 100%; justify-content: flex-start; padding-left: 28px; gap: 8px; }
+  .feature-title { white-space: normal; }
+  .detail-missing { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .epic-group-hdr { flex-wrap: wrap; gap: 6px; }
 }
+
 @media (max-width: 480px) {
-  .navbar { padding: 0 16px; }
-  .filters { gap: 2px; }
-  .filter-btn { padding: 4px 10px; font-size: 11px; }
+  .hamburger-btn { display: flex; align-items: center; }
+  .nav-tabs { display: none; width: 100%; order: 3; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid var(--border); margin-left: 0; }
+  .nav-tabs.mobile-open { display: flex; }
+  .nav-tab { padding: 10px 16px; font-size: 14px; text-align: left; }
+  .nav-title { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .new-feature-btn { padding: 6px 10px; font-size: 11px; }
+  .filters { gap: 4px; }
+  .filter-btn { padding: 8px 12px; font-size: 11px; min-height: 36px; }
+  .feature-header { padding: 10px 12px; }
+  .feature-dates { display: none; }
   .feature-right .task-count { display: none; }
+  .lozenge { font-size: 9px; padding: 2px 8px; }
+  .feature-row.expanded .feature-detail { padding: 12px; }
+  .cost-summary { font-size: 12px; }
+  .section-hdr { font-size: 10px; }
+  .feature-desc { font-size: 12px; }
+  .epic-group-hdr { padding: 8px 12px; font-size: 11px; }
+  .epic-group-jira { font-size: 9px; }
+  .repo-chip { font-size: 10px; padding: 2px 8px; }
+  /* Table → stacked card layout on phone */
+  .missing-tbl thead { display: none; }
+  .missing-tbl tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .missing-tbl tr:last-child { border-bottom: none; }
+  .missing-tbl td { display: block; padding: 3px 0; border-bottom: none; font-size: 12px; }
+  .missing-tbl td::before {
+    content: attr(data-label);
+    display: inline-block; width: 72px;
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    vertical-align: middle;
+  }
 }
 
 /* ── Print ── */
@@ -1375,6 +1421,7 @@ body::before {
   <div class="nav-right">
     <button class="new-feature-btn" id="newFeatureBtn">+ New Feature</button>
     <button class="settings-btn" onclick="document.getElementById('settingsModal').style.display='flex'" title="Settings">&#9881;</button>
+    <button class="hamburger-btn" aria-label="Menu" onclick="document.getElementById('navTabs').classList.toggle('mobile-open')">&#9776;</button>
     <span class="nav-time">${new Date(generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
   </div>
 </nav>
