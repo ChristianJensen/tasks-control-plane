@@ -534,7 +534,7 @@ function renderDispatchDropdown(slug) {
   const modeBtn = (mode, label, color, title, target) =>
     `<button onclick="event.stopPropagation();dispatchAgent('${slug}','${mode}','${target}',+(this.closest('.dispatch-dropdown').querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n)" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
   return `<div class="dispatch-wrap">
-    <button class="dispatch-trigger" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('open')">Dispatch Agent &#9662;</button>
+    <button class="dispatch-trigger" onclick="event.stopPropagation();var dd=this.nextElementSibling,r=this.getBoundingClientRect();dd.style.left=r.left+'px';dd.style.top=(r.bottom+4)+'px';dd.classList.toggle('open')">Dispatch Agent &#9662;</button>
     <div class="dispatch-dropdown">
       <div class="dd-parallel"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">1</button><button class="dd-par-btn" data-n="2" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">2</button><button class="dd-par-btn" data-n="3" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">3</button><button class="dd-par-btn" data-n="4" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">4</button></div></div>
       <div class="dd-divider"></div>
@@ -922,7 +922,7 @@ body::before {
 .dispatch-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
 .dispatch-trigger { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); }
 .dispatch-trigger:hover { background: rgba(129,140,248,0.2); }
-.dispatch-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 50; overflow: visible; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.dispatch-dropdown { display: none; position: fixed; margin-top: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 200; overflow: visible; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .dispatch-dropdown.open { display: block; }
 .dispatch-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: none; background: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: var(--transition); font-family: var(--font-body); }
 .dispatch-dropdown button:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
