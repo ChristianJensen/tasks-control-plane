@@ -1471,7 +1471,7 @@ body::before {
   <div class="nav-tabs" id="navTabs">
     <button class="nav-tab active" data-tab="features">Features</button>
     ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts${needsReviewCount > 0 ? ` <span class="triage-badge">${needsReviewCount}</span>` : ""}</button>` : ""}
-    <button class="nav-tab" onclick="event.stopPropagation();toggleAgentsPanel()">Agents${activeWorkers.length > 0 ? ` <span class="agents-badge">${activeWorkers.reduce((s, w) => s + w.tasks, 0)}</span>` : ""}</button>
+    <button class="nav-tab nav-tab-agents" onclick="event.stopPropagation();toggleAgentsPanel()">Agents${activeWorkers.length > 0 ? ` <span class="agents-badge">${activeWorkers.reduce((s, w) => s + w.tasks, 0)}</span>` : ""}</button>
   </div>
   <div class="nav-right">
     <button class="new-feature-btn" id="newFeatureBtn">+ New Feature</button>
@@ -1521,6 +1521,7 @@ ${renderAgentsPanel(activeWorkers, generated_at)}
         <code class="nf-copy-cmd">relay new</code>
         <button class="nf-copy-btn" onclick="navigator.clipboard.writeText('relay new');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
       </div>
+      <button class="dd-go-btn" style="margin-top:10px;width:100%" onclick="nfLaunchTerminal()">&#9654; Launch Terminal</button>
     </div>
     <div id="nfServerStatus" class="nf-status"></div>
   </div>
@@ -1586,9 +1587,10 @@ ${renderAgentsPanel(activeWorkers, generated_at)}
 // ── Tab Navigation ──
 document.querySelectorAll('.nav-tab').forEach(btn => {
   btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    if (!tab) return; // Agents button has no data-tab — handled by its own onclick
     document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const tab = btn.dataset.tab;
     document.getElementById('featuresTab').style.display = tab === 'features' ? '' : 'none';
     const triageTab = document.getElementById('triageTab');
     if (triageTab) triageTab.style.display = tab === 'triage' ? '' : 'none';
@@ -1781,6 +1783,23 @@ function nfCheckServer() {
 function nfLaunchBrowser() {
   window.open('http://localhost:7433/interview', '_blank');
   document.getElementById('nfOverlay').style.display = 'none';
+}
+
+function nfLaunchTerminal() {
+  fetch('http://localhost:7433/api/launch/terminal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command: 'relay new' })
+  }).then(function(r) {
+    if (r.ok) {
+      showToast('Terminal launched with relay new', 'success');
+      document.getElementById('nfOverlay').style.display = 'none';
+    } else {
+      r.json().then(function(d) { showToast('Failed: ' + (d.error || 'unknown'), 'error'); });
+    }
+  }).catch(function() {
+    showToast('Start relay serve to launch terminal', 'error');
+  });
 }
 
 function nfShowTerminal() {
