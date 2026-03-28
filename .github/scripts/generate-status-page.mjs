@@ -644,6 +644,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
         ${lifecycleBadge}
         ${tasks.total > 0 ? `<span class="task-count mono">${tasks.done}/${tasks.total}</span>` : ""}
         ${feature.createdAt || feature.completedAt ? `<span class="feature-dates mono">${feature.createdAt ? formatDate(feature.createdAt) : ""}${feature.createdAt && feature.completedAt ? ` &rarr; ` : ""}${feature.completedAt ? formatDate(feature.completedAt) : ""}</span>` : ""}
+        ${feature.lifecycle === "draft" && tasks.total === 0 ? `<button class="plan-btn" onclick="event.stopPropagation();nfPlanFeature('${escHTML(feature.slug)}')" title="Plan this feature">Plan</button>` : ""}
         <span class="lozenge lozenge-${feature.status}">${statusLabel(feature.status)}</span>
         ${hasDetails ? `<span class="chevron">&#9662;</span>` : ""}
       </div>
@@ -1307,6 +1308,18 @@ body::before {
 }
 .nf-copy-btn:hover { background: rgba(255,255,255,0.14); color: var(--text-primary); }
 
+/* ── Plan Button ── */
+.plan-btn {
+  padding: 4px 12px; border-radius: 6px; border: 1px solid var(--accent);
+  background: rgba(129,140,248,0.1); color: var(--accent);
+  font-size: 11px; font-weight: 600; font-family: var(--font-body);
+  cursor: pointer; transition: all var(--transition);
+}
+.plan-btn:hover {
+  background: rgba(129,140,248,0.2);
+  box-shadow: 0 0 12px rgba(129,140,248,0.2);
+}
+
 /* ── Footer ── */
 .page-footer {
   text-align: center; padding: 32px 0 16px;
@@ -1653,6 +1666,19 @@ function nfLaunchBrowser() {
 
 function nfShowTerminal() {
   document.getElementById('nfTerminalInstructions').style.display = 'block';
+}
+
+function nfPlanFeature(slug) {
+  fetch('http://localhost:7433/api/health', { mode: 'cors' })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      window.open('http://localhost:7433/plan/' + slug, '_blank');
+    })
+    .catch(function() {
+      var cmd = 'relay plan ' + slug;
+      var msg = 'relay serve is not running.\\n\\nStart it with: relay serve\\n\\nOr plan from the terminal: ' + cmd;
+      alert(msg);
+    });
 }
 </script>
 
