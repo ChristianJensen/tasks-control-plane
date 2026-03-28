@@ -1,6 +1,6 @@
 ---
 task-id: migrate-existing-analytics-visualization
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
