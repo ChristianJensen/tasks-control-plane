@@ -532,10 +532,12 @@ function isStaleTask(t, generatedAt) {
 
 function renderDispatchDropdown(slug) {
   const modeBtn = (mode, label, color, title, target) =>
-    `<button onclick="event.stopPropagation();dispatchAgent('${slug}','${mode}','${target}')" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
+    `<button onclick="event.stopPropagation();dispatchAgent('${slug}','${mode}','${target}',+(this.closest('.dispatch-dropdown').querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n)" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
   return `<div class="dispatch-wrap">
     <button class="dispatch-trigger" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('open')">Dispatch Agent &#9662;</button>
     <div class="dispatch-dropdown">
+      <div class="dd-parallel"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">1</button><button class="dd-par-btn" data-n="2" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">2</button><button class="dd-par-btn" data-n="3" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">3</button><button class="dd-par-btn" data-n="4" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">4</button></div></div>
+      <div class="dd-divider"></div>
       <div class="dd-group-label">Cloud Agent</div>
       ${modeBtn("autonomous", "Autonomous", "green", "Cloud agent auto-merges. No human review.", "cloud")}
       ${modeBtn("supervised", "Supervised", "accent", "Cloud agent opens a PR. You review before merge.", "cloud")}
@@ -927,6 +929,12 @@ body::before {
 .dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
 .dd-group-label { padding: 8px 14px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 .dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.dd-parallel { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
+.dd-parallel .dd-group-label { padding: 0; }
+.dd-parallel-btns { display: flex; gap: 4px; }
+.dd-par-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
+.dd-par-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.dd-par-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
 .toast-show { transform: translateY(0); opacity: 1; }
 .toast-info { background: rgba(129,140,248,0.9); backdrop-filter: blur(8px); }
@@ -1575,19 +1583,20 @@ function showToast(msg, type) {
 }
 
 // ── Dispatch Agent (cloud or local) ──
-function dispatchAgent(slug, mode, target) {
+function dispatchAgent(slug, mode, target, agents) {
+  agents = Math.max(1, Math.min(4, agents || 1));
   const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised', guided: 'Guided'};
-  const targetLabels = {cloud: 'Cloud', local: 'Local'};
+  const agentStr = agents > 1 ? ' (' + agents + ' agents)' : '';
   document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
 
   if (target === 'local') {
-    showToast('Launching local agent in ' + modeLabels[mode] + ' mode...', 'info');
+    showToast('Launching ' + agents + ' local agent(s) in ' + modeLabels[mode] + ' mode...', 'info');
     fetch('http://localhost:7433/api/dispatch/local', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: slug, mode: mode })
+      body: JSON.stringify({ slug: slug, mode: mode, agents: agents })
     }).then(r => {
-      if (r.ok) r.json().then(d => showToast('Local agent launched (PID ' + d.pid + ') in ' + modeLabels[mode] + ' mode', 'success'));
+      if (r.ok) r.json().then(d => showToast('Local agent launched (PID ' + d.pid + ') — ' + agents + ' agent(s) in ' + modeLabels[mode] + ' mode', 'success'));
       else r.json().then(d => showToast('Failed: ' + (d.error || 'unknown error'), 'error')).catch(() => r.text().then(t => showToast('Failed: ' + t, 'error')));
     }).catch(() => showToast('Start relay serve to use local dispatch', 'error'));
     return;
@@ -1601,11 +1610,11 @@ function dispatchAgent(slug, mode, target) {
     return;
   }
   const repo = 'ChristianJensen/tasks-control-plane';
-  showToast('Dispatching cloud agent in ' + modeLabels[mode] + ' mode...', 'info');
+  showToast('Dispatching ' + agents + ' cloud agent(s) in ' + modeLabels[mode] + ' mode...', 'info');
   fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
     method: 'POST',
     headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode } })
+    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode, agents: String(agents) } })
   }).then(r => {
     if (r.ok || r.status === 204) showToast('Cloud agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
     else r.text().then(t => showToast('Failed: ' + t, 'error'));
