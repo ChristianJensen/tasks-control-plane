@@ -1,31 +1,10 @@
 ---
+lifecycle: draft
 execution: supervised
 priority: medium
 epic: TASK-5
 epic-title: Q1 - Task Tracker Enhancements
----
-<!-- LIFECYCLE NOTE: The parent directory (draft/, active/, completed/, cancelled/)
-     is authoritative for feature lifecycle phase. The lifecycle field below is
-     kept in sync for human readability. When directory and frontmatter diverge,
-     the directory wins. Paused and replanning are sub-states within active/. -->
----
-lifecycle: draft          # echoes directory — draft | active | paused | cancelled | replanning | completed
-execution: supervised     # autonomous | supervised | guided
-priority: medium          # high | medium | low
-budget: ""                # max USD spend per task (e.g. "0.50"), tasks can override
-total-budget: ""          # max USD spend across all tasks in this feature (e.g. "5.00")
-total-cost-usd: ""        # aggregated on completion from task cost-usd fields
-total-tokens: ""           # aggregated on completion (input + output)
-epic: "TASK-5"            # Jira Epic ID (leave blank for standalone tasks)
-epic-title: "Q1 - Task Tracker Enhancements"    # Human-readable epic name (optional, for status page display)
 version: 1
-paused-at: ""
-paused-by: ""
-pause-reason: ""
-created-at: ""            # ISO 8601 timestamp when spec was created
-completed-at: ""          # ISO 8601 timestamp when all tasks completed
-deployed-at: ""
-deployed-env: ""
 ---
 
 # Feature Spec: Analytics Improvements
