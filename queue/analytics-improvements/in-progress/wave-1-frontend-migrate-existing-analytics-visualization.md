@@ -1,6 +1,6 @@
 ---
 task-id: migrate-existing-analytics-visualization
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -9,6 +9,9 @@ feature: analytics-improvements
 type: feature
 depends-on:
   - create-analytics-page-foundation
+claimed-by: agent-Christians-MacBook-Air-93924
+claimed-at: 2026-03-28T18:10:35Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
