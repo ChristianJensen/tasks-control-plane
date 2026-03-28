@@ -539,7 +539,6 @@ function renderDispatchDropdown(slug) {
       <div class="dd-group-label">Cloud Agent</div>
       ${modeBtn("autonomous", "Autonomous", "green", "Cloud agent auto-merges. No human review.", "cloud")}
       ${modeBtn("supervised", "Supervised", "accent", "Cloud agent opens a PR. You review before merge.", "cloud")}
-      ${modeBtn("guided", "Guided", "amber", "Cloud agent follows guided workflow.", "cloud")}
       <div class="dd-divider"></div>
       <div class="dd-group-label">Local Agent</div>
       ${modeBtn("autonomous", "Autonomous", "green", "Local agent auto-merges. No human review.", "local")}
@@ -1048,7 +1047,7 @@ body::before {
   background: var(--bg-detail); border-top: 1px solid var(--border);
 }
 .feature-row.expanded .feature-detail {
-  max-height: 3000px; padding: 20px;
+  max-height: 3000px; padding: 20px; overflow: visible;
 }
 .detail-grid { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
 .detail-progress { display: flex; align-items: center; gap: 16px; }
