@@ -6,12 +6,6 @@ wave: 1
 priority: high
 feature: analytics-improvements
 type: feature
-cost-usd: 1.4059273500000002
-input-tokens: 188
-output-tokens: 18826
-duration-ms: 366721
-pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/64
-pr-number: 64
 ---
 
 ## Description
