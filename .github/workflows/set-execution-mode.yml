@@ -3,8 +3,8 @@ name: Set Execution Mode
 on:
   workflow_dispatch:
     inputs:
-      bug_slug:
-        description: 'Bug slug (e.g., cannot-read-properties-of-undefined-reading-id)'
+      slug:
+        description: 'Feature or bug slug (e.g., user-profile-redesign-feature)'
         required: true
       execution_mode:
         description: 'Execution mode: autonomous, supervised, or guided'
@@ -26,11 +26,11 @@ jobs:
 
       - name: Update execution mode on queue tasks
         run: |
-          SLUG="${{ inputs.bug_slug }}"
+          SLUG="${{ inputs.slug }}"
           MODE="${{ inputs.execution_mode }}"
-          echo "Setting execution mode to '$MODE' for bug '$SLUG'"
+          echo "Setting execution mode to '$MODE' for '$SLUG'"
 
-          # Find all queue task files for this bug
+          # Find all queue task files for this slug
           for task_file in queue/"$SLUG"/*/wave-*.md; do
             [ -f "$task_file" ] || continue
             echo "  Updating: $task_file"
@@ -44,5 +44,5 @@ jobs:
           git config user.email "relay-bot[bot]@users.noreply.github.com"
           git add queue/
           git diff --cached --stat
-          git commit -m "fix: set execution mode to ${{ inputs.execution_mode }} for ${{ inputs.bug_slug }}" || echo "Nothing to commit"
+          git commit -m "fix: set execution mode to ${{ inputs.execution_mode }} for ${{ inputs.slug }}" || echo "Nothing to commit"
           git push

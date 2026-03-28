@@ -530,6 +530,25 @@ function isStaleTask(t, generatedAt) {
   } catch { return false; }
 }
 
+function renderDispatchDropdown(slug) {
+  const modeBtn = (mode, label, color, title, target) =>
+    `<button onclick="event.stopPropagation();dispatchAgent('${slug}','${mode}','${target}')" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
+  return `<div class="dispatch-wrap">
+    <button class="dispatch-trigger" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('open')">Dispatch Agent &#9662;</button>
+    <div class="dispatch-dropdown">
+      <div class="dd-group-label">Cloud Agent</div>
+      ${modeBtn("autonomous", "Autonomous", "green", "Cloud agent auto-merges. No human review.", "cloud")}
+      ${modeBtn("supervised", "Supervised", "accent", "Cloud agent opens a PR. You review before merge.", "cloud")}
+      ${modeBtn("guided", "Guided", "amber", "Cloud agent follows guided workflow.", "cloud")}
+      <div class="dd-divider"></div>
+      <div class="dd-group-label">Local Agent</div>
+      ${modeBtn("autonomous", "Autonomous", "green", "Local agent auto-merges. No human review.", "local")}
+      ${modeBtn("supervised", "Supervised", "accent", "Local agent opens a PR. You review before merge.", "local")}
+      ${modeBtn("guided", "Guided", "amber", "You run locally. Agent assists interactively.", "local")}
+    </div>
+  </div>`;
+}
+
 function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) {
   const tasks = feature.tasks || { total: 0, done: 0 };
   const pct = tasks.total > 0 ? Math.round((tasks.done / tasks.total) * 100) : 0;
@@ -615,17 +634,13 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   }).join("");
 
   const hasBugDigest = isBug && feature.bugDigest && feature.bugDigest.length > 0;
+  const canDispatchFeature = !isBug && feature.lifecycle === "active" && tasks.total > 0;
   const hasDetails = tasks.total > 0 || hasBugDigest || feature.problem;
 
+  const dispatchDropdownHTML = (hasBugDigest || canDispatchFeature) ? renderDispatchDropdown(escHTML(feature.slug)) : "";
+
   const bugDigestHTML = hasBugDigest ?
-    `<div class="dispatch-wrap">
-      <button class="dispatch-trigger" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('open')">Dispatch Agent &#9662;</button>
-      <div class="dispatch-dropdown">
-        <button onclick="event.stopPropagation();dispatchWithMode('${escHTML(feature.slug)}','autonomous')" title="Agent fixes, tests pass, auto-merges. No human review."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button>
-        <button onclick="event.stopPropagation();dispatchWithMode('${escHTML(feature.slug)}','supervised')" title="Agent fixes and opens a PR. You review before merge."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button>
-        <button onclick="event.stopPropagation();dispatchWithMode('${escHTML(feature.slug)}','guided')" title="You run relay start locally. Agent assists interactively."><span class="dd-color" style="background:var(--amber)"></span> Guided</button>
-      </div>
-    </div>` +
+    dispatchDropdownHTML +
     feature.bugDigest.map((s) =>
       `<div class="bug-digest-section"><div class="bug-digest-heading">${escHTML(s.heading)}</div><div class="bug-digest-body">${escHTML(s.content).replace(/\n/g, "<br>")}</div></div>`
     ).join("") +
@@ -654,6 +669,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     ${hasDetails ? `<div class="feature-detail">
       ${hasBugDigest && tasks.total === 0 ? `<div class="bug-digest">${bugDigestHTML}</div>` : `
       ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem)}</div>` : ""}
+      ${canDispatchFeature ? `<div class="feature-dispatch">${dispatchDropdownHTML}</div>` : ""}
       <div class="detail-grid">
         <div class="detail-progress">
           ${progressRingSVG(pct, color)}
@@ -885,6 +901,7 @@ body::before {
 .triage-hdr span:first-child { color: var(--red); }
 .triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
 .empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
+.feature-dispatch { margin-bottom: 12px; }
 .bug-digest { padding: 4px 0; }
 .bug-digest-section { margin-bottom: 16px; }
 .bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -909,6 +926,8 @@ body::before {
 .dispatch-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: none; background: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: var(--transition); font-family: var(--font-body); }
 .dispatch-dropdown button:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
 .dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
+.dd-group-label { padding: 8px 14px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
 .toast-show { transform: translateY(0); opacity: 1; }
 .toast-info { background: rgba(129,140,248,0.9); backdrop-filter: blur(8px); }
@@ -1556,24 +1575,40 @@ function showToast(msg, type) {
   setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 4000);
 }
 
-// ── Dispatch with Execution Mode ──
-function dispatchWithMode(slug, mode) {
+// ── Dispatch Agent (cloud or local) ──
+function dispatchAgent(slug, mode, target) {
+  const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised', guided: 'Guided'};
+  const targetLabels = {cloud: 'Cloud', local: 'Local'};
+  document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
+
+  if (target === 'local') {
+    showToast('Launching local agent in ' + modeLabels[mode] + ' mode...', 'info');
+    fetch('http://localhost:7433/api/dispatch/local', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: slug, mode: mode })
+    }).then(r => {
+      if (r.ok) r.json().then(d => showToast('Local agent launched (PID ' + d.pid + ') in ' + modeLabels[mode] + ' mode', 'success'));
+      else r.json().then(d => showToast('Failed: ' + (d.error || 'unknown error'), 'error')).catch(() => r.text().then(t => showToast('Failed: ' + t, 'error')));
+    }).catch(() => showToast('Start relay serve to use local dispatch', 'error'));
+    return;
+  }
+
+  // Cloud dispatch — requires GitHub PAT
   const pat = localStorage.getItem('gh_pat');
   if (!pat) {
     document.getElementById('settingsModal').style.display = 'flex';
     showToast('Configure your GitHub PAT first', 'warn');
     return;
   }
-  const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised', guided: 'Guided'};
-  document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
   const repo = 'ChristianJensen/tasks-control-plane';
-  showToast('Dispatching agent in ' + modeLabels[mode] + ' mode...', 'info');
+  showToast('Dispatching cloud agent in ' + modeLabels[mode] + ' mode...', 'info');
   fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
     method: 'POST',
     headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({ ref: 'main', inputs: { bug_slug: slug, execution_mode: mode } })
+    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode } })
   }).then(r => {
-    if (r.ok || r.status === 204) showToast('Agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
+    if (r.ok || r.status === 204) showToast('Cloud agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
     else r.text().then(t => showToast('Failed: ' + t, 'error'));
   }).catch(e => showToast('Error: ' + e.message, 'error'));
 }
