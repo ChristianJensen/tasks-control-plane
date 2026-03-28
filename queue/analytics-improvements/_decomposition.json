@@ -1,0 +1,103 @@
+{
+  "contract_diff": null,
+  "tasks": [
+    {
+      "repo": "frontend",
+      "wave": 1,
+      "priority": "high",
+      "execution": "supervised",
+      "slug": "create-analytics-page-route",
+      "description": "Create new /analytics route with basic page structure, loading states, error handling, and update analytics button to navigate instead of opening side panel.",
+      "why": "Establishes the foundation for the dedicated analytics page by setting up routing, basic component structure, and changing the navigation behavior from side panel to page navigation.",
+      "implementation_notes": "Add route to App.jsx, create AnalyticsPage component with loading spinner, error state with retry button, and success state placeholder. Update analytics button click handler to use navigation instead of panel toggle. Ensure page works when accessed directly via URL. Add navigation state to prevent duplicate clicks during routing.",
+      "contract_references": "Uses existing /tasks/analytics endpoint - no contract changes needed. The endpoint already provides countsByStatus, completedPerDay, avgTimeInStatus, and completedTasksByCategory data.",
+      "acceptance_criteria": [
+        "Tests pass (npm test)",
+        "Contract-compliant",
+        "Analytics button navigates to /analytics route instead of opening side panel",
+        "New AnalyticsPage component renders with proper loading state",
+        "Error state displays with retry button when API call fails",
+        "Page works correctly when accessed directly via URL",
+        "Analytics button is disabled during navigation to prevent duplicate clicks",
+        "Basic component structure ready for analytics data display"
+      ],
+      "estimated_lines": 180,
+      "depends_on": []
+    },
+    {
+      "repo": "frontend",
+      "wave": 2,
+      "priority": "high",
+      "execution": "supervised",
+      "slug": "migrate-existing-analytics-displays",
+      "description": "Move existing analytics visualizations (task counts by status, daily completions chart, average time in status) from side panel to the new dedicated analytics page with expanded layout.",
+      "why": "Preserves all current analytics functionality by migrating existing data displays to the new page format, ensuring no regression in analytics capabilities while providing more space for better visualization.",
+      "implementation_notes": "Extract analytics display components from existing side panel code. Integrate task counts display, daily completions chart, and average time metrics into AnalyticsPage. Ensure data fetching from /tasks/analytics endpoint works correctly. Use expanded layout to improve readability. Follow existing design system patterns.",
+      "contract_references": "Consumes countsByStatus (todo, in-progress, done counts), completedPerDay (7-day array with date/count objects), and avgTimeInStatus (todo and inProgress averages in hours) from /tasks/analytics endpoint.",
+      "acceptance_criteria": [
+        "Tests pass (npm test)",
+        "Contract-compliant",
+        "Task counts by status display correctly on analytics page",
+        "Daily completions chart displays for last 7 days",
+        "Average time in status metrics display correctly", 
+        "All analytics data loads from existing /tasks/analytics endpoint",
+        "Analytics page shows loading indicators while fetching data",
+        "Expanded layout improves data visualization readability",
+        "Analytics page follows existing design system and UI patterns"
+      ],
+      "estimated_lines": 200,
+      "depends_on": ["create-analytics-page-route.md"]
+    },
+    {
+      "repo": "frontend",
+      "wave": 2,
+      "priority": "high",
+      "execution": "supervised",
+      "slug": "add-pie-chart-visualization",
+      "description": "Install Chart.js library and implement pie chart visualization showing completed tasks broken down by category (work, personal, errands, uncategorized).",
+      "why": "Adds the new pie chart requirement to provide category-based insights for completed tasks, giving users better visibility into their task completion patterns across different areas of their life.",
+      "implementation_notes": "Install Chart.js via npm. Create pie chart component that consumes completedTasksByCategory data from /tasks/analytics endpoint. Handle empty state gracefully when no completed tasks exist. Use Chart.js configuration for accessibility and responsive design. Position chart appropriately within analytics page layout.",
+      "contract_references": "Uses completedTasksByCategory from /tasks/analytics endpoint, which provides counts for work, personal, errands, and uncategorized completed tasks as integers.",
+      "acceptance_criteria": [
+        "Tests pass (npm test)",
+        "Contract-compliant",
+        "Chart.js library installed and integrated correctly",
+        "Pie chart displays completed tasks by category using Chart.js",
+        "Chart shows work, personal, errands, and uncategorized categories",
+        "Pie chart shows helpful empty state when no completed tasks exist",
+        "Chart is responsive and follows design system colors",
+        "Chart data loads from completedTasksByCategory in /tasks/analytics response"
+      ],
+      "estimated_lines": 140,
+      "depends_on": ["create-analytics-page-route.md"]
+    },
+    {
+      "repo": "frontend",
+      "wave": 3,
+      "priority": "high",
+      "execution": "supervised", 
+      "slug": "remove-side-panel-analytics",
+      "description": "Completely remove old side panel analytics code and components, clean up unused imports and dependencies, ensuring no dead code remains.",
+      "why": "Completes the migration by removing legacy analytics implementation, preventing code bloat and potential confusion. Ensures the codebase is clean and maintainable after the analytics page migration.",
+      "implementation_notes": "Remove side panel analytics components, related state management, and panel toggle functionality. Clean up unused imports, CSS, and any analytics-specific panel code. Verify no other components depend on removed code. Run tests to ensure no regressions. Update any documentation or comments referencing the old side panel.",
+      "contract_references": "No contract dependencies - this is purely cleanup of frontend code that no longer interfaces with the API.",
+      "acceptance_criteria": [
+        "Tests pass (npm test)",
+        "Contract-compliant",
+        "Old side panel analytics code is completely removed",
+        "No unused imports or dependencies remain",
+        "No dead code related to analytics side panel exists",
+        "All existing functionality works without regressions",
+        "Code is clean and maintainable after removal"
+      ],
+      "estimated_lines": 90,
+      "depends_on": ["migrate-existing-analytics-displays.md", "add-pie-chart-visualization.md"]
+    }
+  ],
+  "decisions": [
+    "Wave structure: Wave 1 establishes routing foundation, Wave 2 implements features (existing analytics migration and new pie chart), Wave 3 cleans up legacy code. This ensures working functionality before removing old code.",
+    "No API changes needed: The existing /tasks/analytics endpoint already provides completedTasksByCategory data required for the pie chart feature.",
+    "Task 2 and 3 are parallel in Wave 2: Both depend only on the route foundation from Task 1, allowing them to be developed simultaneously.",
+    "Task 4 cleanup depends on both Wave 2 tasks: Ensures new implementation is fully working before removing old side panel code to prevent regressions."
+  ]
+}
