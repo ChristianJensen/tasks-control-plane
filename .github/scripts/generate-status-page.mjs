@@ -531,21 +531,17 @@ function isStaleTask(t, generatedAt) {
 }
 
 function renderDispatchDropdown(slug) {
-  const modeBtn = (mode, label, color, title, target) =>
-    `<button onclick="event.stopPropagation();dispatchAgent('${slug}','${mode}','${target}',+(this.closest('.dispatch-dropdown').querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n)" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
+  const modeBtn = (mode, label, color, title) =>
+    `<button class="dd-mode-btn" data-mode="${mode}" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown'),t=dd.querySelector('.dd-target-btn.active').dataset.target,n=+(dd.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}','${mode}',t,n)" title="${title}"><span class="dd-color" style="background:var(--${color})"></span> ${label}</button>`;
   return `<div class="dispatch-wrap">
     <button class="dispatch-trigger" onclick="event.stopPropagation();var dd=this.nextElementSibling,r=this.getBoundingClientRect();dd.style.left=r.left+'px';dd.style.top=(r.bottom+4)+'px';dd.classList.toggle('open')">Dispatch Agent &#9662;</button>
     <div class="dispatch-dropdown">
-      <div class="dd-parallel"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">1</button><button class="dd-par-btn" data-n="2" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">2</button><button class="dd-par-btn" data-n="3" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">3</button><button class="dd-par-btn" data-n="4" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">4</button></div></div>
+      <div class="dd-row"><span class="dd-group-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown');dd.querySelectorAll('.dd-target-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');dd.querySelector('[data-mode=guided]').style.display='none'" title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown');dd.querySelectorAll('.dd-target-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');dd.querySelector('[data-mode=guided]').style.display=''" title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
+      <div class="dd-row"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">1</button><button class="dd-par-btn" data-n="2" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">2</button><button class="dd-par-btn" data-n="3" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">3</button><button class="dd-par-btn" data-n="4" onclick="event.stopPropagation();this.parentElement.querySelectorAll('.dd-par-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">4</button></div></div>
       <div class="dd-divider"></div>
-      <div class="dd-group-label">Cloud Agent</div>
-      ${modeBtn("autonomous", "Autonomous", "green", "Cloud agent auto-merges. No human review.", "cloud")}
-      ${modeBtn("supervised", "Supervised", "accent", "Cloud agent opens a PR. You review before merge.", "cloud")}
-      <div class="dd-divider"></div>
-      <div class="dd-group-label">Local Agent</div>
-      ${modeBtn("autonomous", "Autonomous", "green", "Local agent auto-merges. No human review.", "local")}
-      ${modeBtn("supervised", "Supervised", "accent", "Local agent opens a PR. You review before merge.", "local")}
-      ${modeBtn("guided", "Guided", "amber", "You run locally. Agent assists interactively.", "local")}
+      ${modeBtn("autonomous", "Autonomous", "green", "Agent auto-merges. No human review.")}
+      ${modeBtn("supervised", "Supervised", "accent", "Agent opens a PR. You review before merge.")}
+      <button class="dd-mode-btn" data-mode="guided" style="display:none" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown'),t=dd.querySelector('.dd-target-btn.active').dataset.target,n=+(dd.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}','guided',t,n)" title="You run locally. Agent assists interactively."><span class="dd-color" style="background:var(--amber)"></span> Guided</button>
     </div>
   </div>`;
 }
@@ -929,8 +925,13 @@ body::before {
 .dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
 .dd-group-label { padding: 8px 14px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 .dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
-.dd-parallel { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
-.dd-parallel .dd-group-label { padding: 0; }
+.dd-row { display: flex; align-items: center; gap: 8px; padding: 6px 14px; }
+.dd-row .dd-group-label { padding: 0; min-width: 50px; }
+.dd-toggle { display: flex; gap: 4px; }
+.dd-target-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
+.dd-target-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.dd-target-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd-target-btn svg { flex-shrink: 0; }
 .dd-parallel-btns { display: flex; gap: 4px; }
 .dd-par-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
 .dd-par-btn:hover { border-color: var(--accent); color: var(--text-primary); }
