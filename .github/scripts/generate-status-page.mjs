@@ -506,7 +506,7 @@ function workerIcon(claimedBy) {
 }
 
 function executionLabel(mode) {
-  return { autonomous: "&#129302; Auto", supervised: "&#128065; Supervised", guided: "&#128100; Guided" }[mode] || mode;
+  return { autonomous: "&#129302; Auto", supervised: "Supervised", guided: "Guided" }[mode] || mode;
 }
 
 function priorityDot(priority) {
@@ -539,16 +539,14 @@ function isStaleTask(t, generatedAt) {
 function ddToggle(cls) {
   return `onclick="event.stopPropagation();this.parentElement.querySelectorAll('.${cls}').forEach(b=>b.classList.remove('active'));this.classList.add('active')"`;
 }
-function renderDispatchDropdown(slug) {
-  return `<div class="dispatch-wrap">
-    <button class="dispatch-trigger" onclick="event.stopPropagation();openDispatchDropdown(this)">Dispatch Agent &#9662;</button>
-    <div class="dispatch-dropdown">
-      <div class="dd-row"><span class="dd-group-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" ${ddToggle("dd-target-btn")} title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" ${ddToggle("dd-target-btn")} title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
-      <div class="dd-row"><span class="dd-group-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" ${ddToggle("dd-par-btn")}>1</button><button class="dd-par-btn" data-n="2" ${ddToggle("dd-par-btn")}>2</button><button class="dd-par-btn" data-n="3" ${ddToggle("dd-par-btn")}>3</button><button class="dd-par-btn" data-n="4" ${ddToggle("dd-par-btn")}>4</button></div></div>
-      <div class="dd-row"><span class="dd-group-label">Mode</span><div class="dd-toggle"><button class="dd-mode-btn active" data-mode="supervised" ${ddToggle("dd-mode-btn")} title="Agent opens a PR. You review before merge."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button><button class="dd-mode-btn" data-mode="autonomous" ${ddToggle("dd-mode-btn")} title="Agent auto-merges. No human review."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button></div></div>
-      <div class="dd-divider"></div>
-      <div class="dd-row dd-go-row"><button class="dd-go-btn" onclick="event.stopPropagation();var dd=this.closest('.dispatch-dropdown'),t=dd.querySelector('.dd-target-btn.active').dataset.target,m=dd.querySelector('.dd-mode-btn.active').dataset.mode,n=+(dd.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}',m,t,n)">&#9654; Dispatch</button></div>
+function renderDispatchBar(slug) {
+  return `<div class="dispatch-bar">
+    <div class="db-controls">
+      <div class="db-group"><span class="db-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" ${ddToggle("dd-target-btn")} title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" ${ddToggle("dd-target-btn")} title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
+      <div class="db-group"><span class="db-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" ${ddToggle("dd-par-btn")}>1</button><button class="dd-par-btn" data-n="2" ${ddToggle("dd-par-btn")}>2</button><button class="dd-par-btn" data-n="3" ${ddToggle("dd-par-btn")}>3</button><button class="dd-par-btn" data-n="4" ${ddToggle("dd-par-btn")}>4</button></div></div>
+      <div class="db-group"><span class="db-label">Mode</span><div class="dd-toggle"><button class="dd-mode-btn active" data-mode="supervised" ${ddToggle("dd-mode-btn")} title="Agent opens a PR. You review before merge."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button><button class="dd-mode-btn" data-mode="autonomous" ${ddToggle("dd-mode-btn")} title="Agent auto-merges. No human review."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button></div></div>
     </div>
+    <button class="dd-go-btn" onclick="event.stopPropagation();var bar=this.closest('.dispatch-bar'),t=bar.querySelector('.dd-target-btn.active').dataset.target,m=bar.querySelector('.dd-mode-btn.active').dataset.mode,n=+(bar.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}',m,t,n)">&#9654; Dispatch</button>
   </div>`;
 }
 
@@ -640,10 +638,10 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   const canDispatchFeature = !isBug && feature.lifecycle === "active" && tasks.total > 0;
   const hasDetails = tasks.total > 0 || hasBugDigest || feature.problem;
 
-  const dispatchDropdownHTML = (hasBugDigest || canDispatchFeature) ? renderDispatchDropdown(escHTML(feature.slug)) : "";
+  const dispatchBarHTML = (hasBugDigest || canDispatchFeature) ? renderDispatchBar(escHTML(feature.slug)) : "";
 
   const bugDigestHTML = hasBugDigest ?
-    dispatchDropdownHTML +
+    dispatchBarHTML +
     feature.bugDigest.map((s) =>
       `<div class="bug-digest-section"><div class="bug-digest-heading">${escHTML(s.heading)}</div><div class="bug-digest-body">${escHTML(s.content).replace(/\n/g, "<br>")}</div></div>`
     ).join("") +
@@ -672,7 +670,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     ${hasDetails ? `<div class="feature-detail">
       ${hasBugDigest && tasks.total === 0 ? `<div class="bug-digest">${bugDigestHTML}</div>` : `
       ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem)}</div>` : ""}
-      ${canDispatchFeature ? `<div class="feature-dispatch">${dispatchDropdownHTML}</div>` : ""}
+      ${canDispatchFeature ? `<div class="feature-dispatch">${dispatchBarHTML}</div>` : ""}
       <div class="detail-grid">
         <div class="detail-progress">
           ${progressRingSVG(pct, color)}
@@ -950,7 +948,7 @@ body::before {
 .triage-hdr span:first-child { color: var(--red); }
 .triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
 .empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
-.feature-dispatch { margin-bottom: 12px; }
+.feature-dispatch { margin-bottom: 16px; }
 .bug-digest { padding: 4px 0; }
 .bug-digest-section { margin-bottom: 16px; }
 .bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -967,16 +965,13 @@ body::before {
 .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
 .modal-btn { padding: 6px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
 .modal-btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
-.dispatch-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
-.dispatch-trigger { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); }
-.dispatch-trigger:hover { background: rgba(129,140,248,0.2); }
-.dispatch-dropdown { display: none; position: fixed; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 200; overflow: visible; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-.dispatch-dropdown.open { display: block; }
+.dispatch-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(129,140,248,0.06); border: 1px solid var(--border); border-radius: 10px; flex-wrap: wrap; }
+.db-controls { display: flex; align-items: center; gap: 16px; flex: 1; flex-wrap: wrap; }
+.db-group { display: flex; align-items: center; gap: 6px; }
+.db-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 .dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
 .dd-group-label { padding: 8px 14px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 .dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
-.dd-row { display: flex; align-items: center; gap: 8px; padding: 6px 14px; }
-.dd-row .dd-group-label { padding: 0; min-width: 50px; }
 .dd-toggle { display: flex; gap: 4px; }
 .dd-target-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
 .dd-target-btn:hover { border-color: var(--accent); color: var(--text-primary); }
@@ -990,7 +985,6 @@ body::before {
 .dd-mode-btn:hover { border-color: var(--accent); color: var(--text-primary); }
 .dd-mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .dd-mode-btn .dd-color { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
-.dd-go-row { justify-content: flex-end; padding-top: 4px; padding-bottom: 8px; }
 .dd-go-btn { padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: var(--font-body); letter-spacing: 0.02em; }
 .dd-go-btn:hover { background: #6366f1; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
@@ -1113,7 +1107,7 @@ body::before {
   background: var(--bg-detail); border-top: 1px solid var(--border);
 }
 .feature-row.expanded .feature-detail {
-  max-height: 3000px; padding: 20px; overflow: visible;
+  max-height: 3000px; padding: 20px;
 }
 .detail-grid { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
 .detail-progress { display: flex; align-items: center; gap: 16px; }
@@ -1551,7 +1545,7 @@ ${renderAgentsPanel(activeWorkers, generated_at)}
       <span class="filter-label">Execution:</span>
       <button class="filter-btn active" data-exec-filter="all">All</button>
       <button class="filter-btn" data-exec-filter="autonomous">&#129302; Auto</button>
-      <button class="filter-btn" data-exec-filter="supervised">&#128065; Supervised</button>
+      <button class="filter-btn" data-exec-filter="supervised">Supervised</button>
       <button class="filter-btn" data-exec-filter="guided">&#128100; Guided</button>
     </div>
   </div>
@@ -1601,13 +1595,6 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
   });
 });
 
-// ── Close dropdowns on outside click ──
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.dispatch-wrap') && !e.target.closest('.dispatch-dropdown')) {
-    document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
-  }
-});
-
 // ── Toast notifications ──
 function showToast(msg, type) {
   const t = document.createElement('div');
@@ -1618,43 +1605,16 @@ function showToast(msg, type) {
   setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 4000);
 }
 
-// ── Dispatch Dropdown Positioning ──
 // ── Agents Panel ──
 function toggleAgentsPanel() {
   var panel = document.getElementById('agentsPanel');
   if (panel) panel.classList.toggle('open');
 }
 
-function openDispatchDropdown(btn) {
-  var dd = btn.nextElementSibling;
-  // Close if already open
-  if (dd.classList.contains('open')) { dd.classList.remove('open'); return; }
-  // Close any other open dropdowns
-  document.querySelectorAll('.dispatch-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
-  // Move dropdown to body so it escapes all overflow:hidden ancestors
-  if (dd.parentElement !== document.body) {
-    document.body.appendChild(dd);
-    btn._dd = dd;
-  }
-  // Position relative to button
-  var r = btn.getBoundingClientRect();
-  dd.classList.add('open');
-  var dh = dd.offsetHeight;
-  dd.style.left = r.left + 'px';
-  // Open upward if not enough space below
-  if (r.bottom + dh + 8 > window.innerHeight) {
-    dd.style.top = Math.max(8, r.top - dh - 4) + 'px';
-  } else {
-    dd.style.top = (r.bottom + 4) + 'px';
-  }
-}
-
 // ── Dispatch Agent (cloud or local) ──
 function dispatchAgent(slug, mode, target, agents) {
   agents = Math.max(1, Math.min(4, agents || 1));
-  const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised', guided: 'Guided'};
-  const agentStr = agents > 1 ? ' (' + agents + ' agents)' : '';
-  document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
+  const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised'};
 
   if (target === 'local') {
     showToast('Launching ' + agents + ' local agent(s) in ' + modeLabels[mode] + ' mode...', 'info');
