@@ -921,7 +921,7 @@ body::before {
 .dispatch-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
 .dispatch-trigger { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); }
 .dispatch-trigger:hover { background: rgba(129,140,248,0.2); }
-.dispatch-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 50; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.dispatch-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 50; overflow: visible; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 .dispatch-dropdown.open { display: block; }
 .dispatch-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: none; background: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: var(--transition); font-family: var(--font-body); }
 .dispatch-dropdown button:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
