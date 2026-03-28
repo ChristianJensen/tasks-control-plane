@@ -1,12 +1,11 @@
 ---
-lifecycle: draft
+lifecycle: active
 execution: supervised
 priority: medium
 epic: TASK-5
 epic-title: Q1 - Task Tracker Enhancements
 version: 1
 ---
-
 # Feature Spec: Analytics Improvements
 
 ## Sources
