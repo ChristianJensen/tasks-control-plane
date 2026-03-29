@@ -1,12 +1,15 @@
 ---
 task-id: add-search-term-highlighting
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 2
 priority: high
 feature: help-content-search
 type: feature
+claimed-by: agent-Christians-MacBook-Air-32613
+claimed-at: 2026-03-29T21:56:47Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
