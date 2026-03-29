@@ -1,6 +1,6 @@
 ---
 task-id: add-search-term-highlighting
-status: pending
+status: ready
 execution: autonomous
 target-repo: frontend
 wave: 2
