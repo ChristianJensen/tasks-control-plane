@@ -1,6 +1,6 @@
 ---
 task-id: add-help-search-box-and-filtering
-status: in-progress
+status: done
 execution: autonomous
 target-repo: frontend
 wave: 1
