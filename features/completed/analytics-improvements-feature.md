@@ -1,10 +1,13 @@
 ---
-lifecycle: active
+lifecycle: completed
 execution: supervised
 priority: medium
 epic: TASK-5
 epic-title: Q1 - Task Tracker Enhancements
 version: 1
+total-cost-usd: 4.642062
+total-tokens: 66813
+completed-at: 2026-03-29T21:56:01Z
 ---
 # Feature Spec: Analytics Improvements
 
