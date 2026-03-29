@@ -1,11 +1,11 @@
 ---
-lifecycle: active
+lifecycle: completed
 execution: autonomous
 priority: medium
 budget: ""
 total-budget: ""
-total-cost-usd: ""
-total-tokens: ""
+total-cost-usd: 1.502299
+total-tokens: 21450
 epic: TASK-5
 epic-title: Q1 - Task Tracker Enhancements
 version: 1
@@ -13,7 +13,7 @@ paused-at: ""
 paused-by: ""
 pause-reason: ""
 created-at: ""
-completed-at: ""
+completed-at: 2026-03-29T22:10:45Z
 deployed-at: ""
 deployed-env: ""
 ---
