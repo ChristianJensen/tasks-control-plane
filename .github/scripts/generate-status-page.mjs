@@ -478,7 +478,7 @@ function formatDate(isoStr) {
 }
 
 function statusLabel(status) {
-  return { shipped: "Shipped", "in-progress": "In Progress", "not-started": "Not Started", blocked: "Blocked", orphaned: "Orphaned", "needs-review": "Needs Review" }[status] || status;
+  return { shipped: "Done", "in-progress": "In Progress", "not-started": "Not Started", blocked: "Blocked", orphaned: "Orphaned", "needs-review": "Needs Review" }[status] || status;
 }
 
 function statusColor(status) {
@@ -532,13 +532,14 @@ function isStaleTask(t, generatedAt) {
   try {
     const claimed = new Date(t.claimed_at).getTime();
     const generated = new Date(generatedAt).getTime();
-    return (generated - claimed) > 2 * 60 * 60 * 1000; // 2 hours
+    return (generated - claimed) > 2 * 60 * 60 * 1000;
   } catch { return false; }
 }
 
 function ddToggle(cls) {
   return `onclick="event.stopPropagation();this.parentElement.querySelectorAll('.${cls}').forEach(b=>b.classList.remove('active'));this.classList.add('active')"`;
 }
+
 function renderDispatchBar(slug) {
   return `<div class="dispatch-bar">
     <div class="db-controls">
@@ -550,6 +551,8 @@ function renderDispatchBar(slug) {
   </div>`;
 }
 
+// ── Triage view still uses collapsible feature rows ─────────────
+
 function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) {
   const tasks = feature.tasks || { total: 0, done: 0 };
   const pct = tasks.total > 0 ? Math.round((tasks.done / tasks.total) * 100) : 0;
@@ -560,7 +563,6 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     ? `<span class="type-icon type-bug" title="Bug">&#9679;</span>`
     : `<span class="type-icon type-feature" title="Feature">&#9670;</span>`;
 
-  // Jira epic link — split pill: left = filter toggle, right = external Jira link
   const epicDisplay = feature.epicTitle
     ? `Jira: ${feature.epic}: ${feature.epicTitle}`
     : `Jira: ${feature.epic}`;
@@ -573,7 +575,6 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       + `</span>`
     : "";
 
-  // SHA-pinned spec link
   const specLinkLabel = isBug ? "Bug Report" : "Feature Specification";
   const specSha = feature.specSha || linkContext.commitSha;
   const specUrl = linkContext.githubServerUrl && linkContext.githubRepository && specSha && feature.specPath
@@ -583,12 +584,10 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     ? `<a href="${escHTML(specUrl)}" target="_blank" rel="noopener" class="spec-link" title="View spec @ ${specSha.slice(0, 7)}">${specLinkLabel}</a>`
     : "";
 
-  // Execution mode badge
   const execBadge = feature.execution
     ? `<span class="lozenge lozenge-exec-${feature.execution}">${executionLabel(feature.execution)}</span>`
     : "";
 
-  // Lifecycle badge (only for non-active states)
   const lifecycleBadge = feature.lifecycle && feature.lifecycle !== "active" && feature.lifecycle !== "completed"
     ? `<span class="lozenge lozenge-lifecycle-${feature.lifecycle}">${feature.lifecycle}</span>`
     : "";
@@ -607,7 +606,6 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     `<div class="pr-row"><svg width="14" height="14" viewBox="0 0 16 16" fill="var(--accent)"><path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg><a href="${escHTML(pr.url)}" target="_blank" rel="noopener">#${pr.number} ${escHTML(pr.title)}</a></div>`
   ).join("");
 
-  // Use allTasks for shipped features, missing for others
   const isShipped = feature.status === "shipped";
   const taskList = isShipped ? (feature.allTasks || []) : (feature.missing || []);
   const sortedTaskList = [...taskList].sort((a, b) =>
@@ -662,7 +660,6 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
         ${lifecycleBadge}
         ${tasks.total > 0 ? `<span class="task-count mono">${tasks.done}/${tasks.total}</span>` : ""}
         ${feature.createdAt || feature.completedAt ? `<span class="feature-dates mono">${feature.createdAt ? formatDate(feature.createdAt) : ""}${feature.createdAt && feature.completedAt ? ` &rarr; ` : ""}${feature.completedAt ? formatDate(feature.completedAt) : ""}</span>` : ""}
-        ${feature.lifecycle === "draft" && tasks.total === 0 ? `<button class="plan-btn plan-btn-check" disabled onclick="event.stopPropagation();nfPlanFeature('${escHTML(feature.slug)}')" title="Start relay serve to enable">Plan</button>` : ""}
         <span class="lozenge lozenge-${feature.status}">${statusLabel(feature.status)}</span>
         ${hasDetails ? `<span class="chevron">&#9662;</span>` : ""}
       </div>
@@ -702,65 +699,6 @@ function formatDuration(claimedAt, generatedAt) {
   return `${hrs}h ${mins % 60}m`;
 }
 
-function renderAgentsPanel(workers, generatedAt) {
-  const cloudIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>';
-  const localIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
-
-  const cards = workers.map((w) => {
-    const isCloud = w.name.startsWith("cloud-");
-    const icon = isCloud ? cloudIcon : localIcon;
-    const typeLabel = isCloud ? "Cloud" : "Local";
-    const taskRows = (w.taskDetails || []).map((td) =>
-      `<div class="ap-task-row">
-        <span class="ap-task-name">${escHTML(td.title)}</span>
-        <span class="ap-task-feature">${escHTML(td.feature)}</span>
-        <span class="ap-task-duration mono">${formatDuration(td.claimed_at, generatedAt)}</span>
-      </div>`
-    ).join("");
-    return `<div class="ap-card">
-      <div class="ap-card-header">
-        <span class="ap-type-icon" title="${typeLabel}">${icon}</span>
-        <span class="ap-agent-name">${escHTML(w.name)}</span>
-        <span class="ap-task-count mono">${w.tasks} task${w.tasks !== 1 ? "s" : ""}</span>
-      </div>
-      ${taskRows}
-    </div>`;
-  }).join("");
-
-  const empty = workers.length === 0
-    ? `<div class="ap-empty">No agents currently running.</div>`
-    : "";
-
-  return `<div class="agents-panel" id="agentsPanel">
-    <div class="ap-header">
-      <span class="ap-title">Active Agents</span>
-      <button class="ap-close" onclick="toggleAgentsPanel()">&times;</button>
-    </div>
-    <div class="ap-body">${cards}${empty}</div>
-  </div>`;
-}
-
-function renderExecSummary(execCounts) {
-  const total = execCounts.autonomous + execCounts.supervised + execCounts.guided;
-  if (total === 0) return "";
-  const pctAuto = Math.round((execCounts.autonomous / total) * 100);
-  const pctSuper = Math.round((execCounts.supervised / total) * 100);
-  const pctGuided = 100 - pctAuto - pctSuper;
-  return `<div class="exec-summary">
-    <div class="detail-label">Execution Mode</div>
-    <div class="exec-bar">
-      ${pctAuto > 0 ? `<div class="exec-bar-seg exec-bar-autonomous" style="width:${pctAuto}%" title="Autonomous: ${execCounts.autonomous}"></div>` : ""}
-      ${pctSuper > 0 ? `<div class="exec-bar-seg exec-bar-supervised" style="width:${pctSuper}%" title="Supervised: ${execCounts.supervised}"></div>` : ""}
-      ${pctGuided > 0 ? `<div class="exec-bar-seg exec-bar-guided" style="width:${pctGuided}%" title="Guided: ${execCounts.guided}"></div>` : ""}
-    </div>
-    <div class="exec-legend">
-      ${execCounts.autonomous > 0 ? `<span class="exec-leg-item"><span class="exec-dot" style="background:#a78bfa"></span>Auto ${execCounts.autonomous}</span>` : ""}
-      ${execCounts.supervised > 0 ? `<span class="exec-leg-item"><span class="exec-dot" style="background:#818cf8"></span>Supervised ${execCounts.supervised}</span>` : ""}
-      ${execCounts.guided > 0 ? `<span class="exec-leg-item"><span class="exec-dot" style="background:#67e8f9"></span>Guided ${execCounts.guided}</span>` : ""}
-    </div>
-  </div>`;
-}
-
 function loadAgentDefs() {
   const scriptDir = dirname(new URL(import.meta.url).pathname);
   const agentsDir = join(scriptDir, "..", "agents");
@@ -785,76 +723,678 @@ function loadAgentDefs() {
   return defs;
 }
 
+// ── Kanban column mapping ───────────────────────────────────────
+
+const KANBAN_COLUMNS = [
+  { key: "draft", label: "Draft", cssClass: "col-draft" },
+  { key: "ready", label: "Ready", cssClass: "col-ready" },
+  { key: "in-progress", label: "In Progress", cssClass: "col-progress" },
+  { key: "done", label: "Done", cssClass: "col-done" },
+  { key: "blocked", label: "Blocked", cssClass: "col-blocked" },
+];
+
+function assignKanbanColumn(feature) {
+  if (feature.lifecycle === "draft") return "draft";
+  if (feature.status === "blocked") return "blocked";
+  if (feature.status === "shipped") return "done";
+  if (feature.status === "in-progress") return "in-progress";
+  return "ready";
+}
+
+function derivePriority(feature) {
+  const tasks = feature.allTasks || [];
+  if (tasks.length === 0) return "p2";
+  const best = tasks.reduce((best, t) => Math.min(best, priorityOrder[t.priority] ?? 9), 9);
+  return best === 0 ? "p0" : best === 1 ? "p1" : "p2";
+}
+
+// ── CSS: Kanban layout (new) ────────────────────────────────────
+
+function renderCSS_Kanban() {
+  return `
+/* ── SIDEBAR ── */
+.sidebar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: relative; z-index: 10; }
+.sidebar-logo { padding: 24px 20px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+.sidebar-logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--green), var(--blue), #ec4899); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff; box-shadow: 0 0 20px rgba(129,140,248,0.3); }
+.sidebar-logo-text h1 { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.5px; }
+.sidebar-logo-text span { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.nav-section { margin-top: 20px; }
+.nav-section:first-child { margin-top: 12px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; padding: 8px 12px 6px; }
+.sb-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-size: 14px; font-weight: 500; position: relative; user-select: none; }
+.sb-nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.sb-nav-item.active { background: linear-gradient(135deg, rgba(129,140,248,0.2), rgba(99,102,241,0.15)); color: var(--text-primary); box-shadow: 0 0 20px rgba(129,140,248,0.1); }
+.sb-nav-item-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: 0.7; }
+.sb-nav-item.active .sb-nav-item-icon { opacity: 1; }
+.sb-nav-badge { margin-left: auto; background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; min-width: 24px; text-align: center; }
+.sb-nav-item.active .sb-nav-badge { background: rgba(129,140,248,0.3); color: var(--accent); }
+.sidebar-bottom { padding: 12px; border-top: 1px solid var(--border); }
+.sb-new-feature-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #6366f1); color: white; border: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: 0 0 20px rgba(129,140,248,0.2); }
+.sb-new-feature-btn:hover { box-shadow: 0 0 30px rgba(129,140,248,0.4); transform: translateY(-1px); }
+
+/* ── TOP BAR ── */
+.topbar { display: flex; align-items: center; justify-content: flex-end; padding: 12px 28px; border-bottom: 1px solid var(--border); position: relative; z-index: 1; background: rgba(10,14,39,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.topbar-time { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
+
+/* ── MAIN CONTENT ── */
+.main-wrapper { position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.main-content { flex: 1; overflow-y: auto; padding: 24px 28px; position: relative; z-index: 1; }
+.view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.view-title { font-size: 22px; font-weight: 700; }
+
+/* ── VIEWS ── */
+.kb-view { display: none; }
+.kb-view.active { display: block; }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-search { padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text-primary); font-family: var(--font-body); font-size: 13px; width: 200px; outline: none; transition: var(--transition); }
+.filter-search:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(129,140,248,0.1); }
+.filter-search::placeholder { color: var(--text-muted); }
+.filter-divider { width: 1px; height: 24px; background: var(--border); }
+.filter-chip { padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: var(--transition); user-select: none; }
+.filter-chip:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.filter-chip.active { background: rgba(129,140,248,0.12); border-color: rgba(129,140,248,0.3); color: var(--accent); }
+
+/* ── KANBAN BOARD ── */
+.kanban { display: flex; gap: 16px; height: calc(100vh - 200px); overflow-x: auto; padding-bottom: 8px; }
+.kanban-column { min-width: 280px; width: 280px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp 0.5s ease-out both; }
+.kanban-column:nth-child(2) { animation-delay: 0.06s; }
+.kanban-column:nth-child(3) { animation-delay: 0.12s; }
+.kanban-column:nth-child(4) { animation-delay: 0.18s; }
+.kanban-column:nth-child(5) { animation-delay: 0.24s; }
+.kanban-column-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.kanban-column-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+.kanban-column-dot { width: 8px; height: 8px; border-radius: 50%; }
+.kanban-column-count { font-size: 12px; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 8px; }
+.kanban-column-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.kanban-column-body::-webkit-scrollbar { width: 4px; }
+.kanban-column-body::-webkit-scrollbar-track { background: transparent; }
+.kanban-column-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.col-draft .kanban-column-dot { background: var(--text-muted); }
+.col-draft .kanban-column-title { color: var(--text-secondary); }
+.col-ready .kanban-column-dot { background: var(--amber); box-shadow: var(--glow-amber); }
+.col-ready .kanban-column-title { color: var(--amber); }
+.col-progress .kanban-column-dot { background: var(--blue); box-shadow: var(--glow-blue); }
+.col-progress .kanban-column-title { color: var(--blue); }
+.col-done .kanban-column-dot { background: var(--green); box-shadow: var(--glow-green); }
+.col-done .kanban-column-title { color: var(--green); }
+.col-blocked .kanban-column-dot { background: var(--red); box-shadow: var(--glow-red); }
+.col-blocked .kanban-column-title { color: var(--red); }
+
+/* ── KANBAN CARDS ── */
+.card { background: var(--bg-detail); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; cursor: pointer; transition: var(--transition); }
+.card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; }
+.card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card-tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.tag-autonomous { background: rgba(167,139,250,0.15); color: var(--purple); }
+.tag-supervised { background: rgba(129,140,248,0.15); color: var(--blue); }
+.tag-guided { background: rgba(34,211,238,0.15); color: var(--cyan); }
+.tag-p0 { background: rgba(248,113,113,0.15); color: var(--red); }
+.tag-p1 { background: rgba(251,191,36,0.15); color: var(--amber); }
+.tag-p2 { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+.tag-bug { background: rgba(248,113,113,0.15); color: var(--red); }
+.tag-feature { background: rgba(129,140,248,0.15); color: var(--blue); }
+.card-progress { margin-top: 10px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+.card-progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 11px; color: var(--text-muted); }
+.card-tasks { font-family: var(--font-mono); font-size: 11px; }
+.card-epic { font-size: 10px; color: var(--text-muted); padding: 2px 6px; border: 1px solid var(--border); border-radius: 4px; }
+
+/* ── DETAIL PANEL ── */
+.detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.detail-overlay.open { opacity: 1; pointer-events: all; }
+.detail-panel { position: fixed; top: 0; right: 0; width: 520px; height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); z-index: 101; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
+.detail-overlay.open .detail-panel { transform: translateX(0); }
+.dp-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-header h2 { font-size: 18px; font-weight: 700; }
+.dp-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.dp-close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.dp-body { flex: 1; overflow-y: auto; padding: 24px; }
+.dp-section { margin-bottom: 24px; }
+.dp-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.dp-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.dp-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dp-meta-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px 12px; }
+.dp-meta-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.dp-meta-value { font-size: 14px; font-weight: 600; }
+.dp-progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.dp-progress-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+.dp-progress-label { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
+.dp-task-list { display: flex; flex-direction: column; gap: 8px; }
+.dp-task { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); font-size: 13px; transition: var(--transition); cursor: pointer; }
+.dp-task:hover { background: var(--bg-card-hover); border-color: var(--border-hover); }
+.dp-task-header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.dp-task-chevron { font-size: 10px; color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
+.dp-task.expanded .dp-task-chevron { transform: rotate(90deg); }
+.dp-task-expand { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.dp-task.expanded .dp-task-expand { max-height: 300px; }
+.dp-task-detail { padding: 0 12px 12px 30px; font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.dp-task-detail-row { display: flex; gap: 8px; margin-top: 6px; }
+.dp-task-detail-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; min-width: 50px; }
+.dp-task-detail-value { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
+.dp-task-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dp-task-name { flex: 1; color: var(--text-primary); font-weight: 500; line-height: 1.3; }
+.dp-task-wave { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); padding: 2px 6px; background: rgba(255,255,255,0.03); border-radius: 4px; }
+.dp-spec-link { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 6px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: var(--purple); font-size: 12px; font-weight: 600; text-decoration: none; transition: var(--transition); font-family: var(--font-body); }
+.dp-spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
+.dp-task-spec-link { display: inline-flex; align-items: center; gap: 4px; color: var(--purple); font-size: 11px; font-weight: 500; text-decoration: none; font-family: var(--font-mono); transition: var(--transition); }
+.dp-task-spec-link:hover { color: var(--text-primary); }
+.cost-row { display: flex; align-items: center; gap: 16px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); }
+.cost-item { display: flex; align-items: center; gap: 6px; }
+.cost-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.cost-value { font-size: 14px; font-weight: 600; color: var(--amber); font-family: var(--font-mono); }
+
+/* ── AGENTS VIEW ── */
+.agents-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; margin-bottom: 28px; }
+.agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.agent-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; }
+.agent-card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+.agent-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.agent-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.agent-card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.agent-status-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+.agent-status-active { background: rgba(52,211,153,0.15); color: var(--green); }
+.agent-status-idle { background: rgba(129,140,248,0.15); color: var(--blue); }
+.agent-category { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.agent-card-name { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.agent-card-role { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+.agent-card-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+
+/* ── SETTINGS VIEW ── */
+.settings-section { margin-bottom: 32px; }
+.settings-section-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+.settings-field { margin-bottom: 16px; }
+.settings-label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px; }
+.settings-input { width: 100%; max-width: 400px; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px; outline: none; }
+.settings-input:focus { border-color: var(--accent); }
+.settings-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.settings-save { padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
+.settings-save:hover { box-shadow: 0 0 20px rgba(129,140,248,0.3); }
+
+/* ── Responsive (Kanban) ── */
+@media (max-width: 1200px) { .kanban-column { min-width: 240px; width: 240px; } .agents-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) {
+  .sidebar { width: 60px; min-width: 60px; }
+  .sidebar-logo-text, .sb-nav-item span:not(.sb-nav-item-icon):not(.sb-nav-badge), .sidebar-logo-text span { display: none; }
+  .sidebar-logo { padding: 16px 12px; justify-content: center; }
+  .sidebar-logo-icon { width: 36px; height: 36px; font-size: 16px; }
+  .sb-nav-item { justify-content: center; padding: 10px; }
+  .sb-nav-badge { display: none; }
+  .sb-new-feature-btn span { display: none; }
+  .detail-panel { width: 100%; }
+  .kanban-column { min-width: 260px; width: 260px; }
+  .topbar { padding: 10px 16px; }
+  .main-content { padding: 16px; }
+}
+@media (max-width: 600px) {
+  .sidebar { display: none; }
+  body { flex-direction: column; }
+  .main-wrapper { height: 100vh; }
+  .kanban { flex-direction: column; height: auto; overflow-x: visible; overflow-y: auto; max-height: calc(100vh - 160px); }
+  .kanban-column { min-width: 100%; width: 100%; }
+  .kanban-column-body { max-height: 300px; }
+  .filter-bar { gap: 6px; }
+  .filter-search { width: 100%; }
+  .view-title { font-size: 18px; }
+  .agents-grid { grid-template-columns: 1fr; }
+  .detail-panel { width: 100%; }
+  .dp-meta-grid { grid-template-columns: 1fr; }
+  .dispatch-bar { flex-direction: column; align-items: stretch; }
+  .db-controls { flex-direction: column; gap: 10px; }
+  .cost-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+`;
+}
+
+// ── CSS: Triage/feature-row styles (preserved from old layout) ──
+
+function renderCSS_TriageCompat() {
+  return `
+/* ── Triage feature rows (compat) ── */
+.triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
+.empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
+.feature-dispatch { margin-bottom: 16px; }
+.bug-digest { padding: 4px 0; }
+.bug-digest-section { margin-bottom: 16px; }
+.bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.bug-digest-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; font-family: var(--font-mono); white-space: pre-wrap; }
+.feature-row { background: var(--bg-card); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; transition: all var(--transition); animation: fadeUp 0.5s ease-out both; }
+.feature-row:hover { border-color: var(--border-hover); box-shadow: 0 4px 30px rgba(0,0,0,0.2); }
+.feature-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer; user-select: none; transition: background var(--transition); }
+.feature-header:hover { background: var(--bg-card-hover); }
+.feature-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+.feature-info { min-width: 0; }
+.feature-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feature-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
+.feature-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.task-count { font-size: 12px; color: var(--text-secondary); }
+.feature-dates { font-size: 11px; color: var(--text-muted); }
+.cost-chip { font-size: 12px; color: var(--amber); margin-left: auto; white-space: nowrap; }
+.repos-cost-row { display: flex; align-items: center; gap: 6px; width: 100%; }
+.chevron { font-size: 12px; color: var(--text-muted); transition: transform 0.2s ease; display: inline-block; }
+.feature-row.expanded .chevron { transform: rotate(180deg); }
+.type-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.type-feature { color: var(--green); }
+.type-bug { color: var(--red); }
+.lozenge { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; backdrop-filter: blur(8px); }
+.lozenge-shipped { background: rgba(52,211,153,0.12); color: var(--green); box-shadow: 0 0 12px rgba(52,211,153,0.1); }
+.lozenge-in-progress { background: rgba(129,140,248,0.12); color: var(--blue); box-shadow: 0 0 12px rgba(129,140,248,0.1); }
+.lozenge-not-started { background: rgba(251,191,36,0.1); color: var(--amber); }
+.lozenge-blocked { background: rgba(248,113,113,0.12); color: var(--red); box-shadow: 0 0 12px rgba(248,113,113,0.1); }
+.lozenge-orphaned { background: rgba(107,114,128,0.12); color: var(--text-muted); }
+.lozenge-needs-review { background: rgba(245,158,11,0.15); color: var(--amber); }
+.lozenge-exec-autonomous { background: rgba(167,139,250,0.12); color: #a78bfa; }
+.lozenge-exec-supervised { background: rgba(129,140,248,0.12); color: #818cf8; }
+.lozenge-exec-guided { background: rgba(103,232,249,0.12); color: #67e8f9; }
+.lozenge-lifecycle-draft { background: rgba(107,114,128,0.12); color: var(--text-muted); font-style: italic; }
+.lozenge-lifecycle-paused { background: rgba(251,191,36,0.1); color: var(--amber); }
+.lozenge-lifecycle-cancelled { background: rgba(248,113,113,0.1); color: var(--red); text-decoration: line-through; }
+.lozenge-lifecycle-replanning { background: rgba(251,146,60,0.1); color: var(--orange); }
+.lozenge-lifecycle-completed { background: rgba(52,211,153,0.1); color: var(--green); }
+.feature-dimmed { opacity: 0.55; }
+.feature-dimmed:hover { opacity: 0.85; }
+.feature-detail { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.4s; background: var(--bg-detail); border-top: 1px solid var(--border); }
+.feature-row.expanded .feature-detail { max-height: 3000px; padding: 20px; }
+.detail-grid { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
+.detail-progress { display: flex; align-items: center; gap: 16px; }
+.progress-label { flex: 1; min-width: 80px; }
+.progress-bar-wrap { margin-bottom: 4px; }
+.pbar { height: 4px; background: var(--ring-bg); border-radius: 2px; overflow: hidden; }
+.pbar-fill { height: 100%; border-radius: 2px; box-shadow: 0 0 8px currentColor; transition: width 0.8s ease-out; }
+.task-meta { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+.detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px; }
+.detail-prs { flex-basis: 100%; }
+.waves-wrap { display: flex; flex-wrap: wrap; gap: 12px; }
+.wave-group { display: flex; align-items: center; gap: 3px; }
+.wave-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); margin-right: 2px; }
+.wdot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; transition: transform 0.15s; }
+.wdot:hover { transform: scale(1.5); }
+.wdot-done { background: var(--green); box-shadow: 0 0 8px rgba(52,211,153,0.5); }
+.wdot-in-progress { background: var(--blue); box-shadow: 0 0 8px rgba(129,140,248,0.5); }
+.wdot-ready, .wdot-pending { background: var(--text-muted); opacity: 0.3; }
+.wdot-blocked { background: var(--red); box-shadow: 0 0 8px rgba(248,113,113,0.5); }
+.wdot-paused, .wdot-cancelled { background: var(--text-muted); opacity: 0.2; }
+.repo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.repo-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border); font-size: 11px; backdrop-filter: blur(8px); }
+.repo-chip-name { font-weight: 600; color: var(--text-secondary); }
+.repo-chip-count { font-family: var(--font-mono); color: var(--text-primary); font-weight: 700; }
+.pr-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
+.pr-row a { color: var(--accent); text-decoration: none; }
+.pr-row a:hover { text-decoration: underline; }
+.detail-missing { grid-column: 1 / -1; margin-top: 4px; }
+.missing-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.missing-tbl th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 6px 12px 6px 0; border-bottom: 1px solid var(--border); }
+.missing-tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+.missing-tbl tr:last-child td { border-bottom: none; }
+.missing-tbl .mono { font-family: var(--font-mono); font-size: 11px; }
+.missing-tbl a { color: var(--accent); text-decoration: none; }
+.missing-tbl a:hover { text-decoration: underline; }
+.worker-empty { color: var(--text-muted); }
+.worker-icon { font-size: 14px; }
+.priority-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
+.stale-task { background: rgba(248,113,113,0.06); }
+.stale-warn { color: var(--amber); font-size: 13px; }
+.jira-pill { display: inline-flex; align-items: center; border-radius: 6px; overflow: hidden; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); font-size: 10px; font-weight: 600; font-family: var(--font-mono); vertical-align: middle; margin-left: 6px; transition: all var(--transition); }
+.epic-filter-toggle { padding: 1px 6px; color: #60a5fa; cursor: pointer; transition: all var(--transition); user-select: none; }
+.epic-filter-toggle:hover { background: rgba(59,130,246,0.2); }
+.epic-filter-toggle.epic-active { background: rgba(59,130,246,0.5); color: #fff; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
+.jira-link-icon { padding: 1px 5px; color: #60a5fa; text-decoration: none; border-left: 1px solid rgba(59,130,246,0.2); transition: all var(--transition); font-size: 11px; line-height: 1; }
+.jira-link-icon:hover { background: rgba(59,130,246,0.2); }
+.spec-link { display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px; border-radius: 6px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); font-size: 10px; font-weight: 600; color: #a78bfa; text-decoration: none; vertical-align: middle; margin-left: 6px; transition: all var(--transition); }
+.spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
+.dismiss-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; margin-left: 8px; }
+.dismiss-btn:hover { background: rgba(255,255,255,0.08); }
+.section-hdr { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.section-hdr .section-count { background: var(--bg-input); border-radius: 10px; padding: 1px 8px; font-size: 10px; font-family: var(--font-mono); }
+.orphaned-section { margin-top: 24px; }
+.orphaned-item { padding: 10px 16px; background: var(--bg-card); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; font-size: 13px; color: var(--text-secondary); border-left: 3px solid var(--text-muted); }
+`;
+}
+
+// ── Kanban card rendering ───────────────────────────────────────
+
+function renderKanbanCard(feature) {
+  const tasks = feature.tasks || { total: 0, done: 0 };
+  const pct = tasks.total > 0 ? Math.round((tasks.done / tasks.total) * 100) : 0;
+  const col = assignKanbanColumn(feature);
+  const pri = derivePriority(feature);
+  const isBug = feature.type === "bug";
+  const execTag = feature.execution === "autonomous" ? "tag-autonomous" : feature.execution === "guided" ? "tag-guided" : "tag-supervised";
+  const execLabel = feature.execution === "autonomous" ? "Auto" : feature.execution === "guided" ? "Guided" : "Supervised";
+  const progressColor = col === "done" ? "var(--green)" : col === "blocked" ? "var(--red)" : col === "ready" ? "var(--amber)" : "var(--blue)";
+  const progressGlow = col === "done" ? "var(--glow-green)" : col === "blocked" ? "var(--glow-red)" : col === "ready" ? "" : "var(--glow-blue)";
+
+  return `<div class="card" data-slug="${escHTML(feature.slug)}" data-exec="${feature.execution || ""}" data-priority="${pri}" data-type="${feature.type}" data-title="${escHTML(feature.title.toLowerCase())}" data-epic="${escHTML(feature.epic || "")}" onclick="openDetail('${escHTML(feature.slug)}')">
+  <div class="card-title">${escHTML(feature.title)}</div>
+  ${feature.problem ? `<div class="card-desc">${escHTML(feature.problem)}</div>` : ""}
+  <div class="card-meta">
+    <span class="card-tag ${isBug ? "tag-bug" : "tag-feature"}">${isBug ? "Bug" : "Feature"}</span>
+    <span class="card-tag tag-${pri}">${pri.toUpperCase()}</span>
+    <span class="card-tag ${execTag}">${execLabel}</span>
+  </div>
+  ${tasks.total > 0 ? `<div class="card-progress"><div class="card-progress-fill" style="width:${pct}%;background:${progressColor}${progressGlow ? ";box-shadow:" + progressGlow : ""}"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">${tasks.done}/${tasks.total} tasks</span>
+    ${feature.epic ? `<span class="card-epic">epic: ${escHTML(feature.epic)}</span>` : ""}
+  </div>` : `<div class="card-footer">${feature.epic ? `<span class="card-epic">epic: ${escHTML(feature.epic)}</span>` : ""}</div>`}
+</div>`;
+}
+
+// ── Kanban board rendering ──────────────────────────────────────
+
+function renderKanbanBoard(features) {
+  const columns = {};
+  for (const col of KANBAN_COLUMNS) columns[col.key] = [];
+  for (const f of features) {
+    if (f.status === "orphaned") continue;
+    const col = assignKanbanColumn(f);
+    if (columns[col]) columns[col].push(f);
+  }
+
+  return `<div class="kanban">${KANBAN_COLUMNS.map(col => {
+    const items = columns[col.key];
+    return `<div class="kanban-column ${col.cssClass}">
+      <div class="kanban-column-header">
+        <div class="kanban-column-title"><span class="kanban-column-dot"></span>${col.label}</div>
+        <span class="kanban-column-count" data-col="${col.key}">${items.length}</span>
+      </div>
+      <div class="kanban-column-body">${items.map(f => renderKanbanCard(f)).join("\n")}</div>
+    </div>`;
+  }).join("\n")}</div>`;
+}
+
+// ── Agents view rendering ───────────────────────────────────────
+
+function renderAgentsView(agentDefs, activeWorkers) {
+  const activeNames = new Set(activeWorkers.map(w => w.name));
+  const agentIcons = { chat: "&#9997;", diagnostic: "&#9889;", plan: "&#9881;", dispatch: "&#9874;", audit: "&#9888;", validate: "&#10003;" };
+  const agentColors = { chat: "rgba(129,140,248,0.15)", diagnostic: "rgba(251,191,36,0.15)", plan: "rgba(167,139,250,0.15)", dispatch: "rgba(34,211,238,0.15)", audit: "rgba(248,113,113,0.15)", validate: "rgba(52,211,153,0.15)" };
+
+  return `<div class="kb-view" id="view-agents">
+    <div class="view-header"><div class="view-title">Agents</div></div>
+    <div class="agents-subtitle">Tap an agent to explore logs, prompts, and performance.</div>
+    <div class="agents-grid">
+      ${agentDefs.map(a => {
+        const isActive = activeNames.has(a.type) || activeNames.has(`agent-${a.type}`) || activeNames.has(`cloud-${a.type}`);
+        const icon = agentIcons[a.type] || "&#9881;";
+        const color = agentColors[a.type] || "rgba(129,140,248,0.15)";
+        return `<div class="agent-card" onclick="window.open('/agent/${a.type}','_blank')">
+          <div class="agent-card-top">
+            <div class="agent-icon" style="background:${color}">${icon}</div>
+            <div class="agent-card-badges">
+              <span class="agent-status-badge ${isActive ? "agent-status-active" : "agent-status-idle"}">${isActive ? "Active" : "Idle"}</span>
+            </div>
+          </div>
+          <div class="agent-card-name">${escHTML(a.name)}</div>
+          <div class="agent-card-role">${escHTML(a.description)}</div>
+        </div>`;
+      }).join("\n")}
+    </div>
+  </div>`;
+}
+
+// ── Build embedded feature JSON for client-side detail panel ────
+
+function buildFeaturesJSON(features, prsByFeature, linkContext) {
+  return features.filter(f => f.status !== "orphaned").map(f => {
+    const tasks = f.tasks || { total: 0, done: 0 };
+    const pct = tasks.total > 0 ? Math.round((tasks.done / tasks.total) * 100) : 0;
+    const isShipped = f.status === "shipped";
+    const taskList = isShipped ? (f.allTasks || []) : (f.missing || []);
+    const sorted = [...taskList].sort((a, b) => (a.wave || 0) - (b.wave || 0) || (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9));
+    const prs = prsByFeature[f.slug] || [];
+
+    return {
+      slug: f.slug, title: f.title, type: f.type, status: f.status, lifecycle: f.lifecycle,
+      execution: f.execution || "supervised", epic: f.epic || "", epicTitle: f.epicTitle || "",
+      problem: f.problem || "", specPath: f.specPath || "", specSha: f.specSha || "",
+      priority: derivePriority(f), tasks, progress: pct,
+      cost: f.cost && f.cost.usd > 0 ? { usd: f.cost.usd, tokens: f.cost.tokens } : null,
+      bugDigest: f.bugDigest || null, severity: f.severity || null,
+      prs: prs.map(p => ({ number: p.number, title: p.title, url: p.url })),
+      taskList: sorted.map(t => ({
+        name: t.title || t.filename.replace(".md", ""), status: t.status,
+        wave: t.wave || 0, repo: t.repo || "", priority: t.priority || "normal",
+        desc: t.description || "", relPath: t.relPath || "", sha: t.sha || "",
+        claimed_at: t.claimed_at || "",
+      })),
+    };
+  });
+}
+
+// ── Client-side JavaScript ──────────────────────────────────────
+
+function renderClientJS(linkContext) {
+  return `
+<script>
+var LINK_CONTEXT = ${JSON.stringify({ githubServerUrl: linkContext.githubServerUrl || "", githubRepository: linkContext.githubRepository || "", commitSha: linkContext.commitSha || "" })};
+var FEATURES_MAP = {};
+FEATURES.forEach(function(f) { FEATURES_MAP[f.slug] = f; });
+
+function specUrl(path, sha) {
+  if (!path || !LINK_CONTEXT.githubServerUrl || !LINK_CONTEXT.githubRepository) return null;
+  var s = sha || LINK_CONTEXT.commitSha;
+  if (!s) return null;
+  return LINK_CONTEXT.githubServerUrl + '/' + LINK_CONTEXT.githubRepository + '/blob/' + s + '/' + path;
+}
+
+var fileIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+var extIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+
+var statusColors = { done: 'var(--green)', 'in-progress': 'var(--blue)', ready: 'var(--amber)', pending: 'var(--text-muted)', blocked: 'var(--red)' };
+var progressColors = { 'In Progress': 'var(--blue)', 'Not Started': 'var(--amber)', Blocked: 'var(--red)', Done: 'var(--green)', Draft: 'var(--text-muted)' };
+
+function fmtTokens(n) { if (n >= 1e6) return (n/1e6).toFixed(1)+'M'; if (n >= 1e3) return (n/1e3).toFixed(0)+'K'; return String(n); }
+function fmtCost(usd) { return usd >= 1 ? '$'+usd.toFixed(2) : '$'+usd.toFixed(4); }
+
+// ── View switching ──
+function switchView(view, navEl) {
+  document.querySelectorAll('.sb-nav-item').forEach(function(el) { el.classList.remove('active'); });
+  if (navEl) navEl.classList.add('active');
+  document.querySelectorAll('.kb-view').forEach(function(v) { v.classList.remove('active'); });
+  var target = document.getElementById('view-' + view);
+  if (target) target.classList.add('active');
+}
+
+// ── Detail panel ──
+function openDetail(slug) {
+  var f = FEATURES_MAP[slug];
+  if (!f) return;
+  document.getElementById('dpTitle').textContent = f.title;
+  var sl = statusLabel(f.status);
+  var pColor = progressColors[sl] || 'var(--blue)';
+
+  var fUrl = specUrl(f.specPath, f.specSha);
+  var specLabel = f.type === 'bug' ? 'Bug Report' : 'Feature Spec';
+  var specHtml = fUrl ? '<a href="'+fUrl+'" target="_blank" rel="noopener" class="dp-spec-link" title="View '+specLabel+'">'+fileIcon+' '+specLabel+' '+extIcon+'</a>' : '';
+
+  var costHtml = '';
+  if (f.cost && f.cost.usd > 0) {
+    costHtml = '<div class="dp-section"><div class="dp-section-title">Cost</div><div class="cost-row"><div class="cost-item"><span style="font-size:14px;opacity:0.7">&#128176;</span><span class="cost-label">Spend</span><span class="cost-value">'+fmtCost(f.cost.usd)+'</span></div><div class="cost-item"><span style="font-size:14px;opacity:0.7">&#9889;</span><span class="cost-label">Tokens</span><span class="cost-value">'+fmtTokens(f.cost.tokens)+'</span></div></div></div>';
+  }
+
+  var dispatchHtml = '';
+  if (sl !== 'Done') {
+    dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Actions</div><div class="dispatch-bar" data-slug="'+slug+'"><div class="db-controls"><div class="db-group"><span class="db-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-target-btn\\')" title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-target-btn\\')" title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div><div class="db-group"><span class="db-label">Mode</span><div class="dd-toggle"><button class="dd-mode-btn active" data-mode="supervised" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-mode-btn\\')" title="Agent opens a PR."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button><button class="dd-mode-btn" data-mode="autonomous" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-mode-btn\\')" title="Agent auto-merges."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button></div></div></div><button class="dd-go-btn" onclick="event.stopPropagation();var bar=this.closest(\\'.dispatch-bar\\'),t=bar.querySelector(\\'.dd-target-btn.active\\').dataset.target,m=bar.querySelector(\\'.dd-mode-btn.active\\').dataset.mode;dispatchAgent(\\''+slug+'\\',m,t,1)">&#9654; Dispatch</button></div></div>';
+  }
+
+  var prsHtml = '';
+  if (f.prs && f.prs.length > 0) {
+    prsHtml = '<div class="dp-section"><div class="dp-section-title">Pull Requests</div>' + f.prs.map(function(p) {
+      return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px"><svg width="14" height="14" viewBox="0 0 16 16" fill="var(--accent)"><path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg><a href="'+p.url+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">#'+p.number+' '+p.title+'</a></div>';
+    }).join('') + '</div>';
+  }
+
+  var tasksHtml = '';
+  if (f.taskList && f.taskList.length) {
+    tasksHtml = '<div class="dp-section"><div class="dp-section-title">Tasks</div><div class="dp-task-list">' +
+      f.taskList.map(function(t) {
+        var tUrl = specUrl(t.relPath, t.sha);
+        var tLink = tUrl ? '<a href="'+tUrl+'" target="_blank" rel="noopener" class="dp-task-spec-link" onclick="event.stopPropagation()">'+fileIcon+' spec '+extIcon+'</a>' : '';
+        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div><div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+'</div></div></div>';
+      }).join('') + '</div></div>';
+  }
+
+  document.getElementById('dpBody').innerHTML =
+    '<div class="dp-section"><div class="dp-section-title">Description</div><div class="dp-desc">'+(f.problem||'No description.')+'</div>'+(specHtml?'<div style="margin-top:12px">'+specHtml+'</div>':'')+'</div>' +
+    '<div class="dp-section"><div class="dp-meta-grid"><div class="dp-meta-item"><div class="dp-meta-label">Status</div><div class="dp-meta-value" style="color:'+pColor+'">'+sl+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Priority</div><div class="dp-meta-value" style="color:'+(f.priority==='p0'?'var(--red)':f.priority==='p1'?'var(--amber)':'var(--text-secondary)')+'">'+f.priority.toUpperCase()+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Execution</div><div class="dp-meta-value">'+f.execution+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Epic</div><div class="dp-meta-value">'+(f.epic||'—')+'</div></div></div></div>' +
+    (f.tasks.total > 0 ? '<div class="dp-section"><div class="dp-section-title">Progress</div><div class="dp-progress-bar"><div class="dp-progress-fill" style="width:'+f.progress+'%;background:'+pColor+'"></div></div><div class="dp-progress-label">'+f.tasks.done+' of '+f.tasks.total+' tasks complete</div></div>' : '') +
+    costHtml + dispatchHtml + prsHtml + tasksHtml;
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function statusLabel(s) { return {shipped:'Done','in-progress':'In Progress','not-started':'Not Started',blocked:'Blocked',orphaned:'Orphaned','needs-review':'Needs Review'}[s]||s; }
+
+function closeDetail(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('detailOverlay').classList.remove('open');
+}
+
+function ddToggleBtn(btn, cls) {
+  btn.closest('.dd-toggle').querySelectorAll('.'+cls).forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+}
+
+// ── Filtering ──
+function applyFilters() {
+  var search = document.getElementById('filterSearch').value.toLowerCase();
+  var activeExec = []; var activePri = [];
+  document.querySelectorAll('.filter-chip.active[data-group="exec"]').forEach(function(c){activeExec.push(c.dataset.value)});
+  document.querySelectorAll('.filter-chip.active[data-group="priority"]').forEach(function(c){activePri.push(c.dataset.value)});
+  var execAll = activeExec.indexOf('all') >= 0 || activeExec.length === 0;
+  var priAll = activePri.length === 0;
+
+  document.querySelectorAll('.card').forEach(function(card) {
+    var t = card.dataset.title || '';
+    var e = card.dataset.exec || '';
+    var p = card.dataset.priority || '';
+    var ep = (card.dataset.epic || '').toLowerCase();
+    var matchSearch = !search || t.indexOf(search) >= 0 || ep.indexOf(search) >= 0;
+    var matchExec = execAll || activeExec.indexOf(e) >= 0;
+    var matchPri = priAll || activePri.indexOf(p) >= 0;
+    card.style.display = (matchSearch && matchExec && matchPri) ? '' : 'none';
+  });
+  document.querySelectorAll('.kanban-column-body').forEach(function(body) {
+    var col = body.closest('.kanban-column');
+    var countEl = col.querySelector('.kanban-column-count');
+    var visible = body.querySelectorAll('.card:not([style*="display: none"])').length;
+    countEl.textContent = visible;
+  });
+}
+
+function toggleChip(chip) {
+  var group = chip.dataset.group;
+  if (chip.dataset.value === 'all') {
+    document.querySelectorAll('.filter-chip[data-group="'+group+'"]').forEach(function(c){c.classList.remove('active')});
+    chip.classList.add('active');
+  } else {
+    var allChip = document.querySelector('.filter-chip[data-group="'+group+'"][data-value="all"]');
+    if (allChip) allChip.classList.remove('active');
+    chip.classList.toggle('active');
+    if (!document.querySelector('.filter-chip.active[data-group="'+group+'"]') && allChip) allChip.classList.add('active');
+  }
+  applyFilters();
+}
+
+// ── Toast ──
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + (type || 'info');
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  requestAnimationFrame(function() { t.classList.add('toast-show'); });
+  setTimeout(function() { t.classList.remove('toast-show'); setTimeout(function() { t.remove(); }, 300); }, 4000);
+}
+
+// ── Dispatch Agent ──
+function dispatchAgent(slug, mode, target, agents) {
+  agents = Math.max(1, Math.min(4, agents || 1));
+  var modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised'};
+  if (target === 'local') {
+    showToast('Launching local agent in ' + modeLabels[mode] + ' mode...', 'info');
+    fetch('http://localhost:7433/api/dispatch/local', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: slug, mode: mode, agents: agents })
+    }).then(function(r) {
+      if (r.ok) r.json().then(function(d) { showToast('Local agent launched (PID ' + d.pid + ')', 'success'); });
+      else r.json().then(function(d) { showToast('Failed: ' + (d.error || 'unknown'), 'error'); }).catch(function() { r.text().then(function(t) { showToast('Failed: ' + t, 'error'); }); });
+    }).catch(function() { showToast('Start relay serve to use local dispatch', 'error'); });
+    return;
+  }
+  var pat = localStorage.getItem('gh_pat');
+  if (!pat) { showToast('Set GitHub PAT in Settings first', 'warn'); switchView('settings', document.querySelector('[onclick*="settings"]')); return; }
+  var repo = 'ChristianJensen/tasks-control-plane';
+  showToast('Dispatching cloud agent in ' + modeLabels[mode] + ' mode...', 'info');
+  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
+    method: 'POST', headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
+    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode, agents: String(agents) } })
+  }).then(function(r) {
+    if (r.ok || r.status === 204) showToast('Cloud agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
+    else r.text().then(function(t) { showToast('Failed: ' + t, 'error'); });
+  }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+}
+
+// ── Settings ──
+var savedPat = localStorage.getItem('gh_pat');
+if (savedPat) document.getElementById('ghPat').value = savedPat;
+function savePat() {
+  var v = document.getElementById('ghPat').value.trim();
+  if (v) { localStorage.setItem('gh_pat', v); showToast('Token saved', 'success'); }
+}
+
+// ── Triage feature row expand ──
+document.addEventListener('click', function(e) {
+  var header = e.target.closest('.feature-header');
+  if (header && !e.target.closest('a')) { header.parentElement.classList.toggle('expanded'); }
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDetail();
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault(); document.getElementById('filterSearch').focus();
+  }
+});
+
+// ── URL param: ?epic=KEY ──
+var epicParam = new URLSearchParams(window.location.search).get('epic');
+if (epicParam) {
+  document.getElementById('filterSearch').value = epicParam;
+  applyFilters();
+}
+
+// ── Clock ──
+function updateTime() {
+  var el = document.getElementById('topbarTime');
+  if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+updateTime(); setInterval(updateTime, 60000);
+
+// ── Plan button enablement ──
+fetch('http://localhost:7433/api/health', { mode: 'cors' }).then(function(r) { return r.json(); }).then(function() {
+  document.querySelectorAll('.plan-btn-check').forEach(function(btn) { btn.disabled = false; btn.title = 'Plan this feature'; });
+}).catch(function() {});
+<\/script>`;
+}
+
+// ── Main renderHTML ─────────────────────────────────────────────
+
 function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding = {}) {
   const { summary, execCounts, activeWorkers, features, generated_at } = boardState;
   const agentDefs = loadAgentDefs();
-  const featureItems = features.filter((f) => f.type !== "bug" && f.status !== "orphaned");
   const triageItems = features.filter((f) => f.type === "bug" && f.reportedBy === "telemetry");
-  const bugItems = features.filter((f) => f.type === "bug" && f.status !== "orphaned" && f.reportedBy !== "telemetry");
-  const totalTasks = features.reduce((s, f) => s + (f.tasks?.total || 0), 0);
-  const doneTasks = features.reduce((s, f) => s + (f.tasks?.done || 0), 0);
-  const overallPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-
-  // Group features by epic
-  function groupByEpic(items) {
-    const groups = new Map();
-    for (const f of items) {
-      const key = f.epic || "__ungrouped__";
-      if (!groups.has(key)) {
-        groups.set(key, { epicKey: f.epic, epicTitle: f.epicTitle || "", items: [] });
-      }
-      if (f.epicTitle && !groups.get(key).epicTitle) {
-        groups.get(key).epicTitle = f.epicTitle;
-      }
-      groups.get(key).items.push(f);
-    }
-    return groups;
-  }
-
-  const epicGroups = groupByEpic(featureItems);
-  const hasAnyEpic = [...epicGroups.keys()].some((k) => k !== "__ungrouped__");
-  let rowIndex = 0;
-  let featureRowsHTML = "";
-
-  if (!hasAnyEpic) {
-    // No epics — render flat like before
-    featureRowsHTML = featureItems.map((f, i) =>
-      renderFeatureRow(f, prsByFeature, i, linkContext, generated_at)
-    ).join("\n");
-  } else {
-    for (const [key, group] of epicGroups) {
-      const label = key === "__ungrouped__"
-        ? "Other Features"
-        : (group.epicTitle ? `Jira: ${group.epicKey}: ${group.epicTitle}` : `Jira: ${group.epicKey}`);
-      const jiraUrl = key !== "__ungrouped__" && linkContext.jiraBaseUrl
-        ? `${linkContext.jiraBaseUrl}/browse/${group.epicKey}`
-        : null;
-      const jiraIcon = jiraUrl
-        ? ` <a href="${escHTML(jiraUrl)}" target="_blank" rel="noopener" class="epic-group-jira" title="Open in Jira">&#8599;</a>`
-        : "";
-      featureRowsHTML += `<div class="epic-group" data-epic-group="${escHTML(group.epicKey)}">`;
-      featureRowsHTML += `<div class="epic-group-hdr" onclick="this.parentElement.classList.toggle('epic-expanded')">`
-        + `<span class="epic-group-chevron">&#9662;</span>`
-        + `<span class="epic-group-label">${escHTML(label)}</span>${jiraIcon}`
-        + `<span class="section-count">${group.items.length}</span>`
-        + `</div>`;
-      featureRowsHTML += `<div class="epic-group-body">`;
-      for (const f of group.items) {
-        featureRowsHTML += renderFeatureRow(f, prsByFeature, rowIndex++, linkContext, generated_at);
-      }
-      featureRowsHTML += `</div></div>`;
-    }
-  }
-
-  const bugRowsHTML = bugItems.map((f, i) =>
-    renderFeatureRow(f, prsByFeature, featureItems.length + i, linkContext, generated_at)
-  ).join("\n");
-
-  const needsReviewCount = triageItems.filter(f => f.status === "needs-review").length;
+  const allNonOrphan = features.filter(f => f.status !== "orphaned");
 
   const triageRowsHTML = triageItems.map((f, i) =>
-    renderFeatureRow(f, prsByFeature, featureItems.length + bugItems.length + i, linkContext, generated_at)
+    renderFeatureRow(f, prsByFeature, i, linkContext, generated_at)
   ).join("\n");
+
+  const featuresJSON = buildFeaturesJSON(features, prsByFeature, linkContext);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -870,6 +1410,7 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
   --font-body: 'DM Sans', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --bg: #0a0e27;
+  --bg-sidebar: #070b1e;
   --bg-card: rgba(255,255,255,0.04);
   --bg-card-hover: rgba(255,255,255,0.07);
   --bg-detail: rgba(0,0,0,0.2);
@@ -885,6 +1426,8 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
   --amber: #fbbf24;
   --red: #f87171;
   --orange: #fb923c;
+  --cyan: #22d3ee;
+  --purple: #a78bfa;
   --ring-bg: rgba(255,255,255,0.06);
   --nav-bg: rgba(10,14,39,0.8);
   --glow-green: 0 0 30px rgba(52,211,153,0.15);
@@ -892,111 +1435,27 @@ function renderHTML(boardState, prsByFeature, title, linkContext = {}, branding 
   --glow-amber: 0 0 30px rgba(251,191,36,0.15);
   --glow-red: 0 0 30px rgba(248,113,113,0.15);
   --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
   --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-width: 260px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  font-family: var(--font-body);
-  background: var(--bg);
-  color: var(--text-primary);
-  line-height: 1.6;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+body { font-family: var(--font-body); background: var(--bg); color: var(--text-primary); min-height: 100vh; display: flex; overflow: hidden; line-height: 1.6; }
 
-/* ── Animated Aurora Background ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: -1;
-  background:
-    radial-gradient(ellipse 50% 50% at 20% 30%, rgba(0,212,170,0.12), transparent),
-    radial-gradient(ellipse 40% 40% at 80% 20%, rgba(124,58,237,0.10), transparent),
-    radial-gradient(ellipse 45% 45% at 60% 80%, rgba(59,130,246,0.08), transparent),
-    radial-gradient(ellipse 35% 35% at 10% 80%, rgba(236,72,153,0.06), transparent);
-  animation: aurora 20s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes aurora {
-  0%, 100% { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%; }
-  25% { background-position: 100% 0%, 0% 100%, 50% 50%, 100% 0%; }
-  50% { background-position: 50% 100%, 50% 0%, 0% 50%, 50% 50%; }
-  75% { background-position: 0% 50%, 100% 50%, 100% 100%, 0% 0%; }
-}
+/* Aurora */
+.main-wrapper::before { content: ''; position: fixed; inset: 0; z-index: -1; background: radial-gradient(ellipse 50% 50% at 20% 30%, rgba(0,212,170,0.12), transparent), radial-gradient(ellipse 40% 40% at 80% 20%, rgba(124,58,237,0.10), transparent), radial-gradient(ellipse 45% 45% at 60% 80%, rgba(59,130,246,0.08), transparent), radial-gradient(ellipse 35% 35% at 10% 80%, rgba(236,72,153,0.06), transparent); animation: aurora 20s ease-in-out infinite; pointer-events: none; }
+@keyframes aurora { 0%, 100% { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%; } 25% { background-position: 100% 0%, 0% 100%, 50% 50%, 100% 0%; } 50% { background-position: 50% 100%, 50% 0%, 0% 50%, 50% 50%; } 75% { background-position: 0% 50%, 100% 50%, 100% 100%, 0% 0%; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── Nav Bar ── */
-.navbar {
-  position: sticky; top: 0; z-index: 100;
-  background: var(--nav-bg);
-  backdrop-filter: blur(30px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  height: 56px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.nav-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.nav-logo {
-  width: 28px; height: 28px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--green), var(--blue), #ec4899);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 14px; color: #fff;
-  box-shadow: 0 0 20px rgba(129,140,248,0.3);
-}
-.nav-title { font-weight: 700; font-size: 15px; }
-.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
-.nav-tab { background: none; border: none; color: var(--text-secondary); font-family: var(--font-body); font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: 8px; transition: var(--transition); }
-.nav-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-.nav-tab.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
-.triage-badge { display: inline-block; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
-.agents-badge { display: inline-block; background: var(--green); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
-.agents-panel { position: fixed; top: 0; right: 0; width: 360px; height: 100vh; background: var(--bg); border-left: 1px solid var(--border); z-index: 150; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: -8px 0 24px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
-.agents-panel.open { transform: translateX(0); }
-.ap-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.ap-title { font-weight: 700; font-size: 15px; color: var(--text-primary); }
-.ap-close { background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: var(--transition); line-height: 1; }
-.ap-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-.ap-body { flex: 1; overflow-y: auto; padding: 12px 0; }
-.ap-card { padding: 12px 20px; border-bottom: 1px solid var(--border); }
-.ap-card:last-child { border-bottom: none; }
-.ap-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.ap-type-icon { color: var(--text-muted); display: flex; align-items: center; flex-shrink: 0; }
-.ap-agent-name { font-weight: 600; font-size: 13px; color: var(--text-primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ap-task-count { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
-.ap-task-row { display: flex; align-items: center; gap: 8px; padding: 4px 0 4px 22px; font-size: 12px; }
-.ap-task-name { color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ap-task-feature { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
-.ap-task-duration { color: var(--accent); font-size: 11px; flex-shrink: 0; }
-.ap-empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
-.nav-right { display: flex; align-items: center; gap: 16px; }
-.nav-time { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
-.triage-hdr span:first-child { color: var(--red); }
-.triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
-.empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
-.feature-dispatch { margin-bottom: 16px; }
-.bug-digest { padding: 4px 0; }
-.bug-digest-section { margin-bottom: 16px; }
-.bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-.bug-digest-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; font-family: var(--font-mono); white-space: pre-wrap; }
-.settings-btn { background: none; border: none; color: var(--text-secondary); font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition); }
-.settings-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-.modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-.modal-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; max-width: 90vw; }
-.modal-title { font-weight: 700; font-size: 16px; margin-bottom: 16px; }
-.modal-label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px; }
-.modal-input { width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px; }
-.modal-input:focus { outline: none; border-color: var(--accent); }
-.modal-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
-.modal-btn { padding: 6px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
-.modal-btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+/* Dispatch bar */
 .dispatch-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(129,140,248,0.06); border: 1px solid var(--border); border-radius: 10px; flex-wrap: wrap; }
 .db-controls { display: flex; align-items: center; gap: 16px; flex: 1; flex-wrap: wrap; }
 .db-group { display: flex; align-items: center; gap: 6px; }
 .db-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-.dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
-.dd-group-label { padding: 8px 14px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-.dd-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.dd-color { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
 .dd-toggle { display: flex; gap: 4px; }
 .dd-target-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
 .dd-target-btn:hover { border-color: var(--accent); color: var(--text-primary); }
@@ -1009,866 +1468,143 @@ body::before {
 .dd-mode-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
 .dd-mode-btn:hover { border-color: var(--accent); color: var(--text-primary); }
 .dd-mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-.dd-mode-btn .dd-color { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
 .dd-go-btn { padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: var(--font-body); letter-spacing: 0.02em; }
 .dd-go-btn:hover { background: #6366f1; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+
+/* Toast */
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
 .toast-show { transform: translateY(0); opacity: 1; }
 .toast-info { background: rgba(129,140,248,0.9); backdrop-filter: blur(8px); }
 .toast-success { background: rgba(52,211,153,0.9); backdrop-filter: blur(8px); }
 .toast-warn { background: rgba(251,191,36,0.9); color: #1a1a2e; backdrop-filter: blur(8px); }
 .toast-error { background: rgba(248,113,113,0.9); backdrop-filter: blur(8px); }
-.dismiss-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; margin-left: 8px; }
-.dismiss-btn:hover { background: rgba(255,255,255,0.08); }
 
-/* ── Layout ── */
-.layout { max-width: 1200px; margin: 0 auto; padding: 24px; }
+${renderCSS_Kanban()}
+${renderCSS_TriageCompat()}
 
-/* ── Toolbar ── */
-.toolbar {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
-  animation: fadeUp 0.6s ease-out 0.4s both;
-}
-.search-wrap {
-  flex: 1; min-width: 200px; position: relative;
-}
-.search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-.search {
-  width: 100%; padding: 10px 14px 10px 40px;
-  background: var(--bg-input); backdrop-filter: blur(10px);
-  border: 1px solid var(--border); border-radius: 12px;
-  color: var(--text-primary); font-size: 13px; font-family: var(--font-body);
-  outline: none; transition: all var(--transition);
-}
-.search:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(129,140,248,0.15); }
-.search::placeholder { color: var(--text-muted); }
-.filters { display: flex; gap: 4px; flex-wrap: wrap; }
-.filter-btn {
-  padding: 7px 16px; border: 1px solid var(--border); border-radius: 20px;
-  background: var(--bg-input); backdrop-filter: blur(10px);
-  color: var(--text-secondary); font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: all var(--transition); font-family: var(--font-body);
-  white-space: nowrap;
-}
-.filter-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
-.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 20px rgba(129,140,248,0.3); }
-
-/* ── Section Headers ── */
-.section-hdr {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
-  color: var(--text-muted); margin: 28px 0 12px; padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px;
-}
-.section-hdr .section-count {
-  background: var(--bg-input); border-radius: 10px; padding: 1px 8px;
-  font-size: 10px; font-family: var(--font-mono);
-}
-.section-hdr.bug-hdr { color: var(--orange); border-color: rgba(249,115,22,0.2); }
-
-/* ── Feature Rows ── */
-.feature-row {
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 10px;
-  overflow: hidden;
-  transition: all var(--transition);
-  animation: fadeUp 0.5s ease-out both;
-}
-.feature-row:hover { border-color: var(--border-hover); box-shadow: 0 4px 30px rgba(0,0,0,0.2); }
-
-.feature-header {
-  padding: 14px 20px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  cursor: pointer; user-select: none;
-  transition: background var(--transition);
-}
-.feature-header:hover { background: var(--bg-card-hover); }
-.feature-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
-.feature-info { min-width: 0; }
-.feature-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.feature-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
-.feature-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.task-count { font-size: 12px; color: var(--text-secondary); }
-.feature-dates { font-size: 11px; color: var(--text-muted); }
-.cost-chip { font-size: 12px; color: var(--amber); margin-left: auto; white-space: nowrap; }
-.repos-cost-row { display: flex; align-items: center; gap: 6px; width: 100%; }
-.cost-summary { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; font-family: var(--font-mono); }
-.chevron {
-  font-size: 12px; color: var(--text-muted);
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-.feature-row.expanded .chevron { transform: rotate(180deg); }
-
-/* Type Icons */
-.type-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
-.type-feature { color: var(--green); }
-.type-bug { color: var(--red); }
-
-/* ── Lozenges ── */
-.lozenge {
-  display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 20px;
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-  white-space: nowrap; backdrop-filter: blur(8px);
-}
-.lozenge-shipped { background: rgba(52,211,153,0.12); color: var(--green); box-shadow: 0 0 12px rgba(52,211,153,0.1); }
-.lozenge-in-progress { background: rgba(129,140,248,0.12); color: var(--blue); box-shadow: 0 0 12px rgba(129,140,248,0.1); }
-.lozenge-not-started { background: rgba(251,191,36,0.1); color: var(--amber); }
-.lozenge-blocked { background: rgba(248,113,113,0.12); color: var(--red); box-shadow: 0 0 12px rgba(248,113,113,0.1); }
-.lozenge-orphaned { background: rgba(107,114,128,0.12); color: var(--text-muted); }
-.lozenge-needs-review { background: rgba(245,158,11,0.15); color: var(--amber); }
-.lozenge-sev-critical { background: rgba(248,113,113,0.12); color: var(--red); }
-.lozenge-sev-high { background: rgba(251,146,60,0.12); color: var(--orange); }
-.lozenge-sev-medium { background: rgba(251,191,36,0.1); color: var(--amber); }
-.lozenge-sev-low { background: rgba(107,114,128,0.12); color: var(--text-muted); }
-
-/* ── Feature Detail ── */
-.feature-detail {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.4s;
-  background: var(--bg-detail); border-top: 1px solid var(--border);
-}
-.feature-row.expanded .feature-detail {
-  max-height: 3000px; padding: 20px;
-}
-.detail-grid { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
-.detail-progress { display: flex; align-items: center; gap: 16px; }
-.progress-label { flex: 1; min-width: 80px; }
-.progress-bar-wrap { margin-bottom: 4px; }
-.pbar { height: 4px; background: var(--ring-bg); border-radius: 2px; overflow: hidden; }
-.pbar-fill { height: 100%; border-radius: 2px; box-shadow: 0 0 8px currentColor; transition: width 0.8s ease-out; }
-.task-meta { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
-.detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px; }
-
-/* Waves */
-.detail-prs { flex-basis: 100%; }
-.waves-wrap { display: flex; flex-wrap: wrap; gap: 12px; }
-.wave-group { display: flex; align-items: center; gap: 3px; }
-.wave-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); margin-right: 2px; }
-.wdot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; transition: transform 0.15s; }
-.wdot:hover { transform: scale(1.5); }
-.wdot-done { background: var(--green); box-shadow: 0 0 8px rgba(52,211,153,0.5); }
-.wdot-in-progress { background: var(--blue); box-shadow: 0 0 8px rgba(129,140,248,0.5); }
-.wdot-ready, .wdot-pending { background: var(--text-muted); opacity: 0.3; }
-.wdot-blocked { background: var(--red); box-shadow: 0 0 8px rgba(248,113,113,0.5); }
-.wdot-paused, .wdot-cancelled { background: var(--text-muted); opacity: 0.2; }
-
-/* Repo Chips */
-.repo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.repo-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 3px 10px; border-radius: 8px;
-  background: var(--bg-input); border: 1px solid var(--border);
-  font-size: 11px; backdrop-filter: blur(8px);
-}
-.repo-chip-name { font-weight: 600; color: var(--text-secondary); }
-.repo-chip-count { font-family: var(--font-mono); color: var(--text-primary); font-weight: 700; }
-
-/* PRs */
-.pr-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 4px 0; font-size: 12px;
-}
-.pr-row a { color: var(--accent); text-decoration: none; }
-.pr-row a:hover { text-decoration: underline; }
-
-/* Missing Table */
-.detail-missing { grid-column: 1 / -1; margin-top: 4px; }
-.missing-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-.missing-tbl th {
-  text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--text-muted);
-  padding: 6px 12px 6px 0; border-bottom: 1px solid var(--border);
-}
-.missing-tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
-.missing-tbl tr:last-child td { border-bottom: none; }
-.missing-tbl .mono { font-family: var(--font-mono); font-size: 11px; }
-.worker-empty { color: var(--text-muted); }
-.worker-icon { font-size: 14px; }
-
-/* ── Orphaned ── */
-.orphaned-section { margin-top: 24px; }
-.orphaned-item {
-  padding: 10px 16px; background: var(--bg-card); backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius); margin-bottom: 6px; font-size: 13px; color: var(--text-secondary);
-  border-left: 3px solid var(--text-muted);
-}
-
-/* ── Epic Groups ── */
-.epic-group { margin-bottom: 4px; }
-.epic-group-hdr {
-  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
-  color: var(--text-secondary); margin: 20px 0 8px; padding: 10px 16px;
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg-card); backdrop-filter: blur(24px);
-  border: 1px solid var(--border); border-left: 3px solid #60a5fa;
-  border-radius: var(--radius);
-  cursor: pointer; user-select: none;
-  transition: all var(--transition);
-}
-.epic-group-hdr:hover { background: var(--bg-card-hover); border-color: var(--border-hover); border-left-color: #93bbfc; }
-.epic-group-chevron {
-  font-size: 12px; color: var(--text-muted);
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-.epic-group:not(.epic-expanded) .epic-group-chevron { transform: rotate(-90deg); }
-.epic-group-body { overflow: hidden; }
-.epic-group:not(.epic-expanded) .epic-group-body { display: none; }
-.epic-group-hdr .epic-group-label { color: #60a5fa; }
-.epic-group-hdr .section-count {
-  background: var(--bg-input); border-radius: 10px; padding: 1px 8px;
-  font-size: 10px; font-family: var(--font-mono);
-}
-.epic-group-jira {
-  color: #60a5fa; text-decoration: none; font-size: 11px;
-  transition: all var(--transition);
-}
-.epic-group-jira:hover { color: #93bbfc; }
-
-/* ── Jira & Spec Links ── */
-.jira-pill {
-  display: inline-flex; align-items: center;
-  border-radius: 6px; overflow: hidden;
-  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
-  font-size: 10px; font-weight: 600; font-family: var(--font-mono);
-  vertical-align: middle; margin-left: 6px;
-  transition: all var(--transition);
-}
-.epic-filter-toggle {
-  padding: 1px 6px; color: #60a5fa; cursor: pointer;
-  transition: all var(--transition); user-select: none;
-}
-.epic-filter-toggle:hover { background: rgba(59,130,246,0.2); }
-.epic-filter-toggle.epic-active { background: rgba(59,130,246,0.5); color: #fff; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
-.jira-link-icon {
-  padding: 1px 5px; color: #60a5fa; text-decoration: none;
-  border-left: 1px solid rgba(59,130,246,0.2);
-  transition: all var(--transition); font-size: 11px; line-height: 1;
-}
-.jira-link-icon:hover { background: rgba(59,130,246,0.2); }
-.spec-link {
-  display: inline-flex; align-items: center; gap: 3px;
-  padding: 1px 8px; border-radius: 6px;
-  background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
-  font-size: 10px; font-weight: 600; color: #a78bfa;
-  text-decoration: none; vertical-align: middle; margin-left: 6px;
-  transition: all var(--transition);
-}
-.spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
-.missing-tbl a { color: var(--accent); text-decoration: none; }
-.missing-tbl a:hover { text-decoration: underline; }
-
-/* ── Execution Mode Lozenges ── */
-.lozenge-exec-autonomous { background: rgba(167,139,250,0.12); color: #a78bfa; }
-.lozenge-exec-supervised { background: rgba(129,140,248,0.12); color: #818cf8; }
-.lozenge-exec-guided { background: rgba(103,232,249,0.12); color: #67e8f9; }
-
-/* ── Lifecycle Lozenges ── */
-.lozenge-lifecycle-draft { background: rgba(107,114,128,0.12); color: var(--text-muted); font-style: italic; }
-.lozenge-lifecycle-paused { background: rgba(251,191,36,0.1); color: var(--amber); }
-.lozenge-lifecycle-cancelled { background: rgba(248,113,113,0.1); color: var(--red); text-decoration: line-through; }
-.lozenge-lifecycle-replanning { background: rgba(251,146,60,0.1); color: var(--orange); }
-.lozenge-lifecycle-completed { background: rgba(52,211,153,0.1); color: var(--green); }
-.feature-dimmed { opacity: 0.55; }
-.feature-dimmed:hover { opacity: 0.85; }
-
-/* ── Priority Dots ── */
-.priority-dot {
-  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-  vertical-align: middle; margin-right: 3px;
-}
-
-/* ── Stale Task Highlighting ── */
-.stale-task { background: rgba(248,113,113,0.06); }
-.stale-warn { color: var(--amber); font-size: 13px; }
-
-/* ── Execution Summary Bar ── */
-.exec-summary { margin-left: auto; min-width: 160px; }
-.exec-bar {
-  display: flex; height: 6px; border-radius: 3px; overflow: hidden;
-  background: var(--ring-bg); margin: 6px 0 4px;
-}
-.exec-bar-seg { transition: width 0.8s ease-out; }
-.exec-bar-autonomous { background: #a78bfa; }
-.exec-bar-supervised { background: #818cf8; }
-.exec-bar-guided { background: #67e8f9; }
-.exec-legend { display: flex; gap: 10px; flex-wrap: wrap; }
-.exec-leg-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); }
-.exec-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-
-/* ── Active Workers ── */
-/* ── Filter Label ── */
-.filter-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 7px 4px; }
-
-/* ── Theme Toggle (hidden — single theme) ── */
-.theme-toggle { display: none; }
-
-/* ── Agent Buttons ── */
-.agent-btn {
-  padding: 6px 16px; border-radius: 8px; border: 1px solid rgba(52,211,153,0.3);
-  background: rgba(52,211,153,0.1); color: #34d399;
-  font-size: 13px; font-weight: 600; font-family: var(--font-body);
-  cursor: pointer; transition: all var(--transition);
-}
-.agent-btn:hover {
-  background: rgba(52,211,153,0.2); border-color: rgba(52,211,153,0.5);
-  transform: translateY(-1px);
-}
-
-/* ── New Feature Button + Modal ── */
-.new-feature-btn {
-  padding: 6px 16px; border-radius: 8px; border: none;
-  background: var(--accent); color: #fff;
-  font-size: 13px; font-weight: 600; font-family: var(--font-body);
-  cursor: pointer; transition: all var(--transition);
-  box-shadow: 0 0 20px rgba(129,140,248,0.2);
-}
-.new-feature-btn:hover {
-  box-shadow: 0 0 30px rgba(129,140,248,0.4);
-  transform: translateY(-1px);
-}
-.nf-overlay {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center;
-}
-.nf-modal {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 28px;
-  width: 480px; max-width: 90vw;
-  animation: fadeUp 0.3s ease-out;
-}
-.nf-modal h2 {
-  font-size: 16px; font-weight: 700; color: var(--text-primary);
-  margin: 0 0 8px;
-}
-.nf-modal p {
-  font-size: 13px; color: var(--text-secondary);
-  margin: 0 0 20px; line-height: 1.5;
-}
-.nf-options { display: flex; flex-direction: column; gap: 12px; }
-.nf-option {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 16px; border-radius: 12px;
-  background: var(--bg-card); border: 1px solid var(--border);
-  cursor: pointer; transition: all var(--transition);
-  text-decoration: none;
-}
-.nf-option:hover {
-  border-color: var(--border-hover);
-  background: var(--bg-card-hover);
-}
-.nf-option-icon {
-  font-size: 20px; width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 10px; background: rgba(129,140,248,0.1);
-  flex-shrink: 0;
-}
-.nf-option-text h3 {
-  font-size: 14px; font-weight: 600; color: var(--text-primary);
-  margin: 0 0 2px;
-}
-.nf-option-text p {
-  font-size: 12px; color: var(--text-secondary);
-  margin: 0;
-}
-.nf-status {
-  font-size: 11px; color: var(--text-muted);
-  margin-top: 16px; text-align: center;
-  font-family: var(--font-mono);
-}
-.nf-status.nf-connected { color: var(--green); }
-.nf-copy-wrap {
-  display: flex; align-items: center; gap: 8px;
-  margin-top: 12px;
-}
-.nf-copy-cmd {
-  flex: 1; padding: 8px 12px;
-  background: var(--bg-input); border: 1px solid var(--border);
-  border-radius: 8px; color: var(--text-primary);
-  font-family: var(--font-mono); font-size: 12px;
-}
-.nf-copy-btn {
-  padding: 8px 12px; border-radius: 8px; border: none;
-  background: rgba(255,255,255,0.08); color: var(--text-secondary);
-  font-size: 12px; font-weight: 600; cursor: pointer;
-  transition: all var(--transition);
-}
-.nf-copy-btn:hover { background: rgba(255,255,255,0.14); color: var(--text-primary); }
-
-/* ── Plan Button ── */
-.plan-btn {
-  padding: 4px 12px; border-radius: 6px; border: 1px solid var(--accent);
-  background: rgba(129,140,248,0.1); color: var(--accent);
-  font-size: 11px; font-weight: 600; font-family: var(--font-body);
-  cursor: pointer; transition: all var(--transition);
-}
-.plan-btn:hover:not(:disabled) {
-  background: rgba(129,140,248,0.2);
-  box-shadow: 0 0 12px rgba(129,140,248,0.2);
-}
-.plan-btn:disabled {
-  opacity: 0.3; cursor: not-allowed;
-}
-
-/* ── Footer ── */
-.page-footer {
-  text-align: center; padding: 32px 0 16px;
-  font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
-  letter-spacing: 0.05em;
-}
-
-/* ── Animations ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Responsive ── */
-
-/* Hamburger (hidden on desktop) */
-.hamburger-btn {
-  display: none; background: none; border: 1px solid var(--border);
-  color: var(--text-primary); font-size: 20px; padding: 4px 10px;
-  border-radius: 8px; cursor: pointer; line-height: 1;
-}
-
-@media (max-width: 768px) {
-  .layout { padding: 16px; }
-  .detail-grid { flex-direction: column; align-items: stretch; }
-  .search-wrap { flex-basis: 100%; min-width: unset; }
-  .filters { flex-basis: 100%; }
-  .navbar { height: auto; min-height: 48px; flex-wrap: wrap; padding: 8px 16px; gap: 8px; }
-  .nav-time { display: none; }
-  .nav-title { font-size: 13px; }
-  .feature-header { flex-wrap: wrap; padding: 12px 16px; }
-  .feature-left { flex-basis: 100%; }
-  .feature-right { flex-basis: 100%; justify-content: flex-start; padding-left: 28px; gap: 8px; }
-  .feature-title { white-space: normal; }
-  .detail-missing { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .epic-group-hdr { flex-wrap: wrap; gap: 6px; }
-}
-
-@media (max-width: 480px) {
-  .hamburger-btn { display: flex; align-items: center; }
-  .nav-tabs { display: none; width: 100%; order: 3; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid var(--border); margin-left: 0; }
-  .nav-tabs.mobile-open { display: flex; }
-  .nav-tab { padding: 10px 16px; font-size: 14px; text-align: left; }
-  .nav-title { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .agent-btn { padding: 6px 10px; font-size: 11px; }
-  .new-feature-btn { padding: 6px 10px; font-size: 11px; }
-  .filters { gap: 4px; }
-  .filter-btn { padding: 8px 12px; font-size: 11px; min-height: 36px; }
-  .feature-header { padding: 10px 12px; }
-  .feature-dates { display: none; }
-  .feature-right .task-count { display: none; }
-  .lozenge { font-size: 9px; padding: 2px 8px; }
-  .feature-row.expanded .feature-detail { padding: 12px; }
-  .cost-summary { font-size: 12px; }
-  .section-hdr { font-size: 10px; }
-  .feature-desc { font-size: 12px; }
-  .epic-group-hdr { padding: 8px 12px; font-size: 11px; }
-  .epic-group-jira { font-size: 9px; }
-  .repo-chip { font-size: 10px; padding: 2px 8px; }
-  /* Table → stacked card layout on phone */
-  .missing-tbl thead { display: none; }
-  .missing-tbl tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .missing-tbl tr:last-child { border-bottom: none; }
-  .missing-tbl td { display: block; padding: 3px 0; border-bottom: none; font-size: 12px; }
-  .missing-tbl td::before {
-    content: attr(data-label);
-    display: inline-block; width: 72px;
-    font-size: 9px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--text-muted);
-    vertical-align: middle;
-  }
-}
-
-/* ── Print ── */
 @media print {
-  body, .jira-mode { background: #fff !important; }
-  .navbar, .theme-toggle, .toolbar { display: none !important; }
-  .feature-row { break-inside: avoid; border: 1px solid #ddd !important; }
-  .feature-detail { max-height: none !important; padding: 16px !important; }
-  .stat, .lozenge, .wdot, .pbar-fill { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .sidebar, .topbar, .detail-overlay { display: none !important; }
+  body { display: block; overflow: visible; }
+  .main-wrapper { overflow: visible; }
+  .kanban { flex-wrap: wrap; height: auto; }
+  .kanban-column { break-inside: avoid; }
 }
 </style>
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="nav-left">
-    <div class="nav-logo">${escHTML(branding.logo || "R")}</div>
-    <span class="nav-title">${escHTML(title)}</span>
-  </div>
-  <div class="nav-tabs" id="navTabs">
-    <button class="nav-tab active" data-tab="features">Features</button>
-    ${triageItems.length > 0 ? `<button class="nav-tab" data-tab="triage">Production Alerts${needsReviewCount > 0 ? ` <span class="triage-badge">${needsReviewCount}</span>` : ""}</button>` : ""}
-    <button class="nav-tab nav-tab-agents" onclick="event.stopPropagation();toggleAgentsPanel()">Agents${activeWorkers.length > 0 ? ` <span class="agents-badge">${activeWorkers.reduce((s, w) => s + w.tasks, 0)}</span>` : ""}</button>
-  </div>
-  <div class="nav-right">
-    ${agentDefs.map(a => `<button class="agent-btn" onclick="window.open('/agent/${a.type}','_blank')" title="${escHTML(a.description)}">${escHTML(a.name)}</button>`).join("\n    ")}
-    <button class="new-feature-btn" id="newFeatureBtn">+ New Feature</button>
-    <button class="settings-btn" onclick="document.getElementById('settingsModal').style.display='flex'" title="Settings">&#9881;</button>
-    <button class="hamburger-btn" aria-label="Menu" onclick="document.getElementById('navTabs').classList.toggle('mobile-open')">&#9776;</button>
-    <span class="nav-time">${new Date(generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</span>
-  </div>
-</nav>
-
-${renderAgentsPanel(activeWorkers, generated_at)}
-
-<div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal-box">
-    <div class="modal-title">Settings</div>
-    <label class="modal-label">GitHub Personal Access Token</label>
-    <input type="password" id="patInput" class="modal-input" placeholder="ghp_..." value="">
-    <p class="modal-hint">Required for Dispatch Agent. Stored in browser only.</p>
-    <div class="modal-actions">
-      <button class="modal-btn" onclick="localStorage.setItem('gh_pat',document.getElementById('patInput').value);document.getElementById('settingsModal').style.display='none'">Save</button>
-      <button class="modal-btn modal-btn-secondary" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">${escHTML(branding.logo || "R")}</div>
+    <div class="sidebar-logo-text">
+      <h1>${escHTML(title.split(" - ")[0] || "Relay")}</h1>
+      <span>Command Center</span>
     </div>
   </div>
-</div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Overview</div>
+      <div class="sb-nav-item active" onclick="switchView('kanban', this)">
+        <span class="sb-nav-item-icon">&#9776;</span>
+        <span>Kanban Board</span>
+      </div>
+      <div class="sb-nav-item" onclick="switchView('agents', this)">
+        <span class="sb-nav-item-icon">&#9881;</span>
+        <span>Agents</span>
+        ${agentDefs.length > 0 ? `<span class="sb-nav-badge">${agentDefs.length}</span>` : ""}
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Operations</div>
+      <div class="sb-nav-item" onclick="switchView('triage', this)">
+        <span class="sb-nav-item-icon">&#9888;</span>
+        <span>Triage</span>
+        ${triageItems.length > 0 ? `<span class="sb-nav-badge" style="background:rgba(248,113,113,0.2);color:var(--red)">${triageItems.length}</span>` : ""}
+      </div>
+      <div class="sb-nav-item" onclick="switchView('settings', this)">
+        <span class="sb-nav-item-icon">&#9881;</span>
+        <span>Settings</span>
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="sb-new-feature-btn" onclick="window.open('http://localhost:7433/interview','_blank')">
+      + <span>New Feature</span>
+    </button>
+  </div>
+</aside>
 
-<div id="nfOverlay" class="nf-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="nf-modal">
-    <h2>Start a New Feature</h2>
-    <p>Define a feature through an AI-guided interview that produces a validated spec.</p>
-    <div class="nf-options">
-      <div class="nf-option" id="nfBrowserOption" onclick="nfLaunchBrowser()">
-        <div class="nf-option-icon">&#127760;</div>
-        <div class="nf-option-text">
-          <h3>Browser Interview</h3>
-          <p>Step-by-step wizard with live AI chat</p>
+<!-- MAIN -->
+<div class="main-wrapper">
+  <div class="topbar">
+    <div class="topbar-time" id="topbarTime">${new Date(generated_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</div>
+  </div>
+
+  <div class="main-content">
+    <!-- KANBAN VIEW -->
+    <div class="kb-view active" id="view-kanban">
+      <div class="view-header"><div class="view-title">Kanban Board</div></div>
+      <div class="filter-bar">
+        <input class="filter-search" id="filterSearch" placeholder="Search features... (/)" oninput="applyFilters()" />
+        <div class="filter-divider"></div>
+        <span class="filter-chip active" data-group="exec" data-value="all" onclick="toggleChip(this)">All</span>
+        <span class="filter-chip" data-group="exec" data-value="autonomous" onclick="toggleChip(this)">Autonomous</span>
+        <span class="filter-chip" data-group="exec" data-value="supervised" onclick="toggleChip(this)">Supervised</span>
+        <span class="filter-chip" data-group="exec" data-value="guided" onclick="toggleChip(this)">Guided</span>
+        <div class="filter-divider"></div>
+        <span class="filter-chip" data-group="priority" data-value="p0" onclick="toggleChip(this)">P0</span>
+        <span class="filter-chip" data-group="priority" data-value="p1" onclick="toggleChip(this)">P1</span>
+        <span class="filter-chip" data-group="priority" data-value="p2" onclick="toggleChip(this)">P2</span>
+      </div>
+      ${renderKanbanBoard(allNonOrphan)}
+    </div>
+
+    <!-- AGENTS VIEW -->
+    ${renderAgentsView(agentDefs, activeWorkers)}
+
+    <!-- TRIAGE VIEW -->
+    <div class="kb-view" id="view-triage">
+      <div class="view-header"><div class="view-title">Triage</div></div>
+      <div class="triage-desc">Issues auto-detected from production telemetry. Review the diagnosis, then decide: plan a fix, dispatch an agent, or dismiss.</div>
+      ${triageRowsHTML}
+      ${triageItems.length === 0 ? `<div class="empty-triage">No production alerts pending. All clear.</div>` : ""}
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="kb-view" id="view-settings">
+      <div class="view-header"><div class="view-title">Settings</div></div>
+      <div class="settings-section">
+        <div class="settings-section-title">GitHub Integration</div>
+        <div class="settings-field">
+          <label class="settings-label">Personal Access Token</label>
+          <input class="settings-input" id="ghPat" type="password" placeholder="ghp_..." />
+          <div class="settings-hint">Required for dispatch agent functionality. Stored in browser localStorage.</div>
         </div>
-      </div>
-      <div class="nf-option" onclick="nfShowTerminal()">
-        <div class="nf-option-icon">&#9000;</div>
-        <div class="nf-option-text">
-          <h3>Terminal</h3>
-          <p>Run the interview in your terminal</p>
-        </div>
+        <button class="settings-save" onclick="savePat()">Save Token</button>
       </div>
     </div>
-    <div id="nfTerminalInstructions" style="display:none">
-      <div class="nf-copy-wrap">
-        <code class="nf-copy-cmd">relay new</code>
-        <button class="nf-copy-btn" onclick="navigator.clipboard.writeText('relay new');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
-      </div>
-      <button class="dd-go-btn" style="margin-top:10px;width:100%" onclick="nfLaunchTerminal()">&#9654; Launch Terminal</button>
-    </div>
-    <div id="nfServerStatus" class="nf-status"></div>
+
+    <!-- ORPHANED -->
+    ${renderOrphaned(features)}
   </div>
 </div>
 
-<div class="layout tab-content" id="featuresTab">
-
-
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 7a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z"/></svg>
-      <input type="text" class="search" placeholder="Search features..." id="searchInput">
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="detail-panel" onclick="event.stopPropagation()">
+    <div class="dp-header">
+      <h2 id="dpTitle">Feature Title</h2>
+      <button class="dp-close" onclick="closeDetail()">&times;</button>
     </div>
-    <div class="filters" id="statusFilters">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="in-progress">In Progress</button>
-      <button class="filter-btn" data-filter="not-started">Not Started</button>
-      <button class="filter-btn" data-filter="blocked">Blocked</button>
-      <button class="filter-btn" data-filter="shipped">Shipped</button>
-    </div>
-    <div class="filters" id="execFilters">
-      <span class="filter-label">Execution:</span>
-      <button class="filter-btn active" data-exec-filter="all">All</button>
-      <button class="filter-btn" data-exec-filter="autonomous">&#129302; Auto</button>
-      <button class="filter-btn" data-exec-filter="supervised">Supervised</button>
-      <button class="filter-btn" data-exec-filter="guided">&#128100; Guided</button>
-    </div>
-  </div>
-
-  ${summary.total_cost_usd > 0 ? `<div class="cost-summary">Total AI spend: <strong>${fmtCost(summary.total_cost_usd)}</strong> &middot; ${fmtTokens(summary.total_tokens)} tokens</div>` : ""}
-
-  ${featureItems.length > 0 ? `<div class="section-hdr"><span>Features</span><span class="section-count">${featureItems.length}</span></div>` : ""}
-
-  <div id="featureList">
-    ${featureRowsHTML}
-  </div>
-
-  ${bugItems.length > 0 ? `<div class="section-hdr bug-hdr"><span>Bugs</span><span class="section-count">${bugItems.length}</span></div>` : ""}
-
-  <div id="bugList">
-    ${bugRowsHTML}
+    <div class="dp-body" id="dpBody"></div>
   </div>
 </div>
 
-<div class="layout tab-content" id="triageTab" style="display:none">
-  <div class="section-hdr triage-hdr"><span>&#128680; Production Alerts</span><span class="section-count">${triageItems.length}</span></div>
-  <p class="triage-desc">Issues auto-detected from production telemetry. Review the diagnosis, then decide: plan a fix, dispatch an agent, or dismiss.</p>
-  <div id="triageList">
-    ${triageRowsHTML}
-  </div>
-  ${triageItems.length === 0 ? `<div class="empty-triage">No production alerts pending. All clear.</div>` : ""}
-</div>
+<div id="toastContainer"></div>
 
-<div class="layout">
-  ${renderOrphaned(features)}
-
-  ${branding.footer ? `<div class="page-footer">${escHTML(branding.footer)}</div>` : ""}
-</div>
-
-<svg width="0" height="0"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="var(--green)"/><stop offset="100%" stop-color="var(--blue)"/></linearGradient></defs></svg>
-
-<script>
-// ── Tab Navigation ──
-document.querySelectorAll('.nav-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    if (!tab) return; // Agents button has no data-tab — handled by its own onclick
-    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('featuresTab').style.display = tab === 'features' ? '' : 'none';
-    const triageTab = document.getElementById('triageTab');
-    if (triageTab) triageTab.style.display = tab === 'triage' ? '' : 'none';
-  });
-});
-
-// ── Toast notifications ──
-function showToast(msg, type) {
-  const t = document.createElement('div');
-  t.className = 'toast toast-' + (type || 'info');
-  t.textContent = msg;
-  document.body.appendChild(t);
-  requestAnimationFrame(() => t.classList.add('toast-show'));
-  setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 4000);
-}
-
-// ── Agents Panel ──
-function toggleAgentsPanel() {
-  var panel = document.getElementById('agentsPanel');
-  if (panel) panel.classList.toggle('open');
-}
-
-// ── Dispatch Agent (cloud or local) ──
-function dispatchAgent(slug, mode, target, agents) {
-  agents = Math.max(1, Math.min(4, agents || 1));
-  const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised'};
-
-  if (target === 'local') {
-    showToast('Launching ' + agents + ' local agent(s) in ' + modeLabels[mode] + ' mode...', 'info');
-    fetch('http://localhost:7433/api/dispatch/local', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: slug, mode: mode, agents: agents })
-    }).then(r => {
-      if (r.ok) r.json().then(d => showToast('Local agent launched (PID ' + d.pid + ') — ' + agents + ' agent(s) in ' + modeLabels[mode] + ' mode', 'success'));
-      else r.json().then(d => showToast('Failed: ' + (d.error || 'unknown error'), 'error')).catch(() => r.text().then(t => showToast('Failed: ' + t, 'error')));
-    }).catch(() => showToast('Start relay serve to use local dispatch', 'error'));
-    return;
-  }
-
-  // Cloud dispatch — requires GitHub PAT
-  const pat = localStorage.getItem('gh_pat');
-  if (!pat) {
-    document.getElementById('settingsModal').style.display = 'flex';
-    showToast('Configure your GitHub PAT first', 'warn');
-    return;
-  }
-  const repo = 'ChristianJensen/tasks-control-plane';
-  showToast('Dispatching ' + agents + ' cloud agent(s) in ' + modeLabels[mode] + ' mode...', 'info');
-  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
-    method: 'POST',
-    headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode, agents: String(agents) } })
-  }).then(r => {
-    if (r.ok || r.status === 204) showToast('Cloud agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
-    else r.text().then(t => showToast('Failed: ' + t, 'error'));
-  }).catch(e => showToast('Error: ' + e.message, 'error'));
-}
-
-// Load saved PAT into settings input
-const savedPat = localStorage.getItem('gh_pat');
-if (savedPat) document.getElementById('patInput').value = savedPat;
-
-// ── Combined Filters (status + execution, intersection logic) ──
-const rows = document.querySelectorAll('.feature-row');
-const statusBtns = document.querySelectorAll('#statusFilters .filter-btn');
-const execBtns = document.querySelectorAll('#execFilters .filter-btn');
-const searchInput = document.getElementById('searchInput');
-let activeStatus = 'all';
-let activeExec = 'all';
-let activeEpic = null;
-
-function applyFilters() {
-  const q = searchInput.value.toLowerCase();
-  rows.forEach(row => {
-    let show = true;
-    // Search filter (matches title, epic key, and epic title)
-    if (q && !(row.dataset.title || '').includes(q) && !(row.dataset.epic || '').toLowerCase().includes(q) && !(row.dataset.epicTitle || '').includes(q)) show = false;
-    // Status filter
-    if (show && activeStatus !== 'all') {
-      if (row.dataset.status !== activeStatus) show = false;
-    }
-    // Execution filter
-    if (show && activeExec !== 'all') {
-      if (row.dataset.execution !== activeExec) show = false;
-    }
-    // Epic filter
-    if (show && activeEpic) {
-      if ((row.dataset.epic || '') !== activeEpic) show = false;
-    }
-    row.style.display = show ? '' : 'none';
-  });
-  // Hide epic groups with no visible rows
-  document.querySelectorAll('.epic-group').forEach(g => {
-    const body = g.querySelector('.epic-group-body') || g;
-    const visible = body.querySelectorAll('.feature-row:not([style*="display: none"])');
-    g.style.display = visible.length > 0 ? '' : 'none';
-  });
-}
-
-statusBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    statusBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeStatus = btn.dataset.filter;
-    applyFilters();
-  });
-});
-
-execBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    execBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeExec = btn.dataset.execFilter;
-    applyFilters();
-  });
-});
-
-// ── Search ──
-searchInput.addEventListener('input', applyFilters);
-document.addEventListener('keydown', e => {
-  if (e.key === '/' && document.activeElement !== searchInput) {
-    e.preventDefault();
-    searchInput.focus();
-  }
-  if (e.key === 'Escape' && document.activeElement === searchInput) {
-    searchInput.blur();
-  }
-});
-
-// ── Epic Filtering ──
-function setEpicFilter(epicKey) {
-  activeEpic = epicKey;
-  document.querySelectorAll('.epic-filter-toggle').forEach(el => {
-    el.classList.toggle('epic-active', el.dataset.epic === epicKey);
-  });
-  applyFilters();
-}
-
-document.addEventListener('click', e => {
-  const toggle = e.target.closest('.epic-filter-toggle');
-  if (toggle) {
-    e.preventDefault();
-    e.stopPropagation();
-    const epic = toggle.dataset.epic;
-    setEpicFilter(activeEpic === epic ? null : epic);
-    return;
-  }
-  const header = e.target.closest('.feature-header');
-  if (header && !e.target.closest('a')) {
-    header.parentElement.classList.toggle('expanded');
-  }
-});
-
-// ── URL param: ?epic=KEY ──
-const epicParam = new URLSearchParams(window.location.search).get('epic');
-if (epicParam) setEpicFilter(epicParam);
-
-// ── Workers Toggle ──
-
-// ── New Feature Modal ──
-document.getElementById('newFeatureBtn').addEventListener('click', function() {
-  document.getElementById('nfOverlay').style.display = 'flex';
-  document.getElementById('nfTerminalInstructions').style.display = 'none';
-  nfCheckServer();
-});
-
-function nfCheckServer() {
-  var statusEl = document.getElementById('nfServerStatus');
-  var browserOption = document.getElementById('nfBrowserOption');
-  statusEl.textContent = 'Checking for local server...';
-  statusEl.className = 'nf-status';
-
-  fetch('http://localhost:7433/api/health', { mode: 'cors' })
-    .then(function(r) { return r.json(); })
-    .then(function() {
-      statusEl.textContent = '\\u25cf relay serve is running';
-      statusEl.className = 'nf-status nf-connected';
-      browserOption.style.opacity = '1';
-      browserOption.style.pointerEvents = 'auto';
-    })
-    .catch(function() {
-      statusEl.textContent = 'Server not running \\u2014 start with: relay serve';
-      statusEl.className = 'nf-status';
-      browserOption.style.opacity = '0.4';
-      browserOption.style.pointerEvents = 'none';
-    });
-}
-
-function nfLaunchBrowser() {
-  window.open('http://localhost:7433/interview', '_blank');
-  document.getElementById('nfOverlay').style.display = 'none';
-}
-
-function nfLaunchTerminal() {
-  fetch('http://localhost:7433/api/launch/terminal', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ command: 'relay new' })
-  }).then(function(r) {
-    if (r.ok) {
-      showToast('Terminal launched with relay new', 'success');
-      document.getElementById('nfOverlay').style.display = 'none';
-    } else {
-      r.json().then(function(d) { showToast('Failed: ' + (d.error || 'unknown'), 'error'); });
-    }
-  }).catch(function() {
-    showToast('Start relay serve to launch terminal', 'error');
-  });
-}
-
-function nfShowTerminal() {
-  document.getElementById('nfTerminalInstructions').style.display = 'block';
-}
-
-// Check if relay serve is running — enable plan buttons if so
-fetch('http://localhost:7433/api/health', { mode: 'cors' })
-  .then(function(r) { return r.json(); })
-  .then(function() {
-    document.querySelectorAll('.plan-btn-check').forEach(function(btn) {
-      btn.disabled = false;
-      btn.title = 'Plan this feature';
-    });
-  })
-  .catch(function() {});
-
-function nfPlanFeature(slug) {
-  fetch('http://localhost:7433/api/health', { mode: 'cors' })
-    .then(function(r) { return r.json(); })
-    .then(function() {
-      window.open('http://localhost:7433/plan/' + slug, '_blank');
-    })
-    .catch(function() {
-      var cmd = 'relay plan ' + slug;
-      var msg = 'relay serve is not running.\\n\\nStart it with: relay serve\\n\\nOr plan from the terminal: ' + cmd;
-      alert(msg);
-    });
-}
-</script>
+<script>var FEATURES = ${JSON.stringify(featuresJSON)};<\/script>
+${renderClientJS(linkContext)}
 
 </body>
 </html>`;
