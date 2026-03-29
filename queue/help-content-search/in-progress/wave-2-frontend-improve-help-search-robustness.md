@@ -1,12 +1,15 @@
 ---
 task-id: improve-help-search-robustness
-status: ready
+status: in-progress
 execution: autonomous
 target-repo: frontend
 wave: 2
 priority: medium
 feature: help-content-search
 type: feature
+claimed-by: agent-Christians-MacBook-Air-32613
+claimed-at: 2026-03-29T22:00:52Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
