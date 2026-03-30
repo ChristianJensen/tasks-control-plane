@@ -409,7 +409,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text-p
       <div class="sb-nav-item" onclick="switchView('agents', this)">
         <span class="sb-nav-item-icon">&#9881;</span>
         <span>Agents</span>
-        <span class="sb-nav-badge">3</span>
+        
       </div>
     </div>
     <div class="nav-section">
@@ -435,7 +435,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text-p
 <!-- MAIN -->
 <div class="main-wrapper">
   <div class="topbar">
-    <div class="topbar-time" id="topbarTime">11:41 AM</div>
+    <div class="topbar-time" id="topbarTime">11:43 AM</div>
   </div>
 
   <div class="main-content">
@@ -700,36 +700,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text-p
     <div class="view-header"><div class="view-title">Agents</div></div>
     <div class="agents-subtitle">Tap an agent to explore logs, prompts, and performance.</div>
     <div class="agents-grid">
-      <div class="agent-card" onclick="window.open('/agent/chat','_blank')">
-          <div class="agent-card-top">
-            <div class="agent-icon" style="background:rgba(129,140,248,0.15)">&#9997;</div>
-            <div class="agent-card-badges">
-              <span class="agent-status-badge agent-status-idle">Idle</span>
-            </div>
-          </div>
-          <div class="agent-card-name">Chat</div>
-          <div class="agent-card-role">Explore the codebase and ask questions</div>
-        </div>
-<div class="agent-card" onclick="window.open('/agent/diagnostics','_blank')">
-          <div class="agent-card-top">
-            <div class="agent-icon" style="background:rgba(129,140,248,0.15)">&#9881;</div>
-            <div class="agent-card-badges">
-              <span class="agent-status-badge agent-status-idle">Idle</span>
-            </div>
-          </div>
-          <div class="agent-card-name">Diagnostics</div>
-          <div class="agent-card-role">Diagnose issues from telemetry logs or bug descriptions</div>
-        </div>
-<div class="agent-card" onclick="window.open('/agent/triage','_blank')">
-          <div class="agent-card-top">
-            <div class="agent-icon" style="background:rgba(129,140,248,0.15)">&#9881;</div>
-            <div class="agent-card-badges">
-              <span class="agent-status-badge agent-status-idle">Idle</span>
-            </div>
-          </div>
-          <div class="agent-card-name">Triage</div>
-          <div class="agent-card-role">Analyze inbox items and produce structured triage reports</div>
-        </div>
+      
     </div>
   </div>
 
