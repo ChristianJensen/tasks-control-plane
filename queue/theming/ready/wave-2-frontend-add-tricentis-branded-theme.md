@@ -1,6 +1,6 @@
 ---
 task-id: add-tricentis-branded-theme
-status: pending
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 2
