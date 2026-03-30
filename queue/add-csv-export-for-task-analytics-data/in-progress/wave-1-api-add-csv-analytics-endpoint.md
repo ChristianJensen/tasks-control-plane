@@ -1,12 +1,15 @@
 ---
 task-id: add-csv-analytics-endpoint
-status: ready
+status: in-progress
 execution: supervised
 target-repo: api
 wave: 1
 priority: high
 feature: add-csv-export-for-task-analytics-data
 type: feature
+claimed-by: agent-Christians-MacBook-Air-8711
+claimed-at: 2026-03-30T14:58:37Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
