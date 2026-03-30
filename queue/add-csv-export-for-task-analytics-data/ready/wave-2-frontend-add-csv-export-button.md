@@ -1,6 +1,6 @@
 ---
 task-id: add-csv-export-button
-status: pending
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 2
