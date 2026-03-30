@@ -1,12 +1,15 @@
 ---
 task-id: add-high-contrast-theme
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: theming
 type: feature
+claimed-by: agent-Christians-MacBook-Air-95803
+claimed-at: 2026-03-30T10:54:12Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
