@@ -1,6 +1,6 @@
 ---
 task-id: add-high-contrast-theme
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
