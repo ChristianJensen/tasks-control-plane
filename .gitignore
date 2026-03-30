@@ -1,1 +1,4 @@
 relay
+.relay/inbox.db
+.relay/inbox.db-shm
+.relay/inbox.db-wal

@@ -1379,6 +1379,17 @@ updateTime(); setInterval(updateTime, 60000);
 fetch('http://localhost:7433/api/health', { mode: 'cors' }).then(function(r) { return r.json(); }).then(function() {
   document.querySelectorAll('.plan-btn-check').forEach(function(btn) { btn.disabled = false; btn.title = 'Plan this feature'; });
 }).catch(function() {});
+
+// ── Inbox badge ──
+fetch('/api/inbox?status=new').then(function(r) { return r.json(); }).then(function(items) {
+  var badge = document.getElementById('inboxBadge');
+  if (badge && items.length > 0) {
+    badge.textContent = items.length;
+    badge.style.display = '';
+    badge.style.background = 'rgba(248,113,113,0.2)';
+    badge.style.color = 'var(--red)';
+  }
+}).catch(function() {});
 <\/script>`;
 }
 
@@ -1517,10 +1528,10 @@ ${renderCSS_TriageCompat()}
     </div>
     <div class="nav-section">
       <div class="nav-section-label">Operations</div>
-      <div class="sb-nav-item" onclick="switchView('triage', this)">
-        <span class="sb-nav-item-icon">&#9888;</span>
-        <span>Triage</span>
-        ${triageItems.length > 0 ? `<span class="sb-nav-badge" style="background:rgba(248,113,113,0.2);color:var(--red)">${triageItems.length}</span>` : ""}
+      <div class="sb-nav-item" onclick="window.location.href='/inbox'">
+        <span class="sb-nav-item-icon">&#9993;</span>
+        <span>Inbox</span>
+        <span class="sb-nav-badge" id="inboxBadge" style="display:none"></span>
       </div>
       <div class="sb-nav-item" onclick="switchView('settings', this)">
         <span class="sb-nav-item-icon">&#9881;</span>

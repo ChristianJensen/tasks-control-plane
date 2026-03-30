@@ -12,6 +12,7 @@
   --font-body: 'DM Sans', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --bg: #0a0e27;
+  --bg-sidebar: #070b1e;
   --bg-card: rgba(255,255,255,0.04);
   --bg-card-hover: rgba(255,255,255,0.07);
   --bg-detail: rgba(0,0,0,0.2);
@@ -27,6 +28,8 @@
   --amber: #fbbf24;
   --red: #f87171;
   --orange: #fb923c;
+  --cyan: #22d3ee;
+  --purple: #a78bfa;
   --ring-bg: rgba(255,255,255,0.06);
   --nav-bg: rgba(10,14,39,0.8);
   --glow-green: 0 0 30px rgba(52,211,153,0.15);
@@ -34,165 +37,259 @@
   --glow-amber: 0 0 30px rgba(251,191,36,0.15);
   --glow-red: 0 0 30px rgba(248,113,113,0.15);
   --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
   --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-width: 260px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  font-family: var(--font-body);
-  background: var(--bg);
-  color: var(--text-primary);
-  line-height: 1.6;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+body { font-family: var(--font-body); background: var(--bg); color: var(--text-primary); min-height: 100vh; display: flex; overflow: hidden; line-height: 1.6; }
 
-/* ── Animated Aurora Background ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: -1;
-  background:
-    radial-gradient(ellipse 50% 50% at 20% 30%, rgba(0,212,170,0.12), transparent),
-    radial-gradient(ellipse 40% 40% at 80% 20%, rgba(124,58,237,0.10), transparent),
-    radial-gradient(ellipse 45% 45% at 60% 80%, rgba(59,130,246,0.08), transparent),
-    radial-gradient(ellipse 35% 35% at 10% 80%, rgba(236,72,153,0.06), transparent);
-  animation: aurora 20s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes aurora {
-  0%, 100% { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%; }
-  25% { background-position: 100% 0%, 0% 100%, 50% 50%, 100% 0%; }
-  50% { background-position: 50% 100%, 50% 0%, 0% 50%, 50% 50%; }
-  75% { background-position: 0% 50%, 100% 50%, 100% 100%, 0% 0%; }
-}
+/* Aurora */
+.main-wrapper::before { content: ''; position: fixed; inset: 0; z-index: -1; background: radial-gradient(ellipse 50% 50% at 20% 30%, rgba(0,212,170,0.12), transparent), radial-gradient(ellipse 40% 40% at 80% 20%, rgba(124,58,237,0.10), transparent), radial-gradient(ellipse 45% 45% at 60% 80%, rgba(59,130,246,0.08), transparent), radial-gradient(ellipse 35% 35% at 10% 80%, rgba(236,72,153,0.06), transparent); animation: aurora 20s ease-in-out infinite; pointer-events: none; }
+@keyframes aurora { 0%, 100% { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%; } 25% { background-position: 100% 0%, 0% 100%, 50% 50%, 100% 0%; } 50% { background-position: 50% 100%, 50% 0%, 0% 50%, 50% 50%; } 75% { background-position: 0% 50%, 100% 50%, 100% 100%, 0% 0%; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── Nav Bar ── */
-.navbar {
-  position: sticky; top: 0; z-index: 100;
-  background: var(--nav-bg);
-  backdrop-filter: blur(30px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  height: 56px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.nav-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.nav-logo {
-  width: 28px; height: 28px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--green), var(--blue), #ec4899);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 14px; color: #fff;
-  box-shadow: 0 0 20px rgba(129,140,248,0.3);
-}
-.nav-title { font-weight: 700; font-size: 15px; }
-.nav-tabs { display: flex; gap: 4px; margin-left: 24px; }
-.nav-tab { background: none; border: none; color: var(--text-secondary); font-family: var(--font-body); font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: 8px; transition: var(--transition); }
-.nav-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-.nav-tab.active { color: var(--text-primary); background: rgba(255,255,255,0.08); }
-.triage-badge { display: inline-block; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
-.nav-right { display: flex; align-items: center; gap: 16px; }
-.nav-time { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
-.triage-hdr span:first-child { color: var(--red); }
-.triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
-.empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
-.bug-digest { padding: 4px 0; }
-.bug-digest-section { margin-bottom: 16px; }
-.bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-.bug-digest-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; font-family: var(--font-mono); white-space: pre-wrap; }
-.settings-btn { background: none; border: none; color: var(--text-secondary); font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition); }
-.settings-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-.modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-.modal-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 400px; max-width: 90vw; }
-.modal-title { font-weight: 700; font-size: 16px; margin-bottom: 16px; }
-.modal-label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px; }
-.modal-input { width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px; }
-.modal-input:focus { outline: none; border-color: var(--accent); }
-.modal-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
-.modal-btn { padding: 6px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
-.modal-btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
-.dispatch-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
-.dispatch-trigger { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(129,140,248,0.1); color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); }
-.dispatch-trigger:hover { background: rgba(129,140,248,0.2); }
-.dispatch-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; z-index: 50; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-.dispatch-dropdown.open { display: block; }
-.dispatch-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: none; background: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: var(--transition); font-family: var(--font-body); }
-.dispatch-dropdown button:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
-.dd-color { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
+/* Dispatch bar */
+.dispatch-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(129,140,248,0.06); border: 1px solid var(--border); border-radius: 10px; flex-wrap: wrap; }
+.db-controls { display: flex; align-items: center; gap: 16px; flex: 1; flex-wrap: wrap; }
+.db-group { display: flex; align-items: center; gap: 6px; }
+.db-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.dd-color { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+.dd-toggle { display: flex; gap: 4px; }
+.dd-target-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
+.dd-target-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.dd-target-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd-target-btn svg { flex-shrink: 0; }
+.dd-parallel-btns { display: flex; gap: 4px; }
+.dd-par-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
+.dd-par-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.dd-par-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd-mode-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
+.dd-mode-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.dd-mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd-go-btn { padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: var(--font-body); letter-spacing: 0.02em; }
+.dd-go-btn:hover { background: #6366f1; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+
+/* Toast */
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
 .toast-show { transform: translateY(0); opacity: 1; }
 .toast-info { background: rgba(129,140,248,0.9); backdrop-filter: blur(8px); }
 .toast-success { background: rgba(52,211,153,0.9); backdrop-filter: blur(8px); }
 .toast-warn { background: rgba(251,191,36,0.9); color: #1a1a2e; backdrop-filter: blur(8px); }
 .toast-error { background: rgba(248,113,113,0.9); backdrop-filter: blur(8px); }
-.dismiss-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; margin-left: 8px; }
-.dismiss-btn:hover { background: rgba(255,255,255,0.08); }
 
-/* ── Layout ── */
-.layout { max-width: 1200px; margin: 0 auto; padding: 24px; }
 
-/* ── Toolbar ── */
-.toolbar {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
-  animation: fadeUp 0.6s ease-out 0.4s both;
-}
-.search-wrap {
-  flex: 1; min-width: 200px; position: relative;
-}
-.search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-.search {
-  width: 100%; padding: 10px 14px 10px 40px;
-  background: var(--bg-input); backdrop-filter: blur(10px);
-  border: 1px solid var(--border); border-radius: 12px;
-  color: var(--text-primary); font-size: 13px; font-family: var(--font-body);
-  outline: none; transition: all var(--transition);
-}
-.search:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(129,140,248,0.15); }
-.search::placeholder { color: var(--text-muted); }
-.filters { display: flex; gap: 4px; flex-wrap: wrap; }
-.filter-btn {
-  padding: 7px 16px; border: 1px solid var(--border); border-radius: 20px;
-  background: var(--bg-input); backdrop-filter: blur(10px);
-  color: var(--text-secondary); font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: all var(--transition); font-family: var(--font-body);
-  white-space: nowrap;
-}
-.filter-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
-.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 20px rgba(129,140,248,0.3); }
+/* ── SIDEBAR ── */
+.sidebar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: relative; z-index: 10; }
+.sidebar-logo { padding: 24px 20px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+.sidebar-logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--green), var(--blue), #ec4899); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff; box-shadow: 0 0 20px rgba(129,140,248,0.3); }
+.sidebar-logo-text h1 { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.5px; }
+.sidebar-logo-text span { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.nav-section { margin-top: 20px; }
+.nav-section:first-child { margin-top: 12px; }
+.nav-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; padding: 8px 12px 6px; }
+.sb-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer; transition: var(--transition); font-size: 14px; font-weight: 500; position: relative; user-select: none; }
+.sb-nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.sb-nav-item.active { background: linear-gradient(135deg, rgba(129,140,248,0.2), rgba(99,102,241,0.15)); color: var(--text-primary); box-shadow: 0 0 20px rgba(129,140,248,0.1); }
+.sb-nav-item-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 16px; opacity: 0.7; }
+.sb-nav-item.active .sb-nav-item-icon { opacity: 1; }
+.sb-nav-badge { margin-left: auto; background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; min-width: 24px; text-align: center; }
+.sb-nav-item.active .sb-nav-badge { background: rgba(129,140,248,0.3); color: var(--accent); }
+.sidebar-bottom { padding: 12px; border-top: 1px solid var(--border); }
+.sb-new-feature-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #6366f1); color: white; border: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: 0 0 20px rgba(129,140,248,0.2); }
+.sb-new-feature-btn:hover { box-shadow: 0 0 30px rgba(129,140,248,0.4); transform: translateY(-1px); }
 
-/* ── Section Headers ── */
-.section-hdr {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
-  color: var(--text-muted); margin: 28px 0 12px; padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px;
-}
-.section-hdr .section-count {
-  background: var(--bg-input); border-radius: 10px; padding: 1px 8px;
-  font-size: 10px; font-family: var(--font-mono);
-}
-.section-hdr.bug-hdr { color: var(--orange); border-color: rgba(249,115,22,0.2); }
+/* ── TOP BAR ── */
+.topbar { display: flex; align-items: center; justify-content: flex-end; padding: 12px 28px; border-bottom: 1px solid var(--border); position: relative; z-index: 1; background: rgba(10,14,39,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.topbar-time { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
 
-/* ── Feature Rows ── */
-.feature-row {
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 10px;
-  overflow: hidden;
-  transition: all var(--transition);
-  animation: fadeUp 0.5s ease-out both;
+/* ── MAIN CONTENT ── */
+.main-wrapper { position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.main-content { flex: 1; overflow-y: auto; padding: 24px 28px; position: relative; z-index: 1; }
+.view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.view-title { font-size: 22px; font-weight: 700; }
+
+/* ── VIEWS ── */
+.kb-view { display: none; }
+.kb-view.active { display: block; }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-search { padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text-primary); font-family: var(--font-body); font-size: 13px; width: 200px; outline: none; transition: var(--transition); }
+.filter-search:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(129,140,248,0.1); }
+.filter-search::placeholder { color: var(--text-muted); }
+.filter-divider { width: 1px; height: 24px; background: var(--border); }
+.filter-chip { padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: var(--transition); user-select: none; }
+.filter-chip:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.filter-chip.active { background: rgba(129,140,248,0.12); border-color: rgba(129,140,248,0.3); color: var(--accent); }
+
+/* ── KANBAN BOARD ── */
+.kanban { display: flex; gap: 16px; height: calc(100vh - 200px); overflow-x: auto; padding-bottom: 8px; }
+.kanban-column { min-width: 280px; width: 280px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp 0.5s ease-out both; }
+.kanban-column:nth-child(2) { animation-delay: 0.06s; }
+.kanban-column:nth-child(3) { animation-delay: 0.12s; }
+.kanban-column:nth-child(4) { animation-delay: 0.18s; }
+.kanban-column:nth-child(5) { animation-delay: 0.24s; }
+.kanban-column-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.kanban-column-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+.kanban-column-dot { width: 8px; height: 8px; border-radius: 50%; }
+.kanban-column-count { font-size: 12px; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 8px; }
+.kanban-column-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.kanban-column-body::-webkit-scrollbar { width: 4px; }
+.kanban-column-body::-webkit-scrollbar-track { background: transparent; }
+.kanban-column-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.col-draft .kanban-column-dot { background: var(--text-muted); }
+.col-draft .kanban-column-title { color: var(--text-secondary); }
+.col-ready .kanban-column-dot { background: var(--amber); box-shadow: var(--glow-amber); }
+.col-ready .kanban-column-title { color: var(--amber); }
+.col-progress .kanban-column-dot { background: var(--blue); box-shadow: var(--glow-blue); }
+.col-progress .kanban-column-title { color: var(--blue); }
+.col-done .kanban-column-dot { background: var(--green); box-shadow: var(--glow-green); }
+.col-done .kanban-column-title { color: var(--green); }
+.col-blocked .kanban-column-dot { background: var(--red); box-shadow: var(--glow-red); }
+.col-blocked .kanban-column-title { color: var(--red); }
+
+/* ── KANBAN CARDS ── */
+.card { background: var(--bg-detail); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; cursor: pointer; transition: var(--transition); }
+.card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; }
+.card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card-tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.tag-autonomous { background: rgba(167,139,250,0.15); color: var(--purple); }
+.tag-supervised { background: rgba(129,140,248,0.15); color: var(--blue); }
+.tag-guided { background: rgba(34,211,238,0.15); color: var(--cyan); }
+.tag-p0 { background: rgba(248,113,113,0.15); color: var(--red); }
+.tag-p1 { background: rgba(251,191,36,0.15); color: var(--amber); }
+.tag-p2 { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+.tag-bug { background: rgba(248,113,113,0.15); color: var(--red); }
+.tag-feature { background: rgba(129,140,248,0.15); color: var(--blue); }
+.card-progress { margin-top: 10px; height: 3px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+.card-progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 11px; color: var(--text-muted); }
+.card-tasks { font-family: var(--font-mono); font-size: 11px; }
+.card-epic { font-size: 10px; color: var(--text-muted); padding: 2px 6px; border: 1px solid var(--border); border-radius: 4px; }
+
+/* ── DETAIL PANEL ── */
+.detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.detail-overlay.open { opacity: 1; pointer-events: all; }
+.detail-panel { position: fixed; top: 0; right: 0; width: 520px; height: 100vh; background: var(--bg-sidebar); border-left: 1px solid var(--border); z-index: 101; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
+.detail-overlay.open .detail-panel { transform: translateX(0); }
+.dp-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.dp-header h2 { font-size: 18px; font-weight: 700; }
+.dp-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.dp-close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.dp-body { flex: 1; overflow-y: auto; padding: 24px; }
+.dp-section { margin-bottom: 24px; }
+.dp-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.dp-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.dp-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dp-meta-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px 12px; }
+.dp-meta-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.dp-meta-value { font-size: 14px; font-weight: 600; }
+.dp-progress-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.dp-progress-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+.dp-progress-label { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
+.dp-task-list { display: flex; flex-direction: column; gap: 8px; }
+.dp-task { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); font-size: 13px; transition: var(--transition); cursor: pointer; }
+.dp-task:hover { background: var(--bg-card-hover); border-color: var(--border-hover); }
+.dp-task-header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.dp-task-chevron { font-size: 10px; color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
+.dp-task.expanded .dp-task-chevron { transform: rotate(90deg); }
+.dp-task-expand { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.dp-task.expanded .dp-task-expand { max-height: 300px; }
+.dp-task-detail { padding: 0 12px 12px 30px; font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.dp-task-detail-row { display: flex; gap: 8px; margin-top: 6px; }
+.dp-task-detail-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; min-width: 50px; }
+.dp-task-detail-value { font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); }
+.dp-task-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dp-task-name { flex: 1; color: var(--text-primary); font-weight: 500; line-height: 1.3; }
+.dp-task-wave { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); padding: 2px 6px; background: rgba(255,255,255,0.03); border-radius: 4px; }
+.dp-spec-link { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 6px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: var(--purple); font-size: 12px; font-weight: 600; text-decoration: none; transition: var(--transition); font-family: var(--font-body); }
+.dp-spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
+.dp-task-spec-link { display: inline-flex; align-items: center; gap: 4px; color: var(--purple); font-size: 11px; font-weight: 500; text-decoration: none; font-family: var(--font-mono); transition: var(--transition); }
+.dp-task-spec-link:hover { color: var(--text-primary); }
+.cost-row { display: flex; align-items: center; gap: 16px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); }
+.cost-item { display: flex; align-items: center; gap: 6px; }
+.cost-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.cost-value { font-size: 14px; font-weight: 600; color: var(--amber); font-family: var(--font-mono); }
+
+/* ── AGENTS VIEW ── */
+.agents-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; margin-bottom: 28px; }
+.agents-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.agent-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; }
+.agent-card:hover { background: var(--bg-card-hover); border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+.agent-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.agent-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.agent-card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.agent-status-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+.agent-status-active { background: rgba(52,211,153,0.15); color: var(--green); }
+.agent-status-idle { background: rgba(129,140,248,0.15); color: var(--blue); }
+.agent-category { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.agent-card-name { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.agent-card-role { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+.agent-card-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+
+/* ── SETTINGS VIEW ── */
+.settings-section { margin-bottom: 32px; }
+.settings-section-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+.settings-field { margin-bottom: 16px; }
+.settings-label { font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px; }
+.settings-input { width: 100%; max-width: 400px; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px; outline: none; }
+.settings-input:focus { border-color: var(--accent); }
+.settings-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.settings-save { padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-body); }
+.settings-save:hover { box-shadow: 0 0 20px rgba(129,140,248,0.3); }
+
+/* ── Responsive (Kanban) ── */
+@media (max-width: 1200px) { .kanban-column { min-width: 240px; width: 240px; } .agents-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) {
+  .sidebar { width: 60px; min-width: 60px; }
+  .sidebar-logo-text, .sb-nav-item span:not(.sb-nav-item-icon):not(.sb-nav-badge), .sidebar-logo-text span { display: none; }
+  .sidebar-logo { padding: 16px 12px; justify-content: center; }
+  .sidebar-logo-icon { width: 36px; height: 36px; font-size: 16px; }
+  .sb-nav-item { justify-content: center; padding: 10px; }
+  .sb-nav-badge { display: none; }
+  .sb-new-feature-btn span { display: none; }
+  .detail-panel { width: 100%; }
+  .kanban-column { min-width: 260px; width: 260px; }
+  .topbar { padding: 10px 16px; }
+  .main-content { padding: 16px; }
 }
+@media (max-width: 600px) {
+  .sidebar { display: none; }
+  body { flex-direction: column; }
+  .main-wrapper { height: 100vh; }
+  .kanban { flex-direction: column; height: auto; overflow-x: visible; overflow-y: auto; max-height: calc(100vh - 160px); }
+  .kanban-column { min-width: 100%; width: 100%; }
+  .kanban-column-body { max-height: 300px; }
+  .filter-bar { gap: 6px; }
+  .filter-search { width: 100%; }
+  .view-title { font-size: 18px; }
+  .agents-grid { grid-template-columns: 1fr; }
+  .detail-panel { width: 100%; }
+  .dp-meta-grid { grid-template-columns: 1fr; }
+  .dispatch-bar { flex-direction: column; align-items: stretch; }
+  .db-controls { flex-direction: column; gap: 10px; }
+  .cost-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+
+/* ── Triage feature rows (compat) ── */
+.triage-desc { color: var(--text-secondary); font-size: 13px; margin: -8px 0 16px 0; }
+.empty-triage { text-align: center; color: var(--text-muted); padding: 40px; font-size: 14px; }
+.feature-dispatch { margin-bottom: 16px; }
+.bug-digest { padding: 4px 0; }
+.bug-digest-section { margin-bottom: 16px; }
+.bug-digest-heading { font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.bug-digest-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; font-family: var(--font-mono); white-space: pre-wrap; }
+.feature-row { background: var(--bg-card); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; transition: all var(--transition); animation: fadeUp 0.5s ease-out both; }
 .feature-row:hover { border-color: var(--border-hover); box-shadow: 0 4px 30px rgba(0,0,0,0.2); }
-
-.feature-header {
-  padding: 14px 20px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  cursor: pointer; user-select: none;
-  transition: background var(--transition);
-}
+.feature-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer; user-select: none; transition: background var(--transition); }
 .feature-header:hover { background: var(--bg-card-hover); }
 .feature-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
 .feature-info { min-width: 0; }
@@ -203,45 +300,30 @@ body::before {
 .feature-dates { font-size: 11px; color: var(--text-muted); }
 .cost-chip { font-size: 12px; color: var(--amber); margin-left: auto; white-space: nowrap; }
 .repos-cost-row { display: flex; align-items: center; gap: 6px; width: 100%; }
-.cost-summary { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; font-family: var(--font-mono); }
-.chevron {
-  font-size: 12px; color: var(--text-muted);
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
+.chevron { font-size: 12px; color: var(--text-muted); transition: transform 0.2s ease; display: inline-block; }
 .feature-row.expanded .chevron { transform: rotate(180deg); }
-
-/* Type Icons */
 .type-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
 .type-feature { color: var(--green); }
 .type-bug { color: var(--red); }
-
-/* ── Lozenges ── */
-.lozenge {
-  display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 20px;
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-  white-space: nowrap; backdrop-filter: blur(8px);
-}
+.lozenge { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; backdrop-filter: blur(8px); }
 .lozenge-shipped { background: rgba(52,211,153,0.12); color: var(--green); box-shadow: 0 0 12px rgba(52,211,153,0.1); }
 .lozenge-in-progress { background: rgba(129,140,248,0.12); color: var(--blue); box-shadow: 0 0 12px rgba(129,140,248,0.1); }
 .lozenge-not-started { background: rgba(251,191,36,0.1); color: var(--amber); }
 .lozenge-blocked { background: rgba(248,113,113,0.12); color: var(--red); box-shadow: 0 0 12px rgba(248,113,113,0.1); }
 .lozenge-orphaned { background: rgba(107,114,128,0.12); color: var(--text-muted); }
 .lozenge-needs-review { background: rgba(245,158,11,0.15); color: var(--amber); }
-.lozenge-sev-critical { background: rgba(248,113,113,0.12); color: var(--red); }
-.lozenge-sev-high { background: rgba(251,146,60,0.12); color: var(--orange); }
-.lozenge-sev-medium { background: rgba(251,191,36,0.1); color: var(--amber); }
-.lozenge-sev-low { background: rgba(107,114,128,0.12); color: var(--text-muted); }
-
-/* ── Feature Detail ── */
-.feature-detail {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.4s;
-  background: var(--bg-detail); border-top: 1px solid var(--border);
-}
-.feature-row.expanded .feature-detail {
-  max-height: 3000px; padding: 20px;
-}
+.lozenge-exec-autonomous { background: rgba(167,139,250,0.12); color: #a78bfa; }
+.lozenge-exec-supervised { background: rgba(129,140,248,0.12); color: #818cf8; }
+.lozenge-exec-guided { background: rgba(103,232,249,0.12); color: #67e8f9; }
+.lozenge-lifecycle-draft { background: rgba(107,114,128,0.12); color: var(--text-muted); font-style: italic; }
+.lozenge-lifecycle-paused { background: rgba(251,191,36,0.1); color: var(--amber); }
+.lozenge-lifecycle-cancelled { background: rgba(248,113,113,0.1); color: var(--red); text-decoration: line-through; }
+.lozenge-lifecycle-replanning { background: rgba(251,146,60,0.1); color: var(--orange); }
+.lozenge-lifecycle-completed { background: rgba(52,211,153,0.1); color: var(--green); }
+.feature-dimmed { opacity: 0.55; }
+.feature-dimmed:hover { opacity: 0.85; }
+.feature-detail { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.4s; background: var(--bg-detail); border-top: 1px solid var(--border); }
+.feature-row.expanded .feature-detail { max-height: 3000px; padding: 20px; }
 .detail-grid { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
 .detail-progress { display: flex; align-items: center; gap: 16px; }
 .progress-label { flex: 1; min-width: 80px; }
@@ -250,8 +332,6 @@ body::before {
 .pbar-fill { height: 100%; border-radius: 2px; box-shadow: 0 0 8px currentColor; transition: width 0.8s ease-out; }
 .task-meta { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
 .detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px; }
-
-/* Waves */
 .detail-prs { flex-basis: 100%; }
 .waves-wrap { display: flex; flex-wrap: wrap; gap: 12px; }
 .wave-group { display: flex; align-items: center; gap: 3px; }
@@ -263,1188 +343,401 @@ body::before {
 .wdot-ready, .wdot-pending { background: var(--text-muted); opacity: 0.3; }
 .wdot-blocked { background: var(--red); box-shadow: 0 0 8px rgba(248,113,113,0.5); }
 .wdot-paused, .wdot-cancelled { background: var(--text-muted); opacity: 0.2; }
-
-/* Repo Chips */
 .repo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.repo-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 3px 10px; border-radius: 8px;
-  background: var(--bg-input); border: 1px solid var(--border);
-  font-size: 11px; backdrop-filter: blur(8px);
-}
+.repo-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border); font-size: 11px; backdrop-filter: blur(8px); }
 .repo-chip-name { font-weight: 600; color: var(--text-secondary); }
 .repo-chip-count { font-family: var(--font-mono); color: var(--text-primary); font-weight: 700; }
-
-/* PRs */
-.pr-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 4px 0; font-size: 12px;
-}
+.pr-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
 .pr-row a { color: var(--accent); text-decoration: none; }
 .pr-row a:hover { text-decoration: underline; }
-
-/* Missing Table */
 .detail-missing { grid-column: 1 / -1; margin-top: 4px; }
 .missing-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-.missing-tbl th {
-  text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--text-muted);
-  padding: 6px 12px 6px 0; border-bottom: 1px solid var(--border);
-}
+.missing-tbl th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 6px 12px 6px 0; border-bottom: 1px solid var(--border); }
 .missing-tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
 .missing-tbl tr:last-child td { border-bottom: none; }
 .missing-tbl .mono { font-family: var(--font-mono); font-size: 11px; }
-.worker-empty { color: var(--text-muted); }
-.worker-icon { font-size: 14px; }
-
-/* ── Orphaned ── */
-.orphaned-section { margin-top: 24px; }
-.orphaned-item {
-  padding: 10px 16px; background: var(--bg-card); backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius); margin-bottom: 6px; font-size: 13px; color: var(--text-secondary);
-  border-left: 3px solid var(--text-muted);
-}
-
-/* ── Epic Groups ── */
-.epic-group { margin-bottom: 4px; }
-.epic-group-hdr {
-  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
-  color: var(--text-secondary); margin: 20px 0 8px; padding: 10px 16px;
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg-card); backdrop-filter: blur(24px);
-  border: 1px solid var(--border); border-left: 3px solid #60a5fa;
-  border-radius: var(--radius);
-  cursor: pointer; user-select: none;
-  transition: all var(--transition);
-}
-.epic-group-hdr:hover { background: var(--bg-card-hover); border-color: var(--border-hover); border-left-color: #93bbfc; }
-.epic-group-chevron {
-  font-size: 12px; color: var(--text-muted);
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-.epic-group:not(.epic-expanded) .epic-group-chevron { transform: rotate(-90deg); }
-.epic-group-body { overflow: hidden; }
-.epic-group:not(.epic-expanded) .epic-group-body { display: none; }
-.epic-group-hdr .epic-group-label { color: #60a5fa; }
-.epic-group-hdr .section-count {
-  background: var(--bg-input); border-radius: 10px; padding: 1px 8px;
-  font-size: 10px; font-family: var(--font-mono);
-}
-.epic-group-jira {
-  color: #60a5fa; text-decoration: none; font-size: 11px;
-  transition: all var(--transition);
-}
-.epic-group-jira:hover { color: #93bbfc; }
-
-/* ── Jira & Spec Links ── */
-.jira-pill {
-  display: inline-flex; align-items: center;
-  border-radius: 6px; overflow: hidden;
-  background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
-  font-size: 10px; font-weight: 600; font-family: var(--font-mono);
-  vertical-align: middle; margin-left: 6px;
-  transition: all var(--transition);
-}
-.epic-filter-toggle {
-  padding: 1px 6px; color: #60a5fa; cursor: pointer;
-  transition: all var(--transition); user-select: none;
-}
-.epic-filter-toggle:hover { background: rgba(59,130,246,0.2); }
-.epic-filter-toggle.epic-active { background: rgba(59,130,246,0.5); color: #fff; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
-.jira-link-icon {
-  padding: 1px 5px; color: #60a5fa; text-decoration: none;
-  border-left: 1px solid rgba(59,130,246,0.2);
-  transition: all var(--transition); font-size: 11px; line-height: 1;
-}
-.jira-link-icon:hover { background: rgba(59,130,246,0.2); }
-.spec-link {
-  display: inline-flex; align-items: center; gap: 3px;
-  padding: 1px 8px; border-radius: 6px;
-  background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
-  font-size: 10px; font-weight: 600; color: #a78bfa;
-  text-decoration: none; vertical-align: middle; margin-left: 6px;
-  transition: all var(--transition);
-}
-.spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
 .missing-tbl a { color: var(--accent); text-decoration: none; }
 .missing-tbl a:hover { text-decoration: underline; }
-
-/* ── Execution Mode Lozenges ── */
-.lozenge-exec-autonomous { background: rgba(167,139,250,0.12); color: #a78bfa; }
-.lozenge-exec-supervised { background: rgba(129,140,248,0.12); color: #818cf8; }
-.lozenge-exec-guided { background: rgba(103,232,249,0.12); color: #67e8f9; }
-
-/* ── Lifecycle Lozenges ── */
-.lozenge-lifecycle-draft { background: rgba(107,114,128,0.12); color: var(--text-muted); font-style: italic; }
-.lozenge-lifecycle-paused { background: rgba(251,191,36,0.1); color: var(--amber); }
-.lozenge-lifecycle-cancelled { background: rgba(248,113,113,0.1); color: var(--red); text-decoration: line-through; }
-.lozenge-lifecycle-replanning { background: rgba(251,146,60,0.1); color: var(--orange); }
-.lozenge-lifecycle-completed { background: rgba(52,211,153,0.1); color: var(--green); }
-.feature-dimmed { opacity: 0.55; }
-.feature-dimmed:hover { opacity: 0.85; }
-
-/* ── Priority Dots ── */
-.priority-dot {
-  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-  vertical-align: middle; margin-right: 3px;
-}
-
-/* ── Stale Task Highlighting ── */
+.worker-empty { color: var(--text-muted); }
+.worker-icon { font-size: 14px; }
+.priority-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
 .stale-task { background: rgba(248,113,113,0.06); }
 .stale-warn { color: var(--amber); font-size: 13px; }
+.jira-pill { display: inline-flex; align-items: center; border-radius: 6px; overflow: hidden; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); font-size: 10px; font-weight: 600; font-family: var(--font-mono); vertical-align: middle; margin-left: 6px; transition: all var(--transition); }
+.epic-filter-toggle { padding: 1px 6px; color: #60a5fa; cursor: pointer; transition: all var(--transition); user-select: none; }
+.epic-filter-toggle:hover { background: rgba(59,130,246,0.2); }
+.epic-filter-toggle.epic-active { background: rgba(59,130,246,0.5); color: #fff; box-shadow: 0 0 10px rgba(59,130,246,0.5); }
+.jira-link-icon { padding: 1px 5px; color: #60a5fa; text-decoration: none; border-left: 1px solid rgba(59,130,246,0.2); transition: all var(--transition); font-size: 11px; line-height: 1; }
+.jira-link-icon:hover { background: rgba(59,130,246,0.2); }
+.spec-link { display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px; border-radius: 6px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); font-size: 10px; font-weight: 600; color: #a78bfa; text-decoration: none; vertical-align: middle; margin-left: 6px; transition: all var(--transition); }
+.spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
+.dismiss-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 12px; margin-left: 8px; }
+.dismiss-btn:hover { background: rgba(255,255,255,0.08); }
+.section-hdr { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.section-hdr .section-count { background: var(--bg-input); border-radius: 10px; padding: 1px 8px; font-size: 10px; font-family: var(--font-mono); }
+.orphaned-section { margin-top: 24px; }
+.orphaned-item { padding: 10px 16px; background: var(--bg-card); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; font-size: 13px; color: var(--text-secondary); border-left: 3px solid var(--text-muted); }
 
-/* ── Execution Summary Bar ── */
-.exec-summary { margin-left: auto; min-width: 160px; }
-.exec-bar {
-  display: flex; height: 6px; border-radius: 3px; overflow: hidden;
-  background: var(--ring-bg); margin: 6px 0 4px;
-}
-.exec-bar-seg { transition: width 0.8s ease-out; }
-.exec-bar-autonomous { background: #a78bfa; }
-.exec-bar-supervised { background: #818cf8; }
-.exec-bar-guided { background: #67e8f9; }
-.exec-legend { display: flex; gap: 10px; flex-wrap: wrap; }
-.exec-leg-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); }
-.exec-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
-/* ── Active Workers ── */
-.workers-section {
-  background: var(--bg-card); backdrop-filter: blur(24px);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  margin-bottom: 24px; overflow: hidden;
-  animation: fadeUp 0.6s ease-out 0.35s both;
-}
-.workers-header {
-  padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; user-select: none;
-}
-.workers-header:hover { background: var(--bg-card-hover); }
-.workers-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
-.workers-section.workers-expanded .workers-body { max-height: 400px; padding: 0 20px 14px; }
-.workers-section.workers-expanded .chevron { transform: rotate(180deg); }
-.worker-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 0; font-size: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.worker-row:last-child { border-bottom: none; }
-.worker-name { font-weight: 600; color: var(--text-primary); min-width: 120px; }
-.worker-tasks { color: var(--text-secondary); min-width: 60px; }
-.worker-features { color: var(--text-muted); font-size: 11px; }
-
-/* ── Filter Label ── */
-.filter-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 7px 4px; }
-
-/* ── Theme Toggle (hidden — single theme) ── */
-.theme-toggle { display: none; }
-
-/* ── New Feature Button + Modal ── */
-.new-feature-btn {
-  padding: 6px 16px; border-radius: 8px; border: none;
-  background: var(--accent); color: #fff;
-  font-size: 13px; font-weight: 600; font-family: var(--font-body);
-  cursor: pointer; transition: all var(--transition);
-  box-shadow: 0 0 20px rgba(129,140,248,0.2);
-}
-.new-feature-btn:hover {
-  box-shadow: 0 0 30px rgba(129,140,248,0.4);
-  transform: translateY(-1px);
-}
-.nf-overlay {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center;
-}
-.nf-modal {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 28px;
-  width: 480px; max-width: 90vw;
-  animation: fadeUp 0.3s ease-out;
-}
-.nf-modal h2 {
-  font-size: 16px; font-weight: 700; color: var(--text-primary);
-  margin: 0 0 8px;
-}
-.nf-modal p {
-  font-size: 13px; color: var(--text-secondary);
-  margin: 0 0 20px; line-height: 1.5;
-}
-.nf-options { display: flex; flex-direction: column; gap: 12px; }
-.nf-option {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 16px; border-radius: 12px;
-  background: var(--bg-card); border: 1px solid var(--border);
-  cursor: pointer; transition: all var(--transition);
-  text-decoration: none;
-}
-.nf-option:hover {
-  border-color: var(--border-hover);
-  background: var(--bg-card-hover);
-}
-.nf-option-icon {
-  font-size: 20px; width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 10px; background: rgba(129,140,248,0.1);
-  flex-shrink: 0;
-}
-.nf-option-text h3 {
-  font-size: 14px; font-weight: 600; color: var(--text-primary);
-  margin: 0 0 2px;
-}
-.nf-option-text p {
-  font-size: 12px; color: var(--text-secondary);
-  margin: 0;
-}
-.nf-status {
-  font-size: 11px; color: var(--text-muted);
-  margin-top: 16px; text-align: center;
-  font-family: var(--font-mono);
-}
-.nf-status.nf-connected { color: var(--green); }
-.nf-copy-wrap {
-  display: flex; align-items: center; gap: 8px;
-  margin-top: 12px;
-}
-.nf-copy-cmd {
-  flex: 1; padding: 8px 12px;
-  background: var(--bg-input); border: 1px solid var(--border);
-  border-radius: 8px; color: var(--text-primary);
-  font-family: var(--font-mono); font-size: 12px;
-}
-.nf-copy-btn {
-  padding: 8px 12px; border-radius: 8px; border: none;
-  background: rgba(255,255,255,0.08); color: var(--text-secondary);
-  font-size: 12px; font-weight: 600; cursor: pointer;
-  transition: all var(--transition);
-}
-.nf-copy-btn:hover { background: rgba(255,255,255,0.14); color: var(--text-primary); }
-
-/* ── Plan Button ── */
-.plan-btn {
-  padding: 4px 12px; border-radius: 6px; border: 1px solid var(--accent);
-  background: rgba(129,140,248,0.1); color: var(--accent);
-  font-size: 11px; font-weight: 600; font-family: var(--font-body);
-  cursor: pointer; transition: all var(--transition);
-}
-.plan-btn:hover:not(:disabled) {
-  background: rgba(129,140,248,0.2);
-  box-shadow: 0 0 12px rgba(129,140,248,0.2);
-}
-.plan-btn:disabled {
-  opacity: 0.3; cursor: not-allowed;
-}
-
-/* ── Footer ── */
-.page-footer {
-  text-align: center; padding: 32px 0 16px;
-  font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
-  letter-spacing: 0.05em;
-}
-
-/* ── Animations ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Responsive ── */
-
-/* Hamburger (hidden on desktop) */
-.hamburger-btn {
-  display: none; background: none; border: 1px solid var(--border);
-  color: var(--text-primary); font-size: 20px; padding: 4px 10px;
-  border-radius: 8px; cursor: pointer; line-height: 1;
-}
-
-@media (max-width: 768px) {
-  .layout { padding: 16px; }
-  .detail-grid { flex-direction: column; align-items: stretch; }
-  .search-wrap { flex-basis: 100%; min-width: unset; }
-  .filters { flex-basis: 100%; }
-  .navbar { height: auto; min-height: 48px; flex-wrap: wrap; padding: 8px 16px; gap: 8px; }
-  .nav-time { display: none; }
-  .nav-title { font-size: 13px; }
-  .feature-header { flex-wrap: wrap; padding: 12px 16px; }
-  .feature-left { flex-basis: 100%; }
-  .feature-right { flex-basis: 100%; justify-content: flex-start; padding-left: 28px; gap: 8px; }
-  .feature-title { white-space: normal; }
-  .detail-missing { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .epic-group-hdr { flex-wrap: wrap; gap: 6px; }
-}
-
-@media (max-width: 480px) {
-  .hamburger-btn { display: flex; align-items: center; }
-  .nav-tabs { display: none; width: 100%; order: 3; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid var(--border); margin-left: 0; }
-  .nav-tabs.mobile-open { display: flex; }
-  .nav-tab { padding: 10px 16px; font-size: 14px; text-align: left; }
-  .nav-title { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .new-feature-btn { padding: 6px 10px; font-size: 11px; }
-  .filters { gap: 4px; }
-  .filter-btn { padding: 8px 12px; font-size: 11px; min-height: 36px; }
-  .feature-header { padding: 10px 12px; }
-  .feature-dates { display: none; }
-  .feature-right .task-count { display: none; }
-  .lozenge { font-size: 9px; padding: 2px 8px; }
-  .feature-row.expanded .feature-detail { padding: 12px; }
-  .cost-summary { font-size: 12px; }
-  .section-hdr { font-size: 10px; }
-  .feature-desc { font-size: 12px; }
-  .epic-group-hdr { padding: 8px 12px; font-size: 11px; }
-  .epic-group-jira { font-size: 9px; }
-  .repo-chip { font-size: 10px; padding: 2px 8px; }
-  /* Table → stacked card layout on phone */
-  .missing-tbl thead { display: none; }
-  .missing-tbl tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .missing-tbl tr:last-child { border-bottom: none; }
-  .missing-tbl td { display: block; padding: 3px 0; border-bottom: none; font-size: 12px; }
-  .missing-tbl td::before {
-    content: attr(data-label);
-    display: inline-block; width: 72px;
-    font-size: 9px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--text-muted);
-    vertical-align: middle;
-  }
-}
-
-/* ── Print ── */
 @media print {
-  body, .jira-mode { background: #fff !important; }
-  .navbar, .theme-toggle, .toolbar { display: none !important; }
-  .feature-row { break-inside: avoid; border: 1px solid #ddd !important; }
-  .feature-detail { max-height: none !important; padding: 16px !important; }
-  .stat, .lozenge, .wdot, .pbar-fill { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .sidebar, .topbar, .detail-overlay { display: none !important; }
+  body { display: block; overflow: visible; }
+  .main-wrapper { overflow: visible; }
+  .kanban { flex-wrap: wrap; height: auto; }
+  .kanban-column { break-inside: avoid; }
 }
 </style>
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="nav-left">
-    <div class="nav-logo">R</div>
-    <span class="nav-title">Task Tracker - Command Center</span>
-  </div>
-  <div class="nav-tabs" id="navTabs">
-    <button class="nav-tab active" data-tab="features">Features</button>
-    <button class="nav-tab" data-tab="triage">Production Alerts</button>
-  </div>
-  <div class="nav-right">
-    <button class="new-feature-btn" id="newFeatureBtn">+ New Feature</button>
-    <button class="settings-btn" onclick="document.getElementById('settingsModal').style.display='flex'" title="Settings">&#9881;</button>
-    <button class="hamburger-btn" aria-label="Menu" onclick="document.getElementById('navTabs').classList.toggle('mobile-open')">&#9776;</button>
-    <span class="nav-time">Mar 28, 2026, 2:43 AM</span>
-  </div>
-</nav>
-
-<div id="settingsModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal-box">
-    <div class="modal-title">Settings</div>
-    <label class="modal-label">GitHub Personal Access Token</label>
-    <input type="password" id="patInput" class="modal-input" placeholder="ghp_..." value="">
-    <p class="modal-hint">Required for Dispatch Agent. Stored in browser only.</p>
-    <div class="modal-actions">
-      <button class="modal-btn" onclick="localStorage.setItem('gh_pat',document.getElementById('patInput').value);document.getElementById('settingsModal').style.display='none'">Save</button>
-      <button class="modal-btn modal-btn-secondary" onclick="document.getElementById('settingsModal').style.display='none'">Cancel</button>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">R</div>
+    <div class="sidebar-logo-text">
+      <h1>Task Tracker</h1>
+      <span>Command Center</span>
     </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Overview</div>
+      <div class="sb-nav-item active" onclick="switchView('kanban', this)">
+        <span class="sb-nav-item-icon">&#9776;</span>
+        <span>Kanban Board</span>
+      </div>
+      <div class="sb-nav-item" onclick="switchView('agents', this)">
+        <span class="sb-nav-item-icon">&#9881;</span>
+        <span>Agents</span>
+        <span class="sb-nav-badge">3</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Operations</div>
+      <div class="sb-nav-item" onclick="window.location.href='/inbox'">
+        <span class="sb-nav-item-icon">&#9993;</span>
+        <span>Inbox</span>
+        <span class="sb-nav-badge" id="inboxBadge" style="display:none"></span>
+      </div>
+      <div class="sb-nav-item" onclick="switchView('settings', this)">
+        <span class="sb-nav-item-icon">&#9881;</span>
+        <span>Settings</span>
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="sb-new-feature-btn" onclick="window.open('http://localhost:7433/interview','_blank')">
+      + <span>New Feature</span>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+  <div class="topbar">
+    <div class="topbar-time" id="topbarTime">09:50 AM</div>
+  </div>
+
+  <div class="main-content">
+    <!-- KANBAN VIEW -->
+    <div class="kb-view active" id="view-kanban">
+      <div class="view-header"><div class="view-title">Kanban Board</div></div>
+      <div class="filter-bar">
+        <input class="filter-search" id="filterSearch" placeholder="Search features... (/)" oninput="applyFilters()" />
+        <div class="filter-divider"></div>
+        <span class="filter-chip active" data-group="exec" data-value="all" onclick="toggleChip(this)">All</span>
+        <span class="filter-chip" data-group="exec" data-value="autonomous" onclick="toggleChip(this)">Autonomous</span>
+        <span class="filter-chip" data-group="exec" data-value="supervised" onclick="toggleChip(this)">Supervised</span>
+        <span class="filter-chip" data-group="exec" data-value="guided" onclick="toggleChip(this)">Guided</span>
+        <div class="filter-divider"></div>
+        <span class="filter-chip" data-group="priority" data-value="p0" onclick="toggleChip(this)">P0</span>
+        <span class="filter-chip" data-group="priority" data-value="p1" onclick="toggleChip(this)">P1</span>
+        <span class="filter-chip" data-group="priority" data-value="p2" onclick="toggleChip(this)">P2</span>
+      </div>
+      <div class="kanban"><div class="kanban-column col-draft">
+      <div class="kanban-column-header">
+        <div class="kanban-column-title"><span class="kanban-column-dot"></span>Draft</div>
+        <span class="kanban-column-count" data-col="draft">1</span>
+      </div>
+      <div class="kanban-column-body"><div class="card" data-slug="theming" data-exec="supervised" data-priority="p2" data-type="feature" data-title="user interface theming" data-epic="" onclick="openDetail('theming')">
+  <div class="card-title">User Interface Theming</div>
+  <div class="card-desc">Task management app users want to personalize their interface appearance beyond the existing light and dark modes. Users need additional theme options that provide better accessibility (high contrast) and branded visual identity (Tricentis branding) to enhance their user experience and accommodate different visual needs.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p2">P2</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-footer"></div>
+</div></div>
+    </div>
+<div class="kanban-column col-ready">
+      <div class="kanban-column-header">
+        <div class="kanban-column-title"><span class="kanban-column-dot"></span>Ready</div>
+        <span class="kanban-column-count" data-col="ready">0</span>
+      </div>
+      <div class="kanban-column-body"></div>
+    </div>
+<div class="kanban-column col-progress">
+      <div class="kanban-column-header">
+        <div class="kanban-column-title"><span class="kanban-column-dot"></span>In Progress</div>
+        <span class="kanban-column-count" data-col="in-progress">0</span>
+      </div>
+      <div class="kanban-column-body"></div>
+    </div>
+<div class="kanban-column col-done">
+      <div class="kanban-column-header">
+        <div class="kanban-column-title"><span class="kanban-column-dot"></span>Done</div>
+        <span class="kanban-column-count" data-col="done">14</span>
+      </div>
+      <div class="kanban-column-body"><div class="card" data-slug="analytics" data-exec="supervised" data-priority="p1" data-type="feature" data-title="task analytics sidebar" data-epic="TASK-5" onclick="openDetail('analytics')">
+  <div class="card-title">Task Analytics Sidebar</div>
+  <div class="card-desc">All end users of the task tracker currently have no visibility into their productivity patterns or task distribution. Without analytics, users cannot see how tasks are distributed across statuses, how many tasks are being completed over time, or how long tasks typically spend in each workflow stage. This feature adds a lightweight analytics sidebar to the existing task list view, giving users at-a-glance metrics without leaving their workflow.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
   </div>
 </div>
-
-<div id="nfOverlay" class="nf-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="nf-modal">
-    <h2>Start a New Feature</h2>
-    <p>Define a feature through an AI-guided interview that produces a validated spec.</p>
-    <div class="nf-options">
-      <div class="nf-option" id="nfBrowserOption" onclick="nfLaunchBrowser()">
-        <div class="nf-option-icon">&#127760;</div>
-        <div class="nf-option-text">
-          <h3>Browser Interview</h3>
-          <p>Step-by-step wizard with live AI chat</p>
-        </div>
-      </div>
-      <div class="nf-option" onclick="nfShowTerminal()">
-        <div class="nf-option-icon">&#9000;</div>
-        <div class="nf-option-text">
-          <h3>Terminal</h3>
-          <p>Run the interview in your terminal</p>
-        </div>
-      </div>
-    </div>
-    <div id="nfTerminalInstructions" style="display:none">
-      <div class="nf-copy-wrap">
-        <code class="nf-copy-cmd">relay new</code>
-        <button class="nf-copy-btn" onclick="navigator.clipboard.writeText('relay new');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
-      </div>
-    </div>
-    <div id="nfServerStatus" class="nf-status"></div>
+<div class="card" data-slug="analytics-improvements" data-exec="supervised" data-priority="p1" data-type="feature" data-title="analytics improvements" data-epic="TASK-5" onclick="openDetail('analytics-improvements')">
+  <div class="card-title">Analytics Improvements</div>
+  <div class="card-desc">Users need better visibility into their task completion patterns and productivity metrics. The current analytics are confined to a side panel which limits the space available for data visualization and doesn't provide category-based insights. Users want a dedicated analytics experience with expanded visualizations including a pie chart breakdown of completed tasks by category.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">3/3 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
   </div>
 </div>
-
-<div class="layout tab-content" id="featuresTab">
-
-  
-
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 7a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z"/></svg>
-      <input type="text" class="search" placeholder="Search features..." id="searchInput">
-    </div>
-    <div class="filters" id="statusFilters">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="in-progress">In Progress</button>
-      <button class="filter-btn" data-filter="not-started">Not Started</button>
-      <button class="filter-btn" data-filter="blocked">Blocked</button>
-      <button class="filter-btn" data-filter="shipped">Shipped</button>
-    </div>
-    <div class="filters" id="execFilters">
-      <span class="filter-label">Execution:</span>
-      <button class="filter-btn active" data-exec-filter="all">All</button>
-      <button class="filter-btn" data-exec-filter="autonomous">&#129302; Auto</button>
-      <button class="filter-btn" data-exec-filter="supervised">&#128065; Supervised</button>
-      <button class="filter-btn" data-exec-filter="guided">&#128100; Guided</button>
-    </div>
+<div class="card" data-slug="darkmode" data-exec="supervised" data-priority="p1" data-type="feature" data-title="dark mode" data-epic="TASK-5" onclick="openDetail('darkmode')">
+  <div class="card-title">Dark Mode</div>
+  <div class="card-desc">All users of the task management app need a dark mode option to reduce eye strain in low-light environments and to respect OS-level theme preferences. Dark mode is an expected baseline feature for modern web apps and its absence signals a lack of UI polish. This is a frontend-only feature — no backend or API changes are required.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
   </div>
-
-  <div class="cost-summary">Total AI spend: <strong>$5.13</strong> &middot; 105K tokens</div>
-
-  <div class="section-hdr"><span>Features</span><span class="section-count">12</span></div>
-
-  <div id="featureList">
-    <div class="epic-group" data-epic-group="TASK-5"><div class="epic-group-hdr" onclick="this.parentElement.classList.toggle('epic-expanded')"><span class="epic-group-chevron">&#9662;</span><span class="epic-group-label">Jira: TASK-5: Q1 - Task Tracker Enhancements</span><span class="section-count">7</span></div><div class="epic-group-body"><div class="feature-row" data-status="not-started" data-type="feature" data-execution="supervised" data-title="analytics improvements" data-epic="TASK-5" data-epic-title="q1 - task tracker enhancements" style="animation-delay:0ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Analytics Improvements <span class="jira-pill"><span class="epic-filter-toggle" data-epic="TASK-5" title="Filter by epic TASK-5">Jira: TASK-5: Q1 - Task Tracker Enhancements</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">0/3</span>
-        
-        
-        <span class="lozenge lozenge-not-started">Not Started</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">Users need better visibility into their task completion patterns and productivity metrics. The current analytics are confined to a side panel which limits the space available for data visualization and doesn't provide category-based insights. Users want a dedicated analytics experience with expanded visualizations including a pie chart breakdown of completed tasks by category.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="131.94689145077132" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">0%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:0%;background:#f59e0b"></div></div></div>
-            <span class="task-meta">0 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-ready" title="Add Pie Chart And Finalize Migration: ready"></span><span class="wdot wdot-ready" title="Create Analytics Page Foundation: ready"></span><span class="wdot wdot-ready" title="Migrate Existing Analytics Visualization: ready"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">0/3</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">Remaining Tasks (3)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-add-pie-chart-and-finalize-migration</td>
-      <td data-label="Status"><span class="wdot wdot-ready"></span> ready</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-create-analytics-page-foundation</td>
-      <td data-label="Status"><span class="wdot wdot-ready"></span> ready</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-migrate-existing-analytics-visualization</td>
-      <td data-label="Status"><span class="wdot wdot-ready"></span> ready</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="supervised" data-title="task analytics sidebar" data-epic="TASK-5" data-epic-title="q1 - task tracker enhancements" style="animation-delay:60ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Task Analytics Sidebar <span class="jira-pill"><span class="epic-filter-toggle" data-epic="TASK-5" title="Filter by epic TASK-5">Jira: TASK-5: Q1 - Task Tracker Enhancements</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">2/2</span>
-        <span class="feature-dates mono">Mar 26, 2026 &rarr; Mar 26, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">All end users of the task tracker currently have no visibility into their productivity patterns or task distribution. Without analytics, users cannot see how tasks are distributed across statuses, how many tasks are being completed over time, or how long tasks typically spend in each workflow stage. This feature adds a lightweight analytics sidebar to the existing task list view, giving users at-a-glance metrics without leaving their workflow.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Analytics Endpoint: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Analytics Sidebar: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">api</span><span class="repo-chip-count">1/1</span></span><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">1/1</span></span></div><span class="cost-chip mono">&#128176; $1.59 &middot; 22K</span></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-analytics-endpoint</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-analytics-sidebar</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="supervised" data-title="dark mode" data-epic="TASK-5" data-epic-title="&quot;&quot;" style="animation-delay:120ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Dark Mode <span class="jira-pill"><span class="epic-filter-toggle" data-epic="TASK-5" title="Filter by epic TASK-5">Jira: TASK-5: &quot;&quot;</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">2/2</span>
-        <span class="feature-dates mono">Mar 25, 2026 &rarr; Mar 25, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">All users of the task management app need a dark mode option to reduce eye strain in low-light environments and to respect OS-level theme preferences. Dark mode is an expected baseline feature for modern web apps and its absence signals a lack of UI polish. This is a frontend-only feature — no backend or API changes are required.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Css Variables And Theme Infrastructure: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Theme Toggle And Persistence: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">2/2</span></span></div><span class="cost-chip mono">&#128176; $0.6458 &middot; 43K</span></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-css-variables-and-theme-infrastructure</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-theme-toggle-and-persistence</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="autonomous" data-title="sorting improvements" data-epic="TASK-5" data-epic-title="" style="animation-delay:180ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Sorting Improvements <span class="jira-pill"><span class="epic-filter-toggle" data-epic="TASK-5" title="Filter by epic TASK-5">Jira: TASK-5</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">2/2</span>
-        <span class="feature-dates mono">Mar 22, 2026 &rarr; Mar 22, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">End users managing task lists have no UI control over sort order. The backend API already supports sorting by `createdAt`, `title`, and `status` with ascending/descending order, but the frontend does not expose these controls. Users are stuck with the default order and cannot organize their view to find or prioritize tasks efficiently.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Sort Dropdown Polish: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Sort Dropdown Tests: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">2/2</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-sort-dropdown-polish</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-sort-dropdown-tests</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="autonomous" data-title="improve spacing between active and completed task sections" data-epic="TASK-5" data-epic-title="" style="animation-delay:240ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Improve Spacing Between Active and Completed Task Sections <span class="jira-pill"><span class="epic-filter-toggle" data-epic="TASK-5" title="Filter by epic TASK-5">Jira: TASK-5</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">2/2</span>
-        <span class="feature-dates mono">Mar 22, 2026 &rarr; Mar 23, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">End users see a large, disproportionate gap between the active tasks list (todo / in-progress) and the completed tasks list (done) on the task list page. This wasted vertical space makes the interface feel disjointed and reduces scannability, forcing users to scroll more than necessary.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Collapsible Completed Section: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Completed Section Tests: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">2/2</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-collapsible-completed-section</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-completed-section-tests</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--text-muted)" title="normal"></span> normal</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="autonomous" data-title="task category sort" data-epic="TASK-5" data-epic-title="q1 - task tracker enhancements" style="animation-delay:300ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Task Category Sort <span class="jira-pill"><span class="epic-filter-toggle" data-epic="TASK-5" title="Filter by epic TASK-5">Jira: TASK-5: Q1 - Task Tracker Enhancements</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">2/2</span>
-        <span class="feature-dates mono">Mar 23, 2026 &rarr; Mar 23, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">Users can assign categories (work, personal, errands) to tasks, but cannot sort the task list by category. This means the categorization effort provides no organizational benefit when viewing tasks — users can't group their view by category to focus on one type of work at a time.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Add Category Sort Logic: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Add Category Sort Option: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">api</span><span class="repo-chip-count">1/1</span></span><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">1/1</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-add-category-sort-logic</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-add-category-sort-option</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="supervised" data-title="task descriptions" data-epic="TASK-5" data-epic-title="q1 - task tracker enhancements" style="animation-delay:360ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Task Descriptions <span class="jira-pill"><span class="epic-filter-toggle" data-epic="TASK-5" title="Filter by epic TASK-5">Jira: TASK-5: Q1 - Task Tracker Enhancements</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">4/4</span>
-        <span class="feature-dates mono">Mar 25, 2026 &rarr; Mar 26, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">End users of the task tracker can currently only give tasks a short title. Titles alone don't provide enough context — users need a place to capture details, steps, or notes about a task so they can understand what needs to be done without relying on memory. The API contract already defines an optional `description` field (max 2000 characters) on tasks, but neither the API implementation nor the frontend supports it. This feature closes that gap.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">4 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Add Description Field: done"></span><span class="wdot wdot-done" title="Add Description To Creation Form: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Expandable Detail Panel: done"></span><span class="wdot wdot-done" title="Inline Description Editing: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">api</span><span class="repo-chip-count">1/1</span></span><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">3/3</span></span></div><span class="cost-chip mono">&#128176; $2.24 &middot; 32K</span></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (4)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-add-description-field</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-add-description-to-creation-form</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-expandable-detail-panel</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-inline-description-editing</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div></div></div><div class="epic-group" data-epic-group="ABC"><div class="epic-group-hdr" onclick="this.parentElement.classList.toggle('epic-expanded')"><span class="epic-group-chevron">&#9662;</span><span class="epic-group-label">Jira: ABC</span><span class="section-count">1</span></div><div class="epic-group-body"><div class="feature-row" data-status="shipped" data-type="feature" data-execution="autonomous" data-title="help content drawer" data-epic="ABC" data-epic-title="" style="animation-delay:420ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Help Content Drawer <span class="jira-pill"><span class="epic-filter-toggle" data-epic="ABC" title="Filter by epic ABC">Jira: ABC</span></span> </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">2/2</span>
-        <span class="feature-dates mono">Mar 21, 2026 &rarr; Mar 21, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">End users of the task management app have no in-app way to discover what capabilities are available to them. Without guidance, users must explore the UI on their own to understand features like batch operations, categories, status workflows, and comments. This leads to underutilization of the system's capabilities. A help content drawer gives users a quick, always-accessible reference to understand what they can do and how to do it.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Help Drawer Component: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Help Drawer Tests: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">2/2</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-help-drawer-component</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-help-drawer-tests</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#129302; Auto</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div></div></div><div class="epic-group" data-epic-group=""><div class="epic-group-hdr" onclick="this.parentElement.classList.toggle('epic-expanded')"><span class="epic-group-chevron">&#9662;</span><span class="epic-group-label">Other Features</span><span class="section-count">4</span></div><div class="epic-group-body"><div class="feature-row" data-status="shipped" data-type="feature" data-execution="supervised" data-title="task status transition log" data-epic="" data-epic-title="" style="animation-delay:480ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Task Status Transition Log  </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">3/3</span>
-        <span class="feature-dates mono">Mar 19, 2026 &rarr; Mar 21, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">When a task's status changes (e.g., todo → in-progress → done), there is no record of who made the change or when it happened. Users and teams have no visibility into the workflow history of a task, making it hard to understand how work progressed or who moved it forward. This feature adds an immutable audit trail of status transitions, exposed via API and visible in the frontend task detail view.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">3 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Wave 1 Api Status History Endpoints: done"></span><span class="wdot wdot-done" title="Wave 1 Frontend Patch Userid Header: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Wave 2 Frontend History Display: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">api</span><span class="repo-chip-count">1/1</span></span><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">2/2</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (3)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-wave-1-api-status-history-endpoints</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-wave-1-frontend-patch-userid-header</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-wave-2-frontend-history-display</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="supervised" data-title="bulk assign category" data-epic="" data-epic-title="" style="animation-delay:540ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Bulk Assign Category  </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">4/4</span>
-        <span class="feature-dates mono">Mar 21, 2026 &rarr; Mar 21, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">Users need a way to organize their tasks by category (work, personal, errands). Currently tasks have no categorization, making it hard to focus on a specific area. When many tasks need the same category, assigning them one-by-one is tedious. Users need to select multiple tasks and bulk assign a category in one action.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">4 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Add Category Field And Patch Support: done"></span><span class="wdot wdot-done" title="Batch Update Category Endpoint: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Bulk Assign Category Ui: done"></span><span class="wdot wdot-done" title="Display Category On Task Cards: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">api</span><span class="repo-chip-count">2/2</span></span><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">2/2</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (4)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-add-category-field-and-patch-support</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-batch-update-category-endpoint</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-bulk-assign-category-ui</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-display-category-on-task-cards</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="supervised" data-title="multi-delete tasks" data-epic="" data-epic-title="" style="animation-delay:600ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">Multi-Delete Tasks  </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        
-        <span class="task-count mono">2/2</span>
-        <span class="feature-dates mono">Mar 21, 2026 &rarr; Mar 21, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      <div class="feature-desc">Users currently have to delete tasks one at a time, which is tedious when cleaning up multiple completed or obsolete tasks. There is no way to select and remove several tasks in a single action, leading to repetitive clicks and a slow workflow for bulk task management.</div>
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Batch Delete Endpoint: done"></span></div><div class="wave-group"><span class="wave-lbl">W2</span><span class="wdot wdot-done" title="Select Mode Batch Delete Ui: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">api</span><span class="repo-chip-count">1/1</span></span><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">1/1</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-batch-delete-endpoint</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-2-frontend-select-mode-batch-delete-ui</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W2</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div><div class="feature-row" data-status="shipped" data-type="feature" data-execution="supervised" data-title="task-status-workflow" data-epic="" data-epic-title="" style="animation-delay:660ms">
-    <div class="feature-header">
-      <div class="feature-left">
-        <span class="type-icon type-feature" title="Feature">&#9670;</span>
-        <div class="feature-info">
-          <div class="feature-title">task-status-workflow  </div>
-        </div>
-      </div>
-      <div class="feature-right">
-        <span class="lozenge lozenge-lifecycle-unknown">unknown</span>
-        <span class="task-count mono">2/2</span>
-        
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
-        <span class="chevron">&#9662;</span>
-      </div>
-    </div>
-    <div class="feature-detail">
-      
-      
-      <div class="detail-grid">
-        <div class="detail-progress">
-          <svg width="48" height="48" viewBox="0 0 48 48" class="progress-ring">
-    <circle cx="24" cy="24" r="21" fill="none" stroke="var(--ring-bg)" stroke-width="3"/>
-    <circle cx="24" cy="24" r="21" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"
-      stroke-dasharray="131.94689145077132" stroke-dashoffset="0" transform="rotate(-90 24 24)"
-      style="transition:stroke-dashoffset 1s ease-out"/>
-    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
-      fill="var(--text-primary)" font-size="11" font-weight="700" font-family="var(--font-mono)">100%</text>
-  </svg>
-          <div class="progress-label">
-            <div class="progress-bar-wrap"><div class="pbar"><div class="pbar-fill" style="width:100%;background:#10b981"></div></div></div>
-            <span class="task-meta">2 done</span>
-          </div>
-        </div>
-        <div class="detail-waves"><div class="detail-label">Waves</div><div class="waves-wrap"><div class="wave-group"><span class="wave-lbl">W1</span><span class="wdot wdot-done" title="Add Status Field: done"></span><span class="wdot wdot-done" title="Kanban Board: done"></span></div></div></div>
-        <div class="detail-repos"><div class="detail-label">Repositories</div><div class="repos-cost-row"><div class="repo-chips"><span class="repo-chip"><span class="repo-chip-name">api</span><span class="repo-chip-count">1/1</span></span><span class="repo-chip"><span class="repo-chip-name">frontend</span><span class="repo-chip-count">1/1</span></span></div></div></div>
-        
-      </div>
-      <div class="detail-missing">
-        <div class="detail-label">All Tasks (2)</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody><tr class="">
-      <td class="mono" data-label="Task">wave-1-api-add-status-field</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr><tr class="">
-      <td class="mono" data-label="Task">wave-1-frontend-kanban-board</td>
-      <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
-      <td data-label="Priority"><span class="priority-dot" style="background:var(--orange)" title="high"></span> high</td>
-      <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
-    </tr></tbody></table>
-      </div>
-      
-    </div>
-  </div></div></div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
   </div>
-
-  
-
-  <div id="bugList">
+</div>
+<div class="card" data-slug="help-content-search" data-exec="autonomous" data-priority="p1" data-type="feature" data-title="help content search" data-epic="TASK-5" onclick="openDetail('help-content-search')">
+  <div class="card-title">Help Content Search</div>
+  <div class="card-desc">Users struggle to find specific help information when the help panel contains multiple sections. As the task management app grows, users waste time scrolling through all help content instead of quickly finding answers to their specific questions. This reduces productivity and creates friction in the user experience.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-autonomous">Auto</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">3/3 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
+  </div>
+</div>
+<div class="card" data-slug="helpcontent" data-exec="autonomous" data-priority="p1" data-type="feature" data-title="help content drawer" data-epic="ABC" onclick="openDetail('helpcontent')">
+  <div class="card-title">Help Content Drawer</div>
+  <div class="card-desc">End users of the task management app have no in-app way to discover what capabilities are available to them. Without guidance, users must explore the UI on their own to understand features like batch operations, categories, status workflows, and comments. This leads to underutilization of the system's capabilities. A help content drawer gives users a quick, always-accessible reference to understand what they can do and how to do it.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-autonomous">Auto</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    <span class="card-epic">epic: ABC</span>
+  </div>
+</div>
+<div class="card" data-slug="logging" data-exec="supervised" data-priority="p1" data-type="feature" data-title="task status transition log" data-epic="" onclick="openDetail('logging')">
+  <div class="card-title">Task Status Transition Log</div>
+  <div class="card-desc">When a task's status changes (e.g., todo → in-progress → done), there is no record of who made the change or when it happened. Users and teams have no visibility into the workflow history of a task, making it hard to understand how work progressed or who moved it forward. This feature adds an immutable audit trail of status transitions, exposed via API and visible in the frontend task detail view.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">3/3 tasks</span>
     
   </div>
 </div>
+<div class="card" data-slug="multiassign" data-exec="supervised" data-priority="p1" data-type="feature" data-title="bulk assign category" data-epic="" onclick="openDetail('multiassign')">
+  <div class="card-title">Bulk Assign Category</div>
+  <div class="card-desc">Users need a way to organize their tasks by category (work, personal, errands). Currently tasks have no categorization, making it hard to focus on a specific area. When many tasks need the same category, assigning them one-by-one is tedious. Users need to select multiple tasks and bulk assign a category in one action.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">4/4 tasks</span>
+    
+  </div>
+</div>
+<div class="card" data-slug="multidelete" data-exec="supervised" data-priority="p1" data-type="feature" data-title="multi-delete tasks" data-epic="" onclick="openDetail('multidelete')">
+  <div class="card-title">Multi-Delete Tasks</div>
+  <div class="card-desc">Users currently have to delete tasks one at a time, which is tedious when cleaning up multiple completed or obsolete tasks. There is no way to select and remove several tasks in a single action, leading to repetitive clicks and a slow workflow for bulk task management.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    
+  </div>
+</div>
+<div class="card" data-slug="sorting-improvements" data-exec="autonomous" data-priority="p1" data-type="feature" data-title="sorting improvements" data-epic="TASK-5" onclick="openDetail('sorting-improvements')">
+  <div class="card-title">Sorting Improvements</div>
+  <div class="card-desc">End users managing task lists have no UI control over sort order. The backend API already supports sorting by `createdAt`, `title`, and `status` with ascending/descending order, but the frontend does not expose these controls. Users are stuck with the default order and cannot organize their view to find or prioritize tasks efficiently.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-autonomous">Auto</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
+  </div>
+</div>
+<div class="card" data-slug="spacegap" data-exec="autonomous" data-priority="p1" data-type="feature" data-title="improve spacing between active and completed task sections" data-epic="TASK-5" onclick="openDetail('spacegap')">
+  <div class="card-title">Improve Spacing Between Active and Completed Task Sections</div>
+  <div class="card-desc">End users see a large, disproportionate gap between the active tasks list (todo / in-progress) and the completed tasks list (done) on the task list page. This wasted vertical space makes the interface feel disjointed and reduces scannability, forcing users to scroll more than necessary.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-autonomous">Auto</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
+  </div>
+</div>
+<div class="card" data-slug="task-category-enhancements" data-exec="autonomous" data-priority="p1" data-type="feature" data-title="task category sort" data-epic="TASK-5" onclick="openDetail('task-category-enhancements')">
+  <div class="card-title">Task Category Sort</div>
+  <div class="card-desc">Users can assign categories (work, personal, errands) to tasks, but cannot sort the task list by category. This means the categorization effort provides no organizational benefit when viewing tasks — users can't group their view by category to focus on one type of work at a time.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-autonomous">Auto</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
+  </div>
+</div>
+<div class="card" data-slug="task-descriptions" data-exec="supervised" data-priority="p1" data-type="feature" data-title="task descriptions" data-epic="TASK-5" onclick="openDetail('task-descriptions')">
+  <div class="card-title">Task Descriptions</div>
+  <div class="card-desc">End users of the task tracker can currently only give tasks a short title. Titles alone don't provide enough context — users need a place to capture details, steps, or notes about a task so they can understand what needs to be done without relying on memory. The API contract already defines an optional `description` field (max 2000 characters) on tasks, but neither the API implementation nor the frontend supports it. This feature closes that gap.</div>
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">4/4 tasks</span>
+    <span class="card-epic">epic: TASK-5</span>
+  </div>
+</div>
+<div class="card" data-slug="cannot-read-properties-of-undefined-reading-id" data-exec="supervised" data-priority="p0" data-type="bug" data-title="typeerror in taskwithcount crashes get /tasks for all users" data-epic="" onclick="openDetail('cannot-read-properties-of-undefined-reading-id')">
+  <div class="card-title">TypeError in taskWithCount Crashes GET /tasks for All Users</div>
+  
+  <div class="card-meta">
+    <span class="card-tag tag-bug">Bug</span>
+    <span class="card-tag tag-p0">P0</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">1/1 tasks</span>
+    
+  </div>
+</div>
+<div class="card" data-slug="task-status-workflow" data-exec="supervised" data-priority="p1" data-type="feature" data-title="task-status-workflow" data-epic="" onclick="openDetail('task-status-workflow')">
+  <div class="card-title">task-status-workflow</div>
+  
+  <div class="card-meta">
+    <span class="card-tag tag-feature">Feature</span>
+    <span class="card-tag tag-p1">P1</span>
+    <span class="card-tag tag-supervised">Supervised</span>
+  </div>
+  <div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green);box-shadow:var(--glow-green)"></div></div>
+  <div class="card-footer">
+    <span class="card-tasks">2/2 tasks</span>
+    
+  </div>
+</div></div>
+    </div>
+<div class="kanban-column col-blocked">
+      <div class="kanban-column-header">
+        <div class="kanban-column-title"><span class="kanban-column-dot"></span>Blocked</div>
+        <span class="kanban-column-count" data-col="blocked">0</span>
+      </div>
+      <div class="kanban-column-body"></div>
+    </div></div>
+    </div>
 
-<div class="layout tab-content" id="triageTab" style="display:none">
-  <div class="section-hdr triage-hdr"><span>&#128680; Production Alerts</span><span class="section-count">1</span></div>
-  <p class="triage-desc">Issues auto-detected from production telemetry. Review the diagnosis, then decide: plan a fix, dispatch an agent, or dismiss.</p>
-  <div id="triageList">
-    <div class="feature-row" data-status="shipped" data-type="bug" data-execution="supervised" data-title="typeerror in taskwithcount crashes get /tasks for all users" data-epic="" data-epic-title="" style="animation-delay:720ms">
+    <!-- AGENTS VIEW -->
+    <div class="kb-view" id="view-agents">
+    <div class="view-header"><div class="view-title">Agents</div></div>
+    <div class="agents-subtitle">Tap an agent to explore logs, prompts, and performance.</div>
+    <div class="agents-grid">
+      <div class="agent-card" onclick="window.open('/agent/chat','_blank')">
+          <div class="agent-card-top">
+            <div class="agent-icon" style="background:rgba(129,140,248,0.15)">&#9997;</div>
+            <div class="agent-card-badges">
+              <span class="agent-status-badge agent-status-idle">Idle</span>
+            </div>
+          </div>
+          <div class="agent-card-name">Chat</div>
+          <div class="agent-card-role">Explore the codebase and ask questions</div>
+        </div>
+<div class="agent-card" onclick="window.open('/agent/diagnostics','_blank')">
+          <div class="agent-card-top">
+            <div class="agent-icon" style="background:rgba(129,140,248,0.15)">&#9881;</div>
+            <div class="agent-card-badges">
+              <span class="agent-status-badge agent-status-idle">Idle</span>
+            </div>
+          </div>
+          <div class="agent-card-name">Diagnostics</div>
+          <div class="agent-card-role">Diagnose issues from telemetry logs or bug descriptions</div>
+        </div>
+<div class="agent-card" onclick="window.open('/agent/triage','_blank')">
+          <div class="agent-card-top">
+            <div class="agent-icon" style="background:rgba(129,140,248,0.15)">&#9881;</div>
+            <div class="agent-card-badges">
+              <span class="agent-status-badge agent-status-idle">Idle</span>
+            </div>
+          </div>
+          <div class="agent-card-name">Triage</div>
+          <div class="agent-card-role">Analyze inbox items and produce structured triage reports</div>
+        </div>
+    </div>
+  </div>
+
+    <!-- TRIAGE VIEW -->
+    <div class="kb-view" id="view-triage">
+      <div class="view-header"><div class="view-title">Triage</div></div>
+      <div class="triage-desc">Issues auto-detected from production telemetry. Review the diagnosis, then decide: plan a fix, dispatch an agent, or dismiss.</div>
+      <div class="feature-row" data-status="shipped" data-type="bug" data-execution="supervised" data-title="typeerror in taskwithcount crashes get /tasks for all users" data-epic="" data-epic-title="" style="animation-delay:0ms">
     <div class="feature-header">
       <div class="feature-left">
         <span class="type-icon type-bug" title="Bug">&#9679;</span>
@@ -1456,12 +749,12 @@ body::before {
         
         <span class="task-count mono">1/1</span>
         <span class="feature-dates mono">Mar 27, 2026</span>
-        
-        <span class="lozenge lozenge-shipped">Shipped</span>
+        <span class="lozenge lozenge-shipped">Done</span>
         <span class="chevron">&#9662;</span>
       </div>
     </div>
     <div class="feature-detail">
+      
       
       
       <div class="detail-grid">
@@ -1490,241 +783,269 @@ body::before {
       <td data-label="Status"><span class="wdot wdot-done"></span> done</td>
       <td data-label="Priority"><span class="priority-dot" style="background:var(--red)" title="critical"></span> critical</td>
       <td class="mono" data-label="Wave">W1</td>
-      <td data-label="Execution">&#128065; Supervised</td>
+      <td data-label="Execution">Supervised</td>
     </tr></tbody></table>
       </div>
       
     </div>
   </div>
+      
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="kb-view" id="view-settings">
+      <div class="view-header"><div class="view-title">Settings</div></div>
+      <div class="settings-section">
+        <div class="settings-section-title">GitHub Integration</div>
+        <div class="settings-field">
+          <label class="settings-label">Personal Access Token</label>
+          <input class="settings-input" id="ghPat" type="password" placeholder="ghp_..." />
+          <div class="settings-hint">Required for dispatch agent functionality. Stored in browser localStorage.</div>
+        </div>
+        <button class="settings-save" onclick="savePat()">Save Token</button>
+      </div>
+    </div>
+
+    <!-- ORPHANED -->
+    
   </div>
-  
 </div>
 
-<div class="layout">
-  
-
-  
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="detail-panel" onclick="event.stopPropagation()">
+    <div class="dp-header">
+      <h2 id="dpTitle">Feature Title</h2>
+      <button class="dp-close" onclick="closeDetail()">&times;</button>
+    </div>
+    <div class="dp-body" id="dpBody"></div>
+  </div>
 </div>
 
-<svg width="0" height="0"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="var(--green)"/><stop offset="100%" stop-color="var(--blue)"/></linearGradient></defs></svg>
+<div id="toastContainer"></div>
+
+<script>var FEATURES = [{"slug":"theming","title":"User Interface Theming","type":"feature","status":"not-started","lifecycle":"draft","execution":"supervised","epic":"","epicTitle":"","problem":"Task management app users want to personalize their interface appearance beyond the existing light and dark modes. Users need additional theme options that provide better accessibility (high contrast) and branded visual identity (Tricentis branding) to enhance their user experience and accommodate different visual needs.","specPath":"features/draft/theming-feature.md","specSha":"","priority":"p2","tasks":{"total":0,"done":0},"progress":0,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[]},{"slug":"analytics","title":"Task Analytics Sidebar","type":"feature","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"TASK-5","epicTitle":"Q1 - Task Tracker Enhancements","problem":"All end users of the task tracker currently have no visibility into their productivity patterns or task distribution. Without analytics, users cannot see how tasks are distributed across statuses, how many tasks are being completed over time, or how long tasks typically spend in each workflow stage. This feature adds a lightweight analytics sidebar to the existing task list view, giving users at-a-glance metrics without leaving their workflow.","specPath":"features/completed/analytics-feature.md","specSha":"8bf60111364f5b7e34fb293f921f35b0f9673a19","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":{"usd":1.5852772499999999,"tokens":21883},"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Analytics Endpoint","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add GET /tasks/analytics endpoint that computes and returns aggregate task metrics: counts by status, daily completions for the last 7 days, and average time spent in each status.","relPath":"queue/_done/analytics/done/wave-1-api-analytics-endpoint.md","sha":"8bf60111364f5b7e34fb293f921f35b0f9673a19","claimed_at":"2026-03-26T10:58:20Z"},{"name":"Analytics Sidebar","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add an analytics sidebar to the task list view with a toggle button, fetching data from GET /tasks/analytics and displaying three metric sections: task counts by status, daily completions, and average time in status.","relPath":"queue/_done/analytics/done/wave-2-frontend-analytics-sidebar.md","sha":"8bf60111364f5b7e34fb293f921f35b0f9673a19","claimed_at":"2026-03-26T11:09:53Z"}]},{"slug":"analytics-improvements","title":"Analytics Improvements","type":"feature","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"TASK-5","epicTitle":"Q1 - Task Tracker Enhancements","problem":"Users need better visibility into their task completion patterns and productivity metrics. The current analytics are confined to a side panel which limits the space available for data visualization and doesn't provide category-based insights. Users want a dedicated analytics experience with expanded visualizations including a pie chart breakdown of completed tasks by category.","specPath":"features/completed/analytics-improvements-feature.md","specSha":"96f7565e79b7a88c3a06d28200371a3a0ae1f86b","priority":"p1","tasks":{"total":3,"done":3,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":{"usd":4.642062299999999,"tokens":66813},"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Add Pie Chart And Finalize Migration","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Add Chart.js library, implement pie chart for completed tasks by category, update analytics button to navigate to page instead of opening sidebar, and remove old sidebar code","relPath":"queue/_done/analytics-improvements/done/wave-1-frontend-add-pie-chart-and-finalize-migration.md","sha":"96f7565e79b7a88c3a06d28200371a3a0ae1f86b","claimed_at":"2026-03-28T18:27:28Z"},{"name":"Create Analytics Page Foundation","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Create the foundational analytics page infrastructure including routing setup, page component, and basic data fetching from existing API","relPath":"queue/_done/analytics-improvements/done/wave-1-frontend-create-analytics-page-foundation.md","sha":"96f7565e79b7a88c3a06d28200371a3a0ae1f86b","claimed_at":"2026-03-28T17:18:28Z"},{"name":"Migrate Existing Analytics Visualization","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Move all existing analytics data displays (task counts by status, daily completions chart, average time metrics) from sidebar to the new analytics page in expanded layout","relPath":"queue/_done/analytics-improvements/done/wave-1-frontend-migrate-existing-analytics-visualization.md","sha":"96f7565e79b7a88c3a06d28200371a3a0ae1f86b","claimed_at":"2026-03-28T18:10:35Z"}]},{"slug":"darkmode","title":"Dark Mode","type":"feature","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"TASK-5","epicTitle":"\"\"","problem":"All users of the task management app need a dark mode option to reduce eye strain in low-light environments and to respect OS-level theme preferences. Dark mode is an expected baseline feature for modern web apps and its absence signals a lack of UI polish. This is a frontend-only feature — no backend or API changes are required.","specPath":"features/completed/darkmode-feature.md","specSha":"f8f9d9f211558c8e4a4037f64106b261cfbb6a69","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":{"usd":0.6458,"tokens":43120},"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Css Variables And Theme Infrastructure","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Define light and dark CSS custom property sets, refactor theme.js and all hardcoded colors to use CSS variables, and add FOUC prevention inline script in index.html.","relPath":"queue/_done/darkmode/done/wave-1-frontend-css-variables-and-theme-infrastructure.md","sha":"f8f9d9f211558c8e4a4037f64106b261cfbb6a69","claimed_at":"2026-03-25T01:02:28Z"},{"name":"Theme Toggle And Persistence","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add a theme toggle button in the header with sun/moon icons, localStorage persistence with graceful degradation, live OS preference detection via matchMedia, and full keyboard/screen-reader accessibility.","relPath":"queue/_done/darkmode/done/wave-2-frontend-theme-toggle-and-persistence.md","sha":"f8f9d9f211558c8e4a4037f64106b261cfbb6a69","claimed_at":"2026-03-25T01:17:31Z"}]},{"slug":"help-content-search","title":"Help Content Search","type":"feature","status":"shipped","lifecycle":"completed","execution":"autonomous","epic":"TASK-5","epicTitle":"Q1 - Task Tracker Enhancements","problem":"Users struggle to find specific help information when the help panel contains multiple sections. As the task management app grows, users waste time scrolling through all help content instead of quickly finding answers to their specific questions. This reduces productivity and creates friction in the user experience.","specPath":"features/completed/help-content-search-feature.md","specSha":"5dc29020a489b83f49588cbd9cff9bde43c96613","priority":"p1","tasks":{"total":3,"done":3,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":{"usd":1.5022996500000003,"tokens":21450},"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Add Help Search Box And Filtering","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Add search box to help panel that filters sections in real-time as user types. Search will find matches in both section titles and content using case-insensitive substring matching.","relPath":"queue/_done/help-content-search/done/wave-1-frontend-add-help-search-box-and-filtering.md","sha":"5dc29020a489b83f49588cbd9cff9bde43c96613","claimed_at":"2026-03-29T21:50:48Z"},{"name":"Add Search Term Highlighting","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Highlight matching search terms in yellow/cyan within help section titles and content text. Add X button to search box for clearing search.","relPath":"queue/_done/help-content-search/done/wave-2-frontend-add-search-term-highlighting.md","sha":"5dc29020a489b83f49588cbd9cff9bde43c96613","claimed_at":"2026-03-29T21:56:47Z"},{"name":"Improve Help Search Robustness","status":"done","wave":2,"repo":"frontend","priority":"medium","desc":"Handle edge cases and improve search performance: whitespace-only searches, very long inputs, mobile performance optimization, search state cleanup, and graceful degradation when highlighting fails.","relPath":"queue/_done/help-content-search/done/wave-2-frontend-improve-help-search-robustness.md","sha":"5dc29020a489b83f49588cbd9cff9bde43c96613","claimed_at":"2026-03-29T22:00:52Z"}]},{"slug":"helpcontent","title":"Help Content Drawer","type":"feature","status":"shipped","lifecycle":"completed","execution":"autonomous","epic":"ABC","epicTitle":"","problem":"End users of the task management app have no in-app way to discover what capabilities are available to them. Without guidance, users must explore the UI on their own to understand features like batch operations, categories, status workflows, and comments. This leads to underutilization of the system's capabilities. A help content drawer gives users a quick, always-accessible reference to understand what they can do and how to do it.","specPath":"features/completed/helpcontent-feature.md","specSha":"098e73847eca05952e6133b990434c4f47c4147d","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Help Drawer Component","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Build HelpDrawer component with help content, help button in header, and all interactive behavior (open/close toggle, backdrop click, Escape key, focus trapping, responsive layout).","relPath":"queue/_done/helpcontent/done/wave-1-frontend-help-drawer-component.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T14:58:30Z"},{"name":"Help Drawer Tests","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add comprehensive tests for the HelpDrawer component covering all acceptance criteria: rendering, toggle behavior, close mechanisms, keyboard accessibility, focus management, and non-interference with app state.","relPath":"queue/_done/helpcontent/done/wave-2-frontend-help-drawer-tests.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T15:07:44Z"}]},{"slug":"logging","title":"Task Status Transition Log","type":"feature","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"","epicTitle":"","problem":"When a task's status changes (e.g., todo → in-progress → done), there is no record of who made the change or when it happened. Users and teams have no visibility into the workflow history of a task, making it hard to understand how work progressed or who moved it forward. This feature adds an immutable audit trail of status transitions, exposed via API and visible in the frontend task detail view.","specPath":"features/completed/logging-feature.md","specSha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","priority":"p1","tasks":{"total":3,"done":3,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Wave 1 Api Status History Endpoints","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add in-memory statusHistory store with auto-incrementing IDs. Require X-User-Id header on PATCH /tasks/{taskId} (return 400 if missing). On PATCH status change, record a StatusTransition entry (skip if no-op same-status). Add GET /tasks/{taskId}/history endpoint returning entries sorted by changedAt ascending. Update DELETE /tasks/{taskId} to cascade-delete history entries. Expose store via _resetStore() for tests.","relPath":"queue/_done/logging/done/wave-1-api-wave-1-api-status-history-endpoints.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-19T15:58:55Z"},{"name":"Wave 1 Frontend Patch Userid Header","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Add the X-User-Id header to all PATCH /tasks/{taskId} fetch calls in the frontend. This is required because the API now mandates X-User-Id on PATCH (breaking change R7). Without this, all task updates from the UI will fail with 400.","relPath":"queue/_done/logging/done/wave-1-frontend-wave-1-frontend-patch-userid-header.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-19T16:07:46Z"},{"name":"Wave 2 Frontend History Display","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Fetch and display the status transition history on the task detail view. Add a new section below comments (or in an appropriate location) showing a timeline of status changes with old status, new status, who changed it, and when.","relPath":"queue/_done/logging/done/wave-2-frontend-wave-2-frontend-history-display.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T00:30:18Z"}]},{"slug":"multiassign","title":"Bulk Assign Category","type":"feature","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"","epicTitle":"","problem":"Users need a way to organize their tasks by category (work, personal, errands). Currently tasks have no categorization, making it hard to focus on a specific area. When many tasks need the same category, assigning them one-by-one is tedious. Users need to select multiple tasks and bulk assign a category in one action.","specPath":"features/completed/multiassign-feature.md","specSha":"098e73847eca05952e6133b990434c4f47c4147d","priority":"p1","tasks":{"total":4,"done":4,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Add Category Field And Patch Support","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add nullable `category` enum field (work, personal, errands) to the Task model. Include category in task creation (defaults to null), in all task responses (GET list, GET single), and accept it in PATCH /tasks/{taskId} with validation. Invalid category values return 400.","relPath":"queue/_done/multiassign/done/wave-1-api-add-category-field-and-patch-support.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T16:05:14Z"},{"name":"Batch Update Category Endpoint","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add POST /tasks/batch-update-category endpoint that accepts an array of task IDs and a category value (including null to clear), updates matching tasks, and returns { updated, notFound } with partial success semantics. Requires X-User-Id header.","relPath":"queue/_done/multiassign/done/wave-1-api-batch-update-category-endpoint.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T16:10:44Z"},{"name":"Bulk Assign Category Ui","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add 'Assign Category' action to the existing multi-select toolbar alongside 'Delete'. Implement a category picker dropdown/modal with Work, Personal, Errands, and None options. Integrate with POST /tasks/batch-update-category API. Refresh task list after assignment.","relPath":"queue/_done/multiassign/done/wave-2-frontend-bulk-assign-category-ui.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T16:24:39Z"},{"name":"Display Category On Task Cards","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Display the assigned category on each task card/row as a visual badge. Add category color tokens to the theme. Show category in both the task list view and task detail view.","relPath":"queue/_done/multiassign/done/wave-2-frontend-display-category-on-task-cards.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T16:20:38Z"}]},{"slug":"multidelete","title":"Multi-Delete Tasks","type":"feature","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"","epicTitle":"","problem":"Users currently have to delete tasks one at a time, which is tedious when cleaning up multiple completed or obsolete tasks. There is no way to select and remove several tasks in a single action, leading to repetitive clicks and a slow workflow for bulk task management.","specPath":"features/completed/multidelete-feature.md","specSha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Batch Delete Endpoint","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add POST /tasks/batch-delete endpoint with input validation, deduplication, cascade deletion of comments/subtasks/auditEntries/statusHistory, and position compaction. Returns { deleted, notFound } response.","relPath":"queue/_done/multidelete/done/wave-1-api-batch-delete-endpoint.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T01:55:12Z"},{"name":"Select Mode Batch Delete Ui","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add select mode toggle with task checkboxes, select-all checkbox, 'Delete selected' button, confirmation dialog, batch delete API integration, toast/snackbar feedback, and selection state management that clears on filter/sort changes.","relPath":"queue/_done/multidelete/done/wave-2-frontend-select-mode-batch-delete-ui.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-21T02:03:53Z"}]},{"slug":"sorting-improvements","title":"Sorting Improvements","type":"feature","status":"shipped","lifecycle":"completed","execution":"autonomous","epic":"TASK-5","epicTitle":"","problem":"End users managing task lists have no UI control over sort order. The backend API already supports sorting by `createdAt`, `title`, and `status` with ascending/descending order, but the frontend does not expose these controls. Users are stuck with the default order and cannot organize their view to find or prioritize tasks efficiently.","specPath":"features/completed/sorting-improvements-feature.md","specSha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Sort Dropdown Polish","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Polish the existing sort dropdown to match the feature spec: update option labels, add invalid URL param validation with graceful fallback, add AbortController for request cancellation on rapid sort switching, and add a loading indicator during sort re-fetch.","relPath":"queue/_done/sorting-improvements/done/wave-1-frontend-sort-dropdown-polish.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-22T00:36:35Z"},{"name":"Sort Dropdown Tests","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add comprehensive tests for the sort dropdown polish: invalid URL param fallback, request cancellation, loading indicator, updated labels, and sort+filter combinations.","relPath":"queue/_done/sorting-improvements/done/wave-2-frontend-sort-dropdown-tests.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":"2026-03-22T00:46:07Z"}]},{"slug":"spacegap","title":"Improve Spacing Between Active and Completed Task Sections","type":"feature","status":"shipped","lifecycle":"completed","execution":"autonomous","epic":"TASK-5","epicTitle":"","problem":"End users see a large, disproportionate gap between the active tasks list (todo / in-progress) and the completed tasks list (done) on the task list page. This wasted vertical space makes the interface feel disjointed and reduces scannability, forcing users to scroll more than necessary.","specPath":"features/completed/spacegap-feature.md","specSha":"a8953a09b75740f25397fb1499176f4fd1792aa8","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Collapsible Completed Section","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Fix the spacing gap between active and completed task sections, restyle the completed section header with a 'Completed (N)' label, add a chevron collapse/expand toggle, and handle all edge cases (0 active, 0 completed, both empty).","relPath":"queue/_done/spacegap/done/wave-1-frontend-collapsible-completed-section.md","sha":"a8953a09b75740f25397fb1499176f4fd1792aa8","claimed_at":"2026-03-22T05:55:41Z"},{"name":"Completed Section Tests","status":"done","wave":2,"repo":"frontend","priority":"normal","desc":"Add comprehensive tests for the collapsible completed section covering spacing, collapse/expand behavior, count display, and all edge cases.","relPath":"queue/_done/spacegap/done/wave-2-frontend-completed-section-tests.md","sha":"a8953a09b75740f25397fb1499176f4fd1792aa8","claimed_at":"2026-03-22T15:23:53Z"}]},{"slug":"task-category-enhancements","title":"Task Category Sort","type":"feature","status":"shipped","lifecycle":"completed","execution":"autonomous","epic":"TASK-5","epicTitle":"Q1 - Task Tracker Enhancements","problem":"Users can assign categories (work, personal, errands) to tasks, but cannot sort the task list by category. This means the categorization effort provides no organizational benefit when viewing tasks — users can't group their view by category to focus on one type of work at a time.","specPath":"features/completed/task-category-enhancements-feature.md","specSha":"8efad801cc7c91c73c57714e1677959b6104f534","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Add Category Sort Logic","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add `sort=category` support to GET /tasks endpoint. Implement a CATEGORY_ORDER constant mapping (errands=0, personal=1, work=2) co-located with existing sort logic. Sort tasks by this fixed mapping with null/uncategorized tasks sorting last in ascending order and first in descending order. Use createdAt desc as tiebreaker for equal category values. Extend existing sort validation to accept 'category' as a valid sort value (invalid values still return 400).","relPath":"queue/_done/task-category-enhancements/done/wave-1-api-add-category-sort-logic.md","sha":"8efad801cc7c91c73c57714e1677959b6104f534","claimed_at":""},{"name":"Add Category Sort Option","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add 'Category' option to the frontend sort dropdown and wire it to send `sort=category` to the API. Add tests for the new sort option.","relPath":"queue/_done/task-category-enhancements/done/wave-2-frontend-add-category-sort-option.md","sha":"8efad801cc7c91c73c57714e1677959b6104f534","claimed_at":""}]},{"slug":"task-descriptions","title":"Task Descriptions","type":"feature","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"TASK-5","epicTitle":"Q1 - Task Tracker Enhancements","problem":"End users of the task tracker can currently only give tasks a short title. Titles alone don't provide enough context — users need a place to capture details, steps, or notes about a task so they can understand what needs to be done without relying on memory. The API contract already defines an optional `description` field (max 2000 characters) on tasks, but neither the API implementation nor the frontend supports it. This feature closes that gap.","specPath":"features/completed/task-descriptions-feature.md","specSha":"12e377949c6be5e2fcce61c702cebd265bdc199c","priority":"p1","tasks":{"total":4,"done":4,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":{"usd":2.2386418499999996,"tokens":31863},"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Add Description Field","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add description field to task creation, update, and retrieval endpoints","relPath":"queue/_done/task-descriptions/done/wave-1-api-add-description-field.md","sha":"12e377949c6be5e2fcce61c702cebd265bdc199c","claimed_at":"2026-03-25T19:39:39Z"},{"name":"Add Description To Creation Form","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Add optional description textarea to the task creation form","relPath":"queue/_done/task-descriptions/done/wave-1-frontend-add-description-to-creation-form.md","sha":"12e377949c6be5e2fcce61c702cebd265bdc199c","claimed_at":"2026-03-25T19:39:39Z"},{"name":"Expandable Detail Panel","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add expandable inline detail panel with accordion behavior to display task descriptions","relPath":"queue/_done/task-descriptions/done/wave-2-frontend-expandable-detail-panel.md","sha":"12e377949c6be5e2fcce61c702cebd265bdc199c","claimed_at":"2026-03-25T20:49:54Z"},{"name":"Inline Description Editing","status":"done","wave":2,"repo":"frontend","priority":"high","desc":"Add inline description editing with save/cancel, loading state, character counter, unsaved changes confirmation, and error handling","relPath":"queue/_done/task-descriptions/done/wave-2-frontend-inline-description-editing.md","sha":"12e377949c6be5e2fcce61c702cebd265bdc199c","claimed_at":"2026-03-26T10:58:26Z"}]},{"slug":"cannot-read-properties-of-undefined-reading-id","title":"TypeError in taskWithCount Crashes GET /tasks for All Users","type":"bug","status":"shipped","lifecycle":"completed","execution":"supervised","epic":"","epicTitle":"","problem":"","specPath":"bugs/completed/cannot-read-properties-of-undefined-reading-id-bug.md","specSha":"c20a59f412d80d1cb0d5d134dd6e242c203744ba","priority":"p0","tasks":{"total":1,"done":1,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":{"usd":0.6574797000000002,"tokens":8407},"bugDigest":[{"heading":"Observed Behavior","content":"Every request to `GET /tasks` returns a 500 Internal Server Error:\n\n```\nTypeError: Cannot read properties of undefined (reading 'id')\n    at taskWithCount (src/app.js:34:30)\n    at GET /tasks (src/app.js:109:25)\n```\n\nTask listing is completely unavailable. 47 errors observed in the last 15 minutes affecting all users."},{"heading":"Root Cause Analysis","content":"The `taskWithCount` helper (defined at `src/app.js:33–42`) receives `undefined` as its `task` argument and crashes at line 34 when it attempts to access `task.id`. The call site is `src/app.js:109`:\n\n```js\nres.json(result.map(taskWithCount));\n```\n\n`result` is an array derived at line 71 from `[...tasks.values()]` — the full in-memory tasks Map — which is subsequently filtered (by `category` and/or `search` query params) and sorted. One or more of these intermediate operations produces `undefined` entries that survive into the final `result` array.\n\n**Most likely root cause:** A filter or sort step introduced by the multiassign feature's category-filter logic uses `.map()` where `.filter()` is required, or uses a predicate that implicitly returns `undefined` for non-matching elements (JavaScript `Array.map` does not remove elements — it replaces them with `undefined` if the mapping function has no explicit return). A sort comparator bug is a secondary candidate.\n\n**Secondary issue identified:** The contract-defined `status` query parameter (comma-separated, e.g. `?status=todo,in-progress`) is not destructured from `req.query` at line 59. This means the status filter is silently ignored; while not the crash cause, it represents a broken contract implementation."},{"heading":"Affected Code Paths","content":"| Repo | File | Function/Line | Issue |\n|------|------|---------------|-------|\n| api | `src/app.js` | `taskWithCount` / line 34 | Accesses `task.id` but `task` is `undefined` |\n| api | `src/app.js` | `GET /tasks` handler / line 109 | `result.map(taskWithCount)` — `result` contains `undefined` entries |\n| api | `src/app.js` | `GET /tasks` handler / line 71 | `[...tasks.values()]` is the source array; corruption occurs in subsequent filter/sort chain |\n| api | `src/app.js` | `GET /tasks` handler / line 59 | `status` query param not destructured — contract filter silently broken (secondary) |"},{"heading":"Fix Strategy","content":"Three layers of fix are required — do **not** use `.filter(Boolean)` alone as a substitution for the root cause fix:\n\n1. **Root cause fix (required):** Identify the filter/sort step that introduces `undefined` into the `result` array. Replace any `.map()`-based filtering with `.filter()`, and fix any sort comparator that can corrupt array entries. Read `taskWithCount` (lines 33–42) and the full `GET /tasks` handler (lines 57–110) to trace the exact transformation chain.\n\n2. **Defensive guard (also required):** Add `.filter(Boolean)` before `.map(taskWithCount)` at line 109 as defense-in-depth, so `taskWithCount` never receives `undefined` even if a future regression reintroduces the issue:\n   ```js\n   res.json(result.filter(Boolean).map(taskWithCount));\n   ```\n\n3. **Harden `taskWithCount`:** Add an early guard at the top of the function:\n   ```js\n   const taskWithCount = (task) => {\n     if (!task) return null;\n     // ... existing logic\n   };\n   ```\n\n4. **Fix the status filter:** Destructure `status` from `req.query` at line 59 and implement the comma-separated filter per contract spec.\n\n**Test file:** `tests/tasks.test.js` — append to existing file using existing patterns (`supertest`, `app._resetStore()` in `beforeEach`)."},{"heading":"Reproduction Steps","content":"1. Start the API server (`npm start`)\n2. Send `GET /tasks` (any query string, including none)\n3. Observe 500 response with the `TypeError` above"},{"heading":"Acceptance Criteria","content":"- [ ] `GET /tasks` returns 200 with a valid task array (no 500 errors)\n- [ ] `GET /tasks` returns 200 when the tasks store is empty\n- [ ] `GET /tasks?category=work` returns only work-category tasks (no undefined entries in the filtered array)\n- [ ] `GET /tasks?status=todo,in-progress` correctly filters by multiple statuses per contract spec\n- [ ] `taskWithCount` never throws when passed a valid task object\n- [ ] Regression test added: verify `GET /tasks` returns 200 and an array (not a 500) covering the crash scenario\n- [ ] No existing tests broken"}],"severity":"critical","prs":[],"taskList":[{"name":"Fix Taskwithcount Undefined Crash","status":"done","wave":1,"repo":"api","priority":"critical","desc":"Fix TypeError in taskWithCount that crashes GET /tasks for all users. The function at src/app.js:34 accesses `.id` on a value that is `undefined`, causing a 500 response on every request to GET /tasks.","relPath":"queue/_done/cannot-read-properties-of-undefined-reading-id/done/wave-1-api-fix-taskwithcount-undefined-crash.md","sha":"c20a59f412d80d1cb0d5d134dd6e242c203744ba","claimed_at":"2026-03-27T17:31:39Z"}]},{"slug":"task-status-workflow","title":"task-status-workflow","type":"feature","status":"shipped","lifecycle":"unknown","execution":"supervised","epic":"","epicTitle":"","problem":"","specPath":"","specSha":"","priority":"p1","tasks":{"total":2,"done":2,"in_progress":0,"ready":0,"pending":0,"blocked":0,"paused":0,"cancelled":0},"progress":100,"cost":null,"bugDigest":null,"severity":null,"prs":[],"taskList":[{"name":"Add Status Field","status":"done","wave":1,"repo":"api","priority":"high","desc":"Add a `status` enum field (`todo`, `in-progress`, `done`) to the task model with a default of `todo`. Add `description` (optional string, max 2000 chars) and `updatedAt` (auto-managed timestamp) fields. Add `?status=` comma-separated query parameter filtering to `GET /tasks`. Validate status values on `POST` and `PATCH`.","relPath":"queue/_done/task-status-workflow/done/wave-1-api-add-status-field.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":""},{"name":"Kanban Board","status":"done","wave":1,"repo":"frontend","priority":"high","desc":"Add a kanban board view with three columns (Todo, In Progress, Done) that displays tasks grouped by their `status` field. Each task card shows title and provides a way to change status. The kanban view replaces or augments the current list view.","relPath":"queue/_done/task-status-workflow/done/wave-1-frontend-kanban-board.md","sha":"93600e456f5cf09afdc239d465dd9fe3f22547b1","claimed_at":""}]}];</script>
 
 <script>
-// ── Tab Navigation ──
-document.querySelectorAll('.nav-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    document.getElementById('featuresTab').style.display = tab === 'features' ? '' : 'none';
-    const triageTab = document.getElementById('triageTab');
-    if (triageTab) triageTab.style.display = tab === 'triage' ? '' : 'none';
-  });
-});
+var LINK_CONTEXT = {"githubServerUrl":"","githubRepository":"","commitSha":""};
+var FEATURES_MAP = {};
+FEATURES.forEach(function(f) { FEATURES_MAP[f.slug] = f; });
 
-// ── Close dropdowns on outside click ──
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.dispatch-wrap')) {
-    document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
-  }
-});
-
-// ── Toast notifications ──
-function showToast(msg, type) {
-  const t = document.createElement('div');
-  t.className = 'toast toast-' + (type || 'info');
-  t.textContent = msg;
-  document.body.appendChild(t);
-  requestAnimationFrame(() => t.classList.add('toast-show'));
-  setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 4000);
+function specUrl(path, sha) {
+  if (!path || !LINK_CONTEXT.githubServerUrl || !LINK_CONTEXT.githubRepository) return null;
+  var s = sha || LINK_CONTEXT.commitSha;
+  if (!s) return null;
+  return LINK_CONTEXT.githubServerUrl + '/' + LINK_CONTEXT.githubRepository + '/blob/' + s + '/' + path;
 }
 
-// ── Dispatch with Execution Mode ──
-function dispatchWithMode(slug, mode) {
-  const pat = localStorage.getItem('gh_pat');
-  if (!pat) {
-    document.getElementById('settingsModal').style.display = 'flex';
-    showToast('Configure your GitHub PAT first', 'warn');
-    return;
-  }
-  const modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised', guided: 'Guided'};
-  document.querySelectorAll('.dispatch-dropdown.open').forEach(d => d.classList.remove('open'));
-  const repo = 'ChristianJensen/tasks-control-plane';
-  showToast('Dispatching agent in ' + modeLabels[mode] + ' mode...', 'info');
-  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
-    method: 'POST',
-    headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({ ref: 'main', inputs: { bug_slug: slug, execution_mode: mode } })
-  }).then(r => {
-    if (r.ok || r.status === 204) showToast('Agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
-    else r.text().then(t => showToast('Failed: ' + t, 'error'));
-  }).catch(e => showToast('Error: ' + e.message, 'error'));
+var fileIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+var extIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+
+var statusColors = { done: 'var(--green)', 'in-progress': 'var(--blue)', ready: 'var(--amber)', pending: 'var(--text-muted)', blocked: 'var(--red)' };
+var progressColors = { 'In Progress': 'var(--blue)', 'Not Started': 'var(--amber)', Blocked: 'var(--red)', Done: 'var(--green)', Draft: 'var(--text-muted)' };
+
+function fmtTokens(n) { if (n >= 1e6) return (n/1e6).toFixed(1)+'M'; if (n >= 1e3) return (n/1e3).toFixed(0)+'K'; return String(n); }
+function fmtCost(usd) { return usd >= 1 ? '$'+usd.toFixed(2) : '$'+usd.toFixed(4); }
+
+// ── View switching ──
+function switchView(view, navEl) {
+  document.querySelectorAll('.sb-nav-item').forEach(function(el) { el.classList.remove('active'); });
+  if (navEl) navEl.classList.add('active');
+  document.querySelectorAll('.kb-view').forEach(function(v) { v.classList.remove('active'); });
+  var target = document.getElementById('view-' + view);
+  if (target) target.classList.add('active');
 }
 
-// Load saved PAT into settings input
-const savedPat = localStorage.getItem('gh_pat');
-if (savedPat) document.getElementById('patInput').value = savedPat;
+// ── Detail panel ──
+function openDetail(slug) {
+  var f = FEATURES_MAP[slug];
+  if (!f) return;
+  document.getElementById('dpTitle').textContent = f.title;
+  var sl = statusLabel(f.status);
+  var pColor = progressColors[sl] || 'var(--blue)';
 
-// ── Combined Filters (status + execution, intersection logic) ──
-const rows = document.querySelectorAll('.feature-row');
-const statusBtns = document.querySelectorAll('#statusFilters .filter-btn');
-const execBtns = document.querySelectorAll('#execFilters .filter-btn');
-const searchInput = document.getElementById('searchInput');
-let activeStatus = 'all';
-let activeExec = 'all';
-let activeEpic = null;
+  var fUrl = specUrl(f.specPath, f.specSha);
+  var specLabel = f.type === 'bug' ? 'Bug Report' : 'Feature Spec';
+  var specHtml = fUrl ? '<a href="'+fUrl+'" target="_blank" rel="noopener" class="dp-spec-link" title="View '+specLabel+'">'+fileIcon+' '+specLabel+' '+extIcon+'</a>' : '';
 
+  var costHtml = '';
+  if (f.cost && f.cost.usd > 0) {
+    costHtml = '<div class="dp-section"><div class="dp-section-title">Cost</div><div class="cost-row"><div class="cost-item"><span style="font-size:14px;opacity:0.7">&#128176;</span><span class="cost-label">Spend</span><span class="cost-value">'+fmtCost(f.cost.usd)+'</span></div><div class="cost-item"><span style="font-size:14px;opacity:0.7">&#9889;</span><span class="cost-label">Tokens</span><span class="cost-value">'+fmtTokens(f.cost.tokens)+'</span></div></div></div>';
+  }
+
+  var dispatchHtml = '';
+  if (sl !== 'Done') {
+    dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Actions</div><div class="dispatch-bar" data-slug="'+slug+'"><div class="db-controls"><div class="db-group"><span class="db-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" onclick="event.stopPropagation();ddToggleBtn(this,\'dd-target-btn\')" title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" onclick="event.stopPropagation();ddToggleBtn(this,\'dd-target-btn\')" title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div><div class="db-group"><span class="db-label">Mode</span><div class="dd-toggle"><button class="dd-mode-btn active" data-mode="supervised" onclick="event.stopPropagation();ddToggleBtn(this,\'dd-mode-btn\')" title="Agent opens a PR."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button><button class="dd-mode-btn" data-mode="autonomous" onclick="event.stopPropagation();ddToggleBtn(this,\'dd-mode-btn\')" title="Agent auto-merges."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button></div></div></div><button class="dd-go-btn" onclick="event.stopPropagation();var bar=this.closest(\'.dispatch-bar\'),t=bar.querySelector(\'.dd-target-btn.active\').dataset.target,m=bar.querySelector(\'.dd-mode-btn.active\').dataset.mode;dispatchAgent(\''+slug+'\',m,t,1)">&#9654; Dispatch</button></div></div>';
+  }
+
+  var prsHtml = '';
+  if (f.prs && f.prs.length > 0) {
+    prsHtml = '<div class="dp-section"><div class="dp-section-title">Pull Requests</div>' + f.prs.map(function(p) {
+      return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px"><svg width="14" height="14" viewBox="0 0 16 16" fill="var(--accent)"><path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg><a href="'+p.url+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">#'+p.number+' '+p.title+'</a></div>';
+    }).join('') + '</div>';
+  }
+
+  var tasksHtml = '';
+  if (f.taskList && f.taskList.length) {
+    tasksHtml = '<div class="dp-section"><div class="dp-section-title">Tasks</div><div class="dp-task-list">' +
+      f.taskList.map(function(t) {
+        var tUrl = specUrl(t.relPath, t.sha);
+        var tLink = tUrl ? '<a href="'+tUrl+'" target="_blank" rel="noopener" class="dp-task-spec-link" onclick="event.stopPropagation()">'+fileIcon+' spec '+extIcon+'</a>' : '';
+        return '<div class="dp-task" onclick="this.classList.toggle(\'expanded\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div><div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+'</div></div></div>';
+      }).join('') + '</div></div>';
+  }
+
+  document.getElementById('dpBody').innerHTML =
+    '<div class="dp-section"><div class="dp-section-title">Description</div><div class="dp-desc">'+(f.problem||'No description.')+'</div>'+(specHtml?'<div style="margin-top:12px">'+specHtml+'</div>':'')+'</div>' +
+    '<div class="dp-section"><div class="dp-meta-grid"><div class="dp-meta-item"><div class="dp-meta-label">Status</div><div class="dp-meta-value" style="color:'+pColor+'">'+sl+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Priority</div><div class="dp-meta-value" style="color:'+(f.priority==='p0'?'var(--red)':f.priority==='p1'?'var(--amber)':'var(--text-secondary)')+'">'+f.priority.toUpperCase()+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Execution</div><div class="dp-meta-value">'+f.execution+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Epic</div><div class="dp-meta-value">'+(f.epic||'—')+'</div></div></div></div>' +
+    (f.tasks.total > 0 ? '<div class="dp-section"><div class="dp-section-title">Progress</div><div class="dp-progress-bar"><div class="dp-progress-fill" style="width:'+f.progress+'%;background:'+pColor+'"></div></div><div class="dp-progress-label">'+f.tasks.done+' of '+f.tasks.total+' tasks complete</div></div>' : '') +
+    costHtml + dispatchHtml + prsHtml + tasksHtml;
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function statusLabel(s) { return {shipped:'Done','in-progress':'In Progress','not-started':'Not Started',blocked:'Blocked',orphaned:'Orphaned','needs-review':'Needs Review'}[s]||s; }
+
+function closeDetail(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('detailOverlay').classList.remove('open');
+}
+
+function ddToggleBtn(btn, cls) {
+  btn.closest('.dd-toggle').querySelectorAll('.'+cls).forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+}
+
+// ── Filtering ──
 function applyFilters() {
-  const q = searchInput.value.toLowerCase();
-  rows.forEach(row => {
-    let show = true;
-    // Search filter (matches title, epic key, and epic title)
-    if (q && !(row.dataset.title || '').includes(q) && !(row.dataset.epic || '').toLowerCase().includes(q) && !(row.dataset.epicTitle || '').includes(q)) show = false;
-    // Status filter
-    if (show && activeStatus !== 'all') {
-      if (row.dataset.status !== activeStatus) show = false;
-    }
-    // Execution filter
-    if (show && activeExec !== 'all') {
-      if (row.dataset.execution !== activeExec) show = false;
-    }
-    // Epic filter
-    if (show && activeEpic) {
-      if ((row.dataset.epic || '') !== activeEpic) show = false;
-    }
-    row.style.display = show ? '' : 'none';
+  var search = document.getElementById('filterSearch').value.toLowerCase();
+  var activeExec = []; var activePri = [];
+  document.querySelectorAll('.filter-chip.active[data-group="exec"]').forEach(function(c){activeExec.push(c.dataset.value)});
+  document.querySelectorAll('.filter-chip.active[data-group="priority"]').forEach(function(c){activePri.push(c.dataset.value)});
+  var execAll = activeExec.indexOf('all') >= 0 || activeExec.length === 0;
+  var priAll = activePri.length === 0;
+
+  document.querySelectorAll('.card').forEach(function(card) {
+    var t = card.dataset.title || '';
+    var e = card.dataset.exec || '';
+    var p = card.dataset.priority || '';
+    var ep = (card.dataset.epic || '').toLowerCase();
+    var matchSearch = !search || t.indexOf(search) >= 0 || ep.indexOf(search) >= 0;
+    var matchExec = execAll || activeExec.indexOf(e) >= 0;
+    var matchPri = priAll || activePri.indexOf(p) >= 0;
+    card.style.display = (matchSearch && matchExec && matchPri) ? '' : 'none';
   });
-  // Hide epic groups with no visible rows
-  document.querySelectorAll('.epic-group').forEach(g => {
-    const body = g.querySelector('.epic-group-body') || g;
-    const visible = body.querySelectorAll('.feature-row:not([style*="display: none"])');
-    g.style.display = visible.length > 0 ? '' : 'none';
+  document.querySelectorAll('.kanban-column-body').forEach(function(body) {
+    var col = body.closest('.kanban-column');
+    var countEl = col.querySelector('.kanban-column-count');
+    var visible = body.querySelectorAll('.card:not([style*="display: none"])').length;
+    countEl.textContent = visible;
   });
 }
 
-statusBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    statusBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeStatus = btn.dataset.filter;
-    applyFilters();
-  });
-});
-
-execBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    execBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeExec = btn.dataset.execFilter;
-    applyFilters();
-  });
-});
-
-// ── Search ──
-searchInput.addEventListener('input', applyFilters);
-document.addEventListener('keydown', e => {
-  if (e.key === '/' && document.activeElement !== searchInput) {
-    e.preventDefault();
-    searchInput.focus();
+function toggleChip(chip) {
+  var group = chip.dataset.group;
+  if (chip.dataset.value === 'all') {
+    document.querySelectorAll('.filter-chip[data-group="'+group+'"]').forEach(function(c){c.classList.remove('active')});
+    chip.classList.add('active');
+  } else {
+    var allChip = document.querySelector('.filter-chip[data-group="'+group+'"][data-value="all"]');
+    if (allChip) allChip.classList.remove('active');
+    chip.classList.toggle('active');
+    if (!document.querySelector('.filter-chip.active[data-group="'+group+'"]') && allChip) allChip.classList.add('active');
   }
-  if (e.key === 'Escape' && document.activeElement === searchInput) {
-    searchInput.blur();
-  }
-});
-
-// ── Epic Filtering ──
-function setEpicFilter(epicKey) {
-  activeEpic = epicKey;
-  document.querySelectorAll('.epic-filter-toggle').forEach(el => {
-    el.classList.toggle('epic-active', el.dataset.epic === epicKey);
-  });
   applyFilters();
 }
 
-document.addEventListener('click', e => {
-  const toggle = e.target.closest('.epic-filter-toggle');
-  if (toggle) {
-    e.preventDefault();
-    e.stopPropagation();
-    const epic = toggle.dataset.epic;
-    setEpicFilter(activeEpic === epic ? null : epic);
+// ── Toast ──
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + (type || 'info');
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  requestAnimationFrame(function() { t.classList.add('toast-show'); });
+  setTimeout(function() { t.classList.remove('toast-show'); setTimeout(function() { t.remove(); }, 300); }, 4000);
+}
+
+// ── Dispatch Agent ──
+function dispatchAgent(slug, mode, target, agents) {
+  agents = Math.max(1, Math.min(4, agents || 1));
+  var modeLabels = {autonomous: 'Autonomous', supervised: 'Supervised'};
+  if (target === 'local') {
+    showToast('Launching local agent in ' + modeLabels[mode] + ' mode...', 'info');
+    fetch('http://localhost:7433/api/dispatch/local', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: slug, mode: mode, agents: agents })
+    }).then(function(r) {
+      if (r.ok) r.json().then(function(d) { showToast('Local agent launched (PID ' + d.pid + ')', 'success'); });
+      else r.json().then(function(d) { showToast('Failed: ' + (d.error || 'unknown'), 'error'); }).catch(function() { r.text().then(function(t) { showToast('Failed: ' + t, 'error'); }); });
+    }).catch(function() { showToast('Start relay serve to use local dispatch', 'error'); });
     return;
   }
-  const header = e.target.closest('.feature-header');
-  if (header && !e.target.closest('a')) {
-    header.parentElement.classList.toggle('expanded');
+  var pat = localStorage.getItem('gh_pat');
+  if (!pat) { showToast('Set GitHub PAT in Settings first', 'warn'); switchView('settings', document.querySelector('[onclick*="settings"]')); return; }
+  var repo = 'ChristianJensen/tasks-control-plane';
+  showToast('Dispatching cloud agent in ' + modeLabels[mode] + ' mode...', 'info');
+  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
+    method: 'POST', headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
+    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode, agents: String(agents) } })
+  }).then(function(r) {
+    if (r.ok || r.status === 204) showToast('Cloud agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
+    else r.text().then(function(t) { showToast('Failed: ' + t, 'error'); });
+  }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+}
+
+// ── Settings ──
+var savedPat = localStorage.getItem('gh_pat');
+if (savedPat) document.getElementById('ghPat').value = savedPat;
+function savePat() {
+  var v = document.getElementById('ghPat').value.trim();
+  if (v) { localStorage.setItem('gh_pat', v); showToast('Token saved', 'success'); }
+}
+
+// ── Triage feature row expand ──
+document.addEventListener('click', function(e) {
+  var header = e.target.closest('.feature-header');
+  if (header && !e.target.closest('a')) { header.parentElement.classList.toggle('expanded'); }
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDetail();
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault(); document.getElementById('filterSearch').focus();
   }
 });
 
 // ── URL param: ?epic=KEY ──
-const epicParam = new URLSearchParams(window.location.search).get('epic');
-if (epicParam) setEpicFilter(epicParam);
-
-// ── Workers Toggle ──
-document.querySelectorAll('.workers-header').forEach(h => {
-  h.addEventListener('click', () => h.parentElement.classList.toggle('workers-expanded'));
-});
-
-// ── New Feature Modal ──
-document.getElementById('newFeatureBtn').addEventListener('click', function() {
-  document.getElementById('nfOverlay').style.display = 'flex';
-  document.getElementById('nfTerminalInstructions').style.display = 'none';
-  nfCheckServer();
-});
-
-function nfCheckServer() {
-  var statusEl = document.getElementById('nfServerStatus');
-  var browserOption = document.getElementById('nfBrowserOption');
-  statusEl.textContent = 'Checking for local server...';
-  statusEl.className = 'nf-status';
-
-  fetch('http://localhost:7433/api/health', { mode: 'cors' })
-    .then(function(r) { return r.json(); })
-    .then(function() {
-      statusEl.textContent = '\u25cf relay serve is running';
-      statusEl.className = 'nf-status nf-connected';
-      browserOption.style.opacity = '1';
-      browserOption.style.pointerEvents = 'auto';
-    })
-    .catch(function() {
-      statusEl.textContent = 'Server not running \u2014 start with: relay serve';
-      statusEl.className = 'nf-status';
-      browserOption.style.opacity = '0.4';
-      browserOption.style.pointerEvents = 'none';
-    });
+var epicParam = new URLSearchParams(window.location.search).get('epic');
+if (epicParam) {
+  document.getElementById('filterSearch').value = epicParam;
+  applyFilters();
 }
 
-function nfLaunchBrowser() {
-  window.open('http://localhost:7433/interview', '_blank');
-  document.getElementById('nfOverlay').style.display = 'none';
+// ── Clock ──
+function updateTime() {
+  var el = document.getElementById('topbarTime');
+  if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
+updateTime(); setInterval(updateTime, 60000);
 
-function nfShowTerminal() {
-  document.getElementById('nfTerminalInstructions').style.display = 'block';
-}
+// ── Plan button enablement ──
+fetch('http://localhost:7433/api/health', { mode: 'cors' }).then(function(r) { return r.json(); }).then(function() {
+  document.querySelectorAll('.plan-btn-check').forEach(function(btn) { btn.disabled = false; btn.title = 'Plan this feature'; });
+}).catch(function() {});
 
-// Check if relay serve is running — enable plan buttons if so
-fetch('http://localhost:7433/api/health', { mode: 'cors' })
-  .then(function(r) { return r.json(); })
-  .then(function() {
-    document.querySelectorAll('.plan-btn-check').forEach(function(btn) {
-      btn.disabled = false;
-      btn.title = 'Plan this feature';
-    });
-  })
-  .catch(function() {});
-
-function nfPlanFeature(slug) {
-  fetch('http://localhost:7433/api/health', { mode: 'cors' })
-    .then(function(r) { return r.json(); })
-    .then(function() {
-      window.open('http://localhost:7433/plan/' + slug, '_blank');
-    })
-    .catch(function() {
-      var cmd = 'relay plan ' + slug;
-      var msg = 'relay serve is not running.\n\nStart it with: relay serve\n\nOr plan from the terminal: ' + cmd;
-      alert(msg);
-    });
-}
+// ── Inbox badge ──
+fetch('/api/inbox?status=new').then(function(r) { return r.json(); }).then(function(items) {
+  var badge = document.getElementById('inboxBadge');
+  if (badge && items.length > 0) {
+    badge.textContent = items.length;
+    badge.style.display = '';
+    badge.style.background = 'rgba(248,113,113,0.2)';
+    badge.style.color = 'var(--red)';
+  }
+}).catch(function() {});
 </script>
 
 </body>
