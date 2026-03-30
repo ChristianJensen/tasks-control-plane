@@ -1383,7 +1383,7 @@ fetch('http://localhost:7433/api/health', { mode: 'cors' }).then(function(r) { r
 }).catch(function() {});
 
 // ── Inbox badge ──
-fetch('/api/inbox?status=new').then(function(r) { return r.json(); }).then(function(items) {
+fetch('http://localhost:7433/api/inbox?status=new').then(function(r) { return r.json(); }).then(function(items) {
   var badge = document.getElementById('inboxBadge');
   if (badge && items.length > 0) {
     badge.textContent = items.length;
@@ -1530,7 +1530,7 @@ ${renderCSS_TriageCompat()}
     </div>
     <div class="nav-section">
       <div class="nav-section-label">Operations</div>
-      <div class="sb-nav-item" onclick="window.location.href='/inbox'">
+      <div class="sb-nav-item" onclick="window.location.href='http://localhost:7433/inbox'">
         <span class="sb-nav-item-icon">&#9993;</span>
         <span>Inbox</span>
         <span class="sb-nav-badge" id="inboxBadge" style="display:none"></span>
