@@ -161,6 +161,29 @@
         }
       }
     },
+    "/tasks/analytics/csv": {
+      "get": {
+        "operationId": "getTaskAnalyticsCSV",
+        "summary": "Export task analytics as CSV",
+        "description": "Returns task counts by status in CSV format for spreadsheet import. Data matches the countsByStatus from the JSON analytics endpoint. File downloads with filename task-analytics-YYYY-MM-DD.csv.",
+        "tags": [
+          "analytics"
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV data",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "example": "Status,Count\ntodo,5\nin-progress,2\ndone,8"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tasks/batch-delete": {
       "post": {
         "operationId": "batchDeleteTasks",
@@ -543,7 +566,7 @@
             "description": "Comment deleted successfully"
           },
           "403": {
-            "description": "Forbidden — caller is not the comment author",
+            "description": "Forbidden \u2014 caller is not the comment author",
             "content": {
               "application/json": {
                 "schema": {
