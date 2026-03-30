@@ -1,6 +1,6 @@
 ---
 task-id: add-csv-export-button
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -9,6 +9,9 @@ feature: add-csv-export-for-task-analytics-data
 type: feature
 depends-on:
   - add-csv-analytics-endpoint
+claimed-by: agent-Christians-MacBook-Air-44889
+claimed-at: 2026-03-30T16:03:09Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
