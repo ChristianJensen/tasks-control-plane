@@ -165,6 +165,8 @@ function parseTask(content, filename, featureSlug, isArchived, sha, relPath) {
     title: deriveTaskTitle(filename),
     sha: sha || null,
     relPath: relPath || "",
+    pr_url: fields["pr-url"] || "",
+    pr_number: fields["pr-number"] || "",
   };
 }
 
@@ -883,6 +885,11 @@ function renderCSS_Kanban() {
 .dp-spec-link:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); }
 .dp-task-spec-link { display: inline-flex; align-items: center; gap: 4px; color: var(--purple); font-size: 11px; font-weight: 500; text-decoration: none; font-family: var(--font-mono); transition: var(--transition); }
 .dp-task-spec-link:hover { color: var(--text-primary); }
+.dp-task-pr-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-family: var(--font-mono); font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--accent); color: var(--accent); background: transparent; cursor: pointer; text-decoration: none; transition: var(--transition); flex-shrink: 0; }
+.dp-task-pr-btn:hover { background: var(--accent); color: var(--bg); }
+.dp-task-pr-btn.awaiting-review { border-color: var(--amber); color: var(--amber); animation: pulse-review 2s ease-in-out infinite; }
+.dp-task-pr-btn.awaiting-review:hover { background: var(--amber); color: var(--bg); }
+@keyframes pulse-review { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 .cost-row { display: flex; align-items: center; gap: 16px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); }
 .cost-item { display: flex; align-items: center; gap: 6px; }
 .cost-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
@@ -1161,6 +1168,7 @@ function buildFeaturesJSON(features, prsByFeature, linkContext) {
         wave: t.wave || 0, repo: t.repo || "", priority: t.priority || "normal",
         desc: t.description || "", relPath: t.relPath || "", sha: t.sha || "",
         claimed_at: t.claimed_at || "",
+        pr_url: t.pr_url || "", pr_number: t.pr_number || "",
       })),
     };
   });
@@ -1237,7 +1245,8 @@ function openDetail(slug) {
       f.taskList.map(function(t) {
         var tUrl = specUrl(t.relPath, t.sha);
         var tLink = tUrl ? '<a href="'+tUrl+'" target="_blank" rel="noopener" class="dp-task-spec-link" onclick="event.stopPropagation()">'+fileIcon+' spec '+extIcon+'</a>' : '';
-        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div><div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+'</div></div></div>';
+        var prBtn = t.pr_url ? '<a href="'+t.pr_url+'" target="_blank" rel="noopener" class="dp-task-pr-btn'+(t.status==='in-progress'?' awaiting-review':'')+'" onclick="event.stopPropagation()" title="'+(t.status==='in-progress'?'Awaiting review':'View PR')+'">PR #'+t.pr_number+'</a>' : '';
+        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div>'+prBtn+'<div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+'</div></div></div>';
       }).join('') + '</div></div>';
   }
 
