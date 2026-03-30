@@ -1,3 +1,6 @@
+---
+lifecycle: active
+---
 <!-- LIFECYCLE NOTE: The parent directory (draft/, active/, completed/, cancelled/)
      is authoritative for feature lifecycle phase. The lifecycle field below is
      kept in sync for human readability. When directory and frontmatter diverge,
