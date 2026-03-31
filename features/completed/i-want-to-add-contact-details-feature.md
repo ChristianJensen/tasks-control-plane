@@ -1,11 +1,11 @@
 ---
-lifecycle: active
+lifecycle: completed
 execution: supervised
 priority: medium
 budget: ""
 total-budget: ""
-total-cost-usd: ""
-total-tokens: ""
+total-cost-usd: 3.322454
+total-tokens: 50310
 epic: TASK-5
 epic-title: Q1 - Task Tracker Enhancements
 version: 1
@@ -13,7 +13,7 @@ paused-at: ""
 paused-by: ""
 pause-reason: ""
 created-at: ""
-completed-at: ""
+completed-at: 2026-03-31T22:55:02Z
 deployed-env: ""
 ---
 <!-- LIFECYCLE NOTE: The parent directory (draft/, active/, completed/, cancelled/)
