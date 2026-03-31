@@ -1,12 +1,15 @@
 ---
 task-id: basic-contact-panel
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: i-want-to-add-contact-details
 type: feature
+claimed-by: agent-Christians-MacBook-Air-2125
+claimed-at: 2026-03-31T21:55:27Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
