@@ -1,12 +1,15 @@
 ---
-lifecycle: active
+lifecycle: completed
+total-cost-usd: 1.191539
+total-tokens: 15317
+completed-at: 2026-03-31T05:45:54Z
 ---
 <!-- LIFECYCLE NOTE: The parent directory (draft/, active/, completed/, cancelled/)
      is authoritative for feature lifecycle phase. The lifecycle field below is
      kept in sync for human readability. When directory and frontmatter diverge,
      the directory wins. Paused and replanning are sub-states within active/. -->
 ---
-lifecycle: draft
+lifecycle: completed
 execution: supervised
 priority: medium
 budget: ""
