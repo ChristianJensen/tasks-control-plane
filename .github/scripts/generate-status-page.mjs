@@ -1198,7 +1198,7 @@ function buildFeaturesJSON(features, prsByFeature, linkContext) {
         name: t.title || t.filename.replace(".md", ""), status: t.status,
         wave: t.wave || 0, repo: t.repo || "", priority: t.priority || "normal",
         desc: t.description || "", relPath: t.relPath || "", sha: t.sha || "",
-        claimed_at: t.claimed_at || "",
+        claimed_by: t.claimed_by || "", claimed_at: t.claimed_at || "",
         pr_url: t.pr_url || "", pr_number: t.pr_number || "",
       })),
     };
@@ -1257,9 +1257,23 @@ function openDetail(slug) {
   }
 
   var dispatchHtml = '';
+  var hasReadyTasks = f.taskList && f.taskList.some(function(t) { return t.status === 'ready'; });
+  var inProgressTasks = f.taskList ? f.taskList.filter(function(t) { return t.status === 'in-progress' && t.claimed_by; }) : [];
   if (f.lifecycle === 'draft') {
     dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Actions</div><button class="dd-go-btn" style="width:100%" onclick="event.stopPropagation();window.open(\\'http://localhost:7433/plan/'+slug+'\\',\\'_blank\\')" title="Plan this feature">&#9998; Plan this feature</button></div>';
-  } else if (sl !== 'Done' && f.tasks && f.tasks.total > 0) {
+  } else if (!hasReadyTasks && inProgressTasks.length > 0) {
+    var agentRows = {};
+    inProgressTasks.forEach(function(t) {
+      if (!agentRows[t.claimed_by]) agentRows[t.claimed_by] = [];
+      agentRows[t.claimed_by].push(t.name);
+    });
+    var agentHtml = Object.keys(agentRows).map(function(name) {
+      var displayName = name.replace(/^agent-/, '').replace(/^cloud-/, 'cloud: ');
+      var taskNames = agentRows[name].join(', ');
+      return '<div class="agent-bar-row"><span class="agent-bar-name">'+displayName+'</span><span class="agent-bar-tasks">'+taskNames+'</span></div>';
+    }).join('');
+    dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Agent Working</div><div class="agent-bar">'+agentHtml+'</div></div>';
+  } else if (sl !== 'Done' && f.tasks && f.tasks.total > 0 && hasReadyTasks) {
     dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Actions</div><div class="dispatch-bar" data-slug="'+slug+'"><div class="db-controls"><div class="db-group"><span class="db-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-target-btn\\')" title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-target-btn\\')" title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div><div class="db-group"><span class="db-label">Mode</span><div class="dd-toggle"><button class="dd-mode-btn active" data-mode="supervised" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-mode-btn\\')" title="Agent opens a PR."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button><button class="dd-mode-btn" data-mode="autonomous" onclick="event.stopPropagation();ddToggleBtn(this,\\'dd-mode-btn\\')" title="Agent auto-merges."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button></div></div></div><button class="dd-go-btn" onclick="event.stopPropagation();var bar=this.closest(\\'.dispatch-bar\\'),t=bar.querySelector(\\'.dd-target-btn.active\\').dataset.target,m=bar.querySelector(\\'.dd-mode-btn.active\\').dataset.mode;dispatchAgent(\\''+slug+'\\',m,t,1)">&#9654; Dispatch</button></div></div>';
   }
 
@@ -1277,7 +1291,8 @@ function openDetail(slug) {
         var tUrl = specUrl(t.relPath, t.sha);
         var tLink = tUrl ? '<a href="'+tUrl+'" target="_blank" rel="noopener" class="dp-task-spec-link" onclick="event.stopPropagation()">'+fileIcon+' spec '+extIcon+'</a>' : '';
         var prBtn = t.pr_url ? '<a href="'+t.pr_url+'" target="_blank" rel="noopener" class="dp-task-pr-btn'+(t.status==='in-progress'?' awaiting-review':'')+'" onclick="event.stopPropagation()" title="'+(t.status==='in-progress'?'Awaiting review':'View PR')+'">PR #'+t.pr_number+'</a>' : '';
-        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div>'+prBtn+'<div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+'</div></div></div>';
+        var workerHtml = t.claimed_by ? '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Worker</span><span class="dp-task-detail-value"><span class="worker-name">'+t.claimed_by.replace(/^agent-/,'').replace(/^cloud-/,'cloud: ')+'</span></span></div>' : '';
+        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div>'+prBtn+'<div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+workerHtml+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+'</div></div></div>';
       }).join('') + '</div></div>';
   }
 
