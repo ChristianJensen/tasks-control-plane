@@ -46,3 +46,9 @@ jobs:
           git diff --cached --stat
           git commit -m "fix: set execution mode to ${{ inputs.execution_mode }} for ${{ inputs.slug }}" || echo "Nothing to commit"
           git push
+
+      - name: Trigger agent dispatch
+        env:
+          GH_TOKEN: ${{ secrets.DISPATCH_PAT }}
+        run: |
+          gh workflow run dispatch-agents.yml --repo "${{ github.repository }}" --ref main
