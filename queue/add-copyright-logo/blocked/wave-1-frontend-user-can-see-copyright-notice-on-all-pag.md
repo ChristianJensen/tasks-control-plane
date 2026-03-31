@@ -1,6 +1,6 @@
 ---
 task-id: user-can-see-copyright-notice-on-all-pag
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
