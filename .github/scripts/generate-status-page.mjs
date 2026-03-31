@@ -1389,7 +1389,7 @@ function dispatchAgent(slug, mode, target, agents) {
   showToast('Dispatching cloud agent in ' + modeLabels[mode] + ' mode...', 'info');
   fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
     method: 'POST', headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode, agents: String(agents) } })
+    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode } })
   }).then(function(r) {
     if (r.ok || r.status === 204) showToast('Cloud agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
     else r.text().then(function(t) { showToast('Failed: ' + t, 'error'); });
