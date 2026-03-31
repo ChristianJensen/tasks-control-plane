@@ -1,12 +1,15 @@
 ---
 task-id: contact-panel-accessibility
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
 priority: medium
 feature: i-want-to-add-contact-details
 type: feature
+claimed-by: agent-Christians-MacBook-Air-21475
+claimed-at: 2026-03-31T22:15:42Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
