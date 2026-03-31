@@ -1550,8 +1550,8 @@ ${renderCSS_TriageCompat()}
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-section-label">Compliance</div>
-      <div class="sb-nav-item" onclick="generateComplianceReport()">
+      <div class="nav-section-label">Compliance Readiness</div>
+      <div class="sb-nav-item" onclick="generateComplianceReport()" title="Generate SOC2 / ISO 27001 compliance readiness report">
         <span class="sb-nav-item-icon">&#9745;</span>
         <span>Generate Report</span>
       </div>
