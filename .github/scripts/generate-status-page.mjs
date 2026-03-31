@@ -1350,6 +1350,18 @@ function dispatchAgent(slug, mode, target, agents) {
   }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
 }
 
+// ── Compliance Report ──
+function generateComplianceReport() {
+  showToast('Generating compliance report...', 'info');
+  fetch('http://localhost:7433/api/report/compliance', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ period: 90, format: 'pdf' })
+  }).then(function(r) {
+    if (r.ok) showToast('Report generation started — check Inbox when done', 'success');
+    else r.json().then(function(d) { showToast('Failed: ' + (d.error || 'unknown'), 'error'); }).catch(function() { showToast('Failed to start report', 'error'); });
+  }).catch(function() { showToast('Start relay serve first', 'error'); });
+}
+
 // ── Settings ──
 var savedPat = localStorage.getItem('gh_pat');
 if (savedPat) document.getElementById('ghPat').value = savedPat;
@@ -1535,6 +1547,13 @@ ${renderCSS_TriageCompat()}
         <span class="sb-nav-item-icon">&#9881;</span>
         <span>Agents</span>
         ${agentDefs.length > 0 ? `<span class="sb-nav-badge">${agentDefs.length}</span>` : ""}
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Compliance</div>
+      <div class="sb-nav-item" onclick="generateComplianceReport()">
+        <span class="sb-nav-item-icon">&#9745;</span>
+        <span>Generate Report</span>
       </div>
     </div>
     <div class="nav-section">

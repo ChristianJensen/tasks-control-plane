@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Compliance Posture Report</title>
+<link rel="stylesheet" href="compliance-report.css">
+</head>
+<body>
+
+<!-- ── Cover Page ─────────────────────────────────────────────── -->
+<section class="cover">
+  <div class="cover-content">
+    <h1 class="cover-title">Compliance Posture Report</h1>
+    <p class="cover-subtitle">SOC 2 &amp; ISO 27001</p>
+    <div class="cover-meta">
+      <p class="cover-app">Task Tracker</p>
+      <p class="cover-org">ChristianJensen</p>
+      <p>Report Period: 2025-12-31 &mdash; 2026-03-31</p>
+      <p>Generated: 2026-03-31 07:43 UTC</p>
+      <p>Scope: Software Development Lifecycle &amp; Control Plane</p>
+    </div>
+    <div class="cover-badge">
+      <span class="score-ring" style="--pct: 57">
+        <span class="score-value">57%</span>
+      </span>
+      <p class="score-label">Automated Controls Passing</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Executive Summary ──────────────────────────────────────── -->
+<section class="exec-summary" id="executive-summary">
+  <h2>Executive Summary</h2>
+  <p>
+    This report assesses the compliance posture of <strong>Task Tracker</strong>
+    (ChristianJensen) against SOC 2 Trust Service Criteria and ISO 27001:2022 Annex A controls.
+    It is generated from automated evidence collection and is intended for
+    internal readiness assessment, customer due diligence, and pre-audit preparation.
+  </p>
+
+  <div class="summary-cards">
+    <div class="card pass">
+      <span class="card-num">4</span>
+      <span class="card-label">Passed</span>
+    </div>
+    <div class="card partial">
+      <span class="card-num">3</span>
+      <span class="card-label">Partial</span>
+    </div>
+    <div class="card fail">
+      <span class="card-num">0</span>
+      <span class="card-label">Failed</span>
+    </div>
+    <div class="card manual">
+      <span class="card-num">0</span>
+      <span class="card-label">Manual Review</span>
+    </div>
+  </div>
+
+  <!-- Category breakdown bar -->
+  <h3>By Category</h3>
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Pass</th>
+        <th>Partial</th>
+        <th>Fail</th>
+        <th>Manual</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td>Change Management</td>
+        <td class="num pass-text">0</td>
+        <td class="num partial-text">3</td>
+        <td class="num fail-text">0</td>
+        <td class="num manual-text">0</td>
+        <td class="num">
+          <span class="score-bar">
+            <span class="score-fill low" style="width: 0%"></span>
+          </span>
+          0%
+        </td>
+      </tr>
+      
+      <tr>
+        <td>Secure Development</td>
+        <td class="num pass-text">4</td>
+        <td class="num partial-text">0</td>
+        <td class="num fail-text">0</td>
+        <td class="num manual-text">0</td>
+        <td class="num">
+          <span class="score-bar">
+            <span class="score-fill high" style="width: 100%"></span>
+          </span>
+          100%
+        </td>
+      </tr>
+      
+    </tbody>
+  </table>
+</section>
+
+<!-- ── Change Traceability ────────────────────────────────────── -->
+<section class="traceability" id="change-traceability">
+  <h2>Change Traceability</h2>
+  <p>
+    Every production change is traceable from business requirement (feature spec)
+    through planned work (task specs) to code review (pull requests).
+    Below are features from the report period with their full audit chain.
+  </p>
+
+  
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>helpcontent</strong>
+      <span class="muted">&nbsp;&mdash; high priority
+         &middot; frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        2026-03-21T15:54:50+01:00 &rarr; 2026-03-21T15:54:50Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-2-frontend-help-drawer-tests</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-frontend-help-drawer-component</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>analytics-improvements</strong>
+      <span class="muted">&nbsp;&mdash; medium priority
+         &middot; frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        ? &rarr; 2026-03-29T21:56:01Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-frontend-add-pie-chart-and-finalize-migration</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/68">#68</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-frontend-migrate-existing-analytics-visualization</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/67">#67</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-frontend-create-analytics-page-foundation</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/66">#66</a>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>task-category-enhancements</strong>
+      <span class="muted">&nbsp;&mdash; medium priority
+         &middot; api, frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        &#34;2026-03-23&#34; &rarr; 2026-03-23T12:18:14Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-2-frontend-add-category-sort-option</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-api-add-category-sort-logic</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>multiassign</strong>
+      <span class="muted">&nbsp;&mdash; normal priority
+         &middot; api, frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        2026-03-21T14:14:45+01:00 &rarr; 2026-03-21T16:35:12Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-api-add-category-field-and-patch-support</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-api-batch-update-category-endpoint</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-display-category-on-task-cards</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-bulk-assign-category-ui</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>analytics</strong>
+      <span class="muted">&nbsp;&mdash; medium priority
+         &middot; api, frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        &#34;2026-03-26&#34; &rarr; 2026-03-26T11:20:55Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-2-frontend-analytics-sidebar</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/62">#62</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-api-analytics-endpoint</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-api/pull/26">#26</a>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>theming</strong>
+      <span class="muted">&nbsp;&mdash; normal priority
+         &middot; frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        ? &rarr; 2026-03-30T11:25:09Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-2-frontend-add-tricentis-branded-theme</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/73">#73</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-frontend-add-high-contrast-theme</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/72">#72</a>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>add-csv-export-for-task-analytics-data</strong>
+      <span class="muted">&nbsp;&mdash; normal priority
+         &middot; api, frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        ? &rarr; 2026-03-31T05:45:54Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-api-add-csv-analytics-endpoint</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-api/pull/29">#29</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-add-csv-export-button</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/74">#74</a>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>task-descriptions</strong>
+      <span class="muted">&nbsp;&mdash; medium priority
+         &middot; api, frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        &#34;2026-03-25&#34; &rarr; 2026-03-26T11:31:55Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-frontend-add-description-to-creation-form</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/59">#59</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-api-add-description-field</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-api/pull/25">#25</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-expandable-detail-panel</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-inline-description-editing</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/61">#61</a>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>multidelete</strong>
+      <span class="muted">&nbsp;&mdash; normal priority
+         &middot; api, frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        2026-03-21T02:28:36+01:00 &rarr; 2026-03-21T14:14:45+01:00
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-api-batch-delete-endpoint</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-select-mode-batch-delete-ui</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>logging</strong>
+      <span class="muted">&nbsp;&mdash; normal priority
+         &middot; api, frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        2026-03-19T16:41:44+01:00 &rarr; 2026-03-21T01:58:20+01:00
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-api-wave-1-api-status-history-endpoints</td>
+          <td>api</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-wave-2-frontend-history-display</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-frontend-wave-1-frontend-patch-userid-header</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>help-content-search</strong>
+      <span class="muted">&nbsp;&mdash; medium priority
+         &middot; frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        &#34;&#34; &rarr; 2026-03-29T22:10:45Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-2-frontend-improve-help-search-robustness</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/71">#71</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-add-search-term-highlighting</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/70">#70</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-frontend-add-help-search-box-and-filtering</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/69">#69</a>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>spacegap</strong>
+      <span class="muted">&nbsp;&mdash; medium priority
+         &middot; frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        &#34;2026-03-22&#34; &rarr; 2026-03-23T11:22:39Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-2-frontend-completed-section-tests</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-1-frontend-collapsible-completed-section</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>darkmode</strong>
+      <span class="muted">&nbsp;&mdash; medium priority
+         &middot; frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        &#34;2026-03-25&#34; &rarr; 2026-03-25T01:22:32Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-frontend-css-variables-and-theme-infrastructure</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/57">#57</a>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-theme-toggle-and-persistence</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <a href="https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/58">#58</a>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>sorting-improvements</strong>
+      <span class="muted">&nbsp;&mdash; high priority
+         &middot; frontend
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        &#34;2026-03-22&#34; &rarr; 2026-03-22T00:53:11Z
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>wave-1-frontend-sort-dropdown-polish</td>
+          <td>frontend</td>
+          <td class="num">1</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+        <tr>
+          <td>wave-2-frontend-sort-dropdown-tests</td>
+          <td>frontend</td>
+          <td class="num">2</td>
+          <td><span class="badge badge-done">done</span></td>
+          <td>
+            
+            <span class="muted">—</span>
+            
+          </td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+  
+  
+</section>
+
+<!-- ── Controls ────────────────────────────────────────────────── -->
+<section class="controls-section" id="controls">
+  <h2>Controls Assessment</h2>
+  <p>
+    Each control is mapped to both SOC 2 Trust Service Criteria and
+    ISO 27001:2022 Annex A where applicable.
+  </p>
+
+  
+  <h3>Change Management</h3>
+  
+  <div class="control-card status-partial">
+    <div class="control-header">
+      <span class="control-id">CC8.1</span>
+      <span class="control-title">Authorization and management of system changes</span>
+      <span class="status-badge partial">Partial</span>
+    </div>
+    <p class="control-desc">Changes to infrastructure and software are authorized, designed, developed, configured, documented, tested, approved, and implemented.
+</p>
+    
+    <p class="control-xref">ISO 27001: A.8.32, A.8.25</p>
+    
+    
+    
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>Main branch has protection rules requiring PR reviews</td>
+          <td><span class="check-icon fail">✗</span></td>
+          <td class="evidence-detail">No branch protection found on main</td>
+        </tr>
+        
+        <tr>
+          <td>CI/CD workflow definitions present</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: validate-contracts.yml, dispatch-agents.yml, handle-telemetry.yml, cloud-agent.yml, status-page.yml (+1 more)</td>
+        </tr>
+        
+        <tr>
+          <td>Recent merged PRs have at least one approval</td>
+          <td><span class="check-icon fail">✗</span></td>
+          <td class="evidence-detail">No recent merged PRs found</td>
+        </tr>
+        
+        <tr>
+          <td>Completed tasks link back to feature specs via queue</td>
+          <td><span class="check-icon fail">✗</span></td>
+          <td class="evidence-detail">No tasks found in queue</td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+  
+  <div class="control-card status-partial">
+    <div class="control-header">
+      <span class="control-id">CC5.1</span>
+      <span class="control-title">Work is planned and tracked before execution</span>
+      <span class="status-badge partial">Partial</span>
+    </div>
+    <p class="control-desc">The entity selects and develops control activities that contribute to the mitigation of risks to the achievement of objectives. Work is authorized via feature specs before task execution begins.
+</p>
+    
+    <p class="control-xref">ISO 27001: A.8.25</p>
+    
+    
+    
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>Feature specs exist in features/ before tasks are queued</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">14 feature spec(s) found with linked tasks</td>
+        </tr>
+        
+        <tr>
+          <td>Tasks have assignment tracking (claimed-by and claimed-at)</td>
+          <td><span class="check-icon fail">✗</span></td>
+          <td class="evidence-detail">No tasks found</td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+  
+  <div class="control-card status-partial">
+    <div class="control-header">
+      <span class="control-id">CC8.1-REVIEW</span>
+      <span class="control-title">Peer review of changes before deployment</span>
+      <span class="status-badge partial">Partial</span>
+    </div>
+    <p class="control-desc">Changes are reviewed by someone other than the author before being merged to production branches.
+</p>
+    
+    <p class="control-xref">ISO 27001: A.8.25, A.8.28</p>
+    
+    
+    
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>Recent merged PRs have review comments or approvals</td>
+          <td><span class="check-icon fail">✗</span></td>
+          <td class="evidence-detail">No recent merged PRs found</td>
+        </tr>
+        
+        <tr>
+          <td>Git provides immutable audit trail (author, timestamp, message)</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">50 commits in last 90 days by 2 authors</td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+  
+  
+  <h3>Secure Development</h3>
+  
+  <div class="control-card status-pass">
+    <div class="control-header">
+      <span class="control-id">A.8.25</span>
+      <span class="control-title">Secure development life cycle</span>
+      <span class="status-badge pass">Pass</span>
+    </div>
+    <p class="control-desc">Rules for the secure development of software and systems shall be established and applied.
+</p>
+    
+    
+    <p class="control-xref">SOC 2: CC8.1</p>
+    
+    
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>SDLC methodology documented in relay.md</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: relay.md</td>
+        </tr>
+        
+        <tr>
+          <td>Testing rules and standards documented</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: testing.md</td>
+        </tr>
+        
+        <tr>
+          <td>API design standards documented</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: api-design.md</td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+  
+  <div class="control-card status-pass">
+    <div class="control-header">
+      <span class="control-id">A.8.26</span>
+      <span class="control-title">Application security requirements</span>
+      <span class="status-badge pass">Pass</span>
+    </div>
+    <p class="control-desc">Information security requirements shall be identified, specified and approved when developing or acquiring applications.
+</p>
+    
+    
+    <p class="control-xref">SOC 2: CC8.1</p>
+    
+    
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>Contract validation runs in CI pipeline</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: validate-contracts.yml</td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+  
+  <div class="control-card status-pass">
+    <div class="control-header">
+      <span class="control-id">A.8.28</span>
+      <span class="control-title">Secure coding</span>
+      <span class="status-badge pass">Pass</span>
+    </div>
+    <p class="control-desc">Secure coding principles shall be applied to software development.
+</p>
+    
+    
+    <p class="control-xref">SOC 2: CC8.1</p>
+    
+    
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>Security coding rules documented (OWASP, input validation, auth)</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: security.md</td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+  
+  <div class="control-card status-pass">
+    <div class="control-header">
+      <span class="control-id">A.8.29</span>
+      <span class="control-title">Security testing in development and acceptance</span>
+      <span class="status-badge pass">Pass</span>
+    </div>
+    <p class="control-desc">Security testing processes shall be defined and implemented.
+</p>
+    
+    
+    <p class="control-xref">SOC 2: CC8.1</p>
+    
+    
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        
+        <tr>
+          <td>Testing requirements including security testing documented</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: testing.md</td>
+        </tr>
+        
+        <tr>
+          <td>CI pipelines run automated tests</td>
+          <td><span class="check-icon pass">✓</span></td>
+          <td class="evidence-detail">Found: validate-contracts.yml, dispatch-agents.yml, handle-telemetry.yml, cloud-agent.yml, status-page.yml (+1 more)</td>
+        </tr>
+        
+      </tbody>
+    </table>
+    
+  </div>
+  
+  
+</section>
+
+<!-- ── Cross-Reference Matrix ─────────────────────────────────── -->
+<section id="cross-reference">
+  <h2>Cross-Reference Matrix</h2>
+  <p>Controls that satisfy both frameworks simultaneously.</p>
+  <table class="xref-table">
+    <thead>
+      <tr><th>Area</th><th>SOC 2</th><th>ISO 27001</th></tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td>Change Management &amp; Secure Development</td>
+        <td>CC8.1</td>
+        <td>A.8.32, A.8.25, A.8.28, A.8.29</td>
+      </tr>
+      
+      <tr>
+        <td>Work Authorization &amp; Planning</td>
+        <td>CC5.1</td>
+        <td>A.8.25</td>
+      </tr>
+      
+      <tr>
+        <td>Code Review &amp; Audit Trail</td>
+        <td>CC8.1-REVIEW</td>
+        <td>A.8.25, A.8.28</td>
+      </tr>
+      
+    </tbody>
+  </table>
+</section>
+
+<!-- ── Evidence Inventory ─────────────────────────────────────── -->
+<section id="evidence-inventory">
+  <h2>Evidence Inventory</h2>
+  <table class="inventory-table">
+    <thead>
+      <tr><th>#</th><th>Source</th><th>Type</th><th>Description</th><th>Collected</th></tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td>1</td>
+        <td>github_api</td>
+        <td>branch_protection_enabled</td>
+        <td>No branch protection found on main</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>2</td>
+        <td>filesystem</td>
+        <td>ci_workflows_exist</td>
+        <td>Found: validate-contracts.yml, dispatch-agents.yml, handle-telemetry.yml, cloud-agent.yml, status-page.yml (+1 more)</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>3</td>
+        <td>github_api</td>
+        <td>prs_have_approvals</td>
+        <td>No recent merged PRs found</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>4</td>
+        <td>relay_queue</td>
+        <td>changes_traceable_to_features</td>
+        <td>No tasks found in queue</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>5</td>
+        <td>relay_features</td>
+        <td>feature_specs_precede_work</td>
+        <td>14 feature spec(s) found with linked tasks</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>6</td>
+        <td>relay_queue</td>
+        <td>work_assigned_and_tracked</td>
+        <td>No tasks found</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>7</td>
+        <td>github_api</td>
+        <td>prs_have_reviews</td>
+        <td>No recent merged PRs found</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>8</td>
+        <td>git</td>
+        <td>git_audit_trail</td>
+        <td>50 commits in last 90 days by 2 authors</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>9</td>
+        <td>filesystem</td>
+        <td>sdlc_process_defined</td>
+        <td>Found: relay.md</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>10</td>
+        <td>filesystem</td>
+        <td>testing_rules_defined</td>
+        <td>Found: testing.md</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>11</td>
+        <td>filesystem</td>
+        <td>api_design_rules_defined</td>
+        <td>Found: api-design.md</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>12</td>
+        <td>filesystem</td>
+        <td>contract_validation_ci</td>
+        <td>Found: validate-contracts.yml</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>13</td>
+        <td>filesystem</td>
+        <td>security_rules_defined</td>
+        <td>Found: security.md</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>14</td>
+        <td>filesystem</td>
+        <td>testing_rules_defined</td>
+        <td>Found: testing.md</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+      <tr>
+        <td>15</td>
+        <td>filesystem</td>
+        <td>ci_workflows_exist</td>
+        <td>Found: validate-contracts.yml, dispatch-agents.yml, handle-telemetry.yml, cloud-agent.yml, status-page.yml (+1 more)</td>
+        <td>2026-03-31 07:43 UTC</td>
+      </tr>
+      
+    </tbody>
+  </table>
+</section>
+
+<!-- ── Gap Analysis ───────────────────────────────────────────── -->
+<section id="gap-analysis">
+  <h2>Gap Analysis</h2>
+  
+  <p class="pass-text">No gaps identified. All automated controls are passing.</p>
+  
+</section>
+
+</body>
+</html>
