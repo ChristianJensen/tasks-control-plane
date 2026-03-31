@@ -1,6 +1,6 @@
 ---
 task-id: contact-panel-accessibility
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
