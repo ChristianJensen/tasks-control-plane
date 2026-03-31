@@ -1543,7 +1543,7 @@ ${renderCSS_TriageCompat()}
         <span class="sb-nav-item-icon">&#9776;</span>
         <span>Kanban Board</span>
       </div>
-      <a class="sb-nav-item" href="/agents" style="text-decoration:none;color:inherit;">
+      <a class="sb-nav-item" href="http://localhost:7433/agents" style="text-decoration:none;color:inherit;">
         <span class="sb-nav-item-icon">&#9881;</span>
         <span>Agents</span>
         ${agentDefs.length > 0 ? `<span class="sb-nav-badge">${agentDefs.length}</span>` : ""}
