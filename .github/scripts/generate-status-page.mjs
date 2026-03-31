@@ -1543,11 +1543,11 @@ ${renderCSS_TriageCompat()}
         <span class="sb-nav-item-icon">&#9776;</span>
         <span>Kanban Board</span>
       </div>
-      <div class="sb-nav-item" onclick="switchView('agents', this)">
+      <a class="sb-nav-item" href="/agents" style="text-decoration:none;color:inherit;">
         <span class="sb-nav-item-icon">&#9881;</span>
         <span>Agents</span>
         ${agentDefs.length > 0 ? `<span class="sb-nav-badge">${agentDefs.length}</span>` : ""}
-      </div>
+      </a>
     </div>
     <div class="nav-section">
       <div class="nav-section-label">Compliance Readiness</div>
