@@ -504,7 +504,8 @@ function progressRingSVG(pct, color, size = 48) {
 function workerIcon(claimedBy) {
   if (!claimedBy) return '<span class="worker-empty">&mdash;</span>';
   const isBot = claimedBy.startsWith("agent-") || claimedBy.startsWith("cloud-");
-  return `<span class="worker-icon" title="${escHTML(claimedBy)}">${isBot ? "&#129302;" : "&#128100;"}</span>`;
+  const icon = isBot ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="M8 12h.01M16 12h.01M9 16s1.5 1 3 1 3-1 3-1"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  return `<span class="worker-icon" title="${escHTML(claimedBy)}">${icon}</span>`;
 }
 
 function executionLabel(mode) {
@@ -551,6 +552,30 @@ function renderDispatchBar(slug) {
     </div>
     <button class="dd-go-btn" onclick="event.stopPropagation();var bar=this.closest('.dispatch-bar'),t=bar.querySelector('.dd-target-btn.active').dataset.target,m=bar.querySelector('.dd-mode-btn.active').dataset.mode,n=+(bar.querySelector('.dd-par-btn.active')||{dataset:{n:1}}).dataset.n;dispatchAgent('${slug}',m,t,n)">&#9654; Dispatch</button>
   </div>`;
+}
+
+function formatAgentName(claimedBy) {
+  if (!claimedBy) return "";
+  return claimedBy.replace(/^agent-/, "").replace(/^cloud-/, "cloud: ");
+}
+
+function renderAgentStatusBar(tasks, generatedAt) {
+  const inProgress = tasks.filter(t => t.status === "in-progress" && t.claimed_by);
+  if (inProgress.length === 0) return "";
+  const agents = {};
+  for (const t of inProgress) {
+    if (!agents[t.claimed_by]) agents[t.claimed_by] = { tasks: [], earliest: t.claimed_at };
+    agents[t.claimed_by].tasks.push(t);
+    if (t.claimed_at && (!agents[t.claimed_by].earliest || t.claimed_at < agents[t.claimed_by].earliest)) {
+      agents[t.claimed_by].earliest = t.claimed_at;
+    }
+  }
+  const rows = Object.entries(agents).map(([name, info]) => {
+    const dur = formatDuration(info.earliest, generatedAt);
+    const taskNames = info.tasks.map(t => escHTML(t.filename.replace(".md", ""))).join(", ");
+    return `<div class="agent-bar-row">${workerIcon(name)} <span class="agent-bar-name">${escHTML(formatAgentName(name))}</span>${dur ? ` <span class="agent-bar-dur mono">${dur}</span>` : ""}<span class="agent-bar-tasks">${taskNames}</span></div>`;
+  }).join("");
+  return `<div class="agent-bar"><div class="agent-bar-label">Agent working</div>${rows}</div>`;
 }
 
 // ── Triage view still uses collapsible feature rows ─────────────
@@ -628,6 +653,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     return `<tr class="${stale ? "stale-task" : ""}">
       <td class="mono" data-label="Task">${taskLink}</td>
       <td data-label="Status"><span class="wdot wdot-${t.status}"></span> ${t.status}${stale ? ' <span class="stale-warn" title="In progress for over 2 hours">&#9888;</span>' : ""}</td>
+      <td data-label="Worker">${t.claimed_by ? `${workerIcon(t.claimed_by)} <span class="worker-name">${escHTML(formatAgentName(t.claimed_by))}</span>` : '<span class="worker-empty">&mdash;</span>'}</td>
       <td data-label="Priority">${priorityDot(t.priority)} ${t.priority}</td>
       <td class="mono" data-label="Wave">W${t.wave}</td>
       <td data-label="Execution">${executionLabel(feature.execution || "supervised")}</td>
@@ -635,10 +661,14 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
   }).join("");
 
   const hasBugDigest = isBug && feature.bugDigest && feature.bugDigest.length > 0;
-  const canDispatchFeature = !isBug && feature.lifecycle === "active" && tasks.total > 0;
+  const hasReadyTasks = (feature.missing || []).some(t => t.status === "ready");
+  const hasInProgressTasks = (feature.missing || []).some(t => t.status === "in-progress");
+  const canDispatchFeature = !isBug && feature.lifecycle === "active" && hasReadyTasks;
+  const showAgentStatus = !isBug && feature.lifecycle === "active" && !hasReadyTasks && hasInProgressTasks;
   const hasDetails = tasks.total > 0 || hasBugDigest || feature.problem;
 
   const dispatchBarHTML = (hasBugDigest || canDispatchFeature) ? renderDispatchBar(escHTML(feature.slug)) : "";
+  const agentStatusHTML = showAgentStatus ? renderAgentStatusBar(feature.missing || [], generatedAt) : "";
 
   const bugDigestHTML = hasBugDigest ?
     dispatchBarHTML +
@@ -670,6 +700,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       ${hasBugDigest && tasks.total === 0 ? `<div class="bug-digest">${bugDigestHTML}</div>` : `
       ${feature.problem ? `<div class="feature-desc">${escHTML(feature.problem)}</div>` : ""}
       ${canDispatchFeature ? `<div class="feature-dispatch">${dispatchBarHTML}</div>` : ""}
+      ${showAgentStatus ? `<div class="feature-dispatch">${agentStatusHTML}</div>` : ""}
       <div class="detail-grid">
         <div class="detail-progress">
           ${progressRingSVG(pct, color)}
@@ -684,7 +715,7 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
       </div>
       ${taskRows ? `<div class="detail-missing">
         <div class="detail-label">${taskTableLabel} (${sortedTaskList.length})</div>
-        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody>${taskRows}</tbody></table>
+        <table class="missing-tbl"><thead><tr><th>Task</th><th>Status</th><th>Worker</th><th>Priority</th><th>Wave</th><th>Execution</th></tr></thead><tbody>${taskRows}</tbody></table>
       </div>` : ""}
       `}
     </div>` : ""}
@@ -1504,6 +1535,13 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text-p
 .dd-mode-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .dd-go-btn { padding: 8px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: var(--font-body); letter-spacing: 0.02em; }
 .dd-go-btn:hover { background: #6366f1; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+.agent-bar { padding: 10px 16px; background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); border-radius: 10px; }
+.agent-bar-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--green); margin-bottom: 6px; }
+.agent-bar-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 0; }
+.agent-bar-name { font-weight: 600; color: var(--text-primary); }
+.agent-bar-dur { font-size: 12px; color: var(--text-secondary); }
+.agent-bar-tasks { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+.worker-name { font-size: 12px; color: var(--text-secondary); }
 
 /* Toast */
 .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #fff; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 400px; }
