@@ -1,6 +1,6 @@
 ---
 task-id: basic-contact-panel
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
