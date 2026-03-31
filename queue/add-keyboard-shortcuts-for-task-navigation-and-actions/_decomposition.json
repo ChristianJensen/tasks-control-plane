@@ -1,0 +1,81 @@
+{
+  "contract_diff": null,
+  "tasks": [
+    {
+      "repo": "frontend",
+      "wave": 1,
+      "priority": "high",
+      "execution": "supervised",
+      "slug": "arrow-key-task-navigation",
+      "description": "Implement up/down arrow key navigation between tasks in the task list with visual focus indicators that meet WCAG 2.1 AA accessibility standards.",
+      "why": "Enables efficient keyboard navigation through task lists without mouse interaction, providing the foundation for keyboard-driven task management workflow.",
+      "implementation_notes": "Add keyboard event listeners to task list container, implement focus state management with DOM-based tracking, create high-contrast visual focus indicators with aria-selected attributes for screen readers. Focus only activates when task list container has focus to prevent conflicts with form inputs. Handle empty task list state by disabling navigation until tasks are present.",
+      "contract_references": "No API changes required - purely frontend keyboard interaction enhancement.",
+      "acceptance_criteria": [
+        "Tests pass (`npm test`)",
+        "Up/down arrow keys navigate between tasks in the task list",
+        "First task receives focus automatically on page load when tasks exist",
+        "Visual focus indicator uses high-contrast borders and aria-selected attributes",
+        "Navigation stops at first/last task boundaries without wrapping",
+        "Keyboard shortcuts only activate when task list container has focus",
+        "Empty task list shows empty state and disables keyboard navigation",
+        "Feature detects keyboard presence and degrades gracefully on mobile devices"
+      ],
+      "estimated_lines": 180,
+      "depends_on": []
+    },
+    {
+      "repo": "frontend",
+      "wave": 1,
+      "priority": "high", 
+      "execution": "supervised",
+      "slug": "spacebar-task-completion",
+      "description": "Implement spacebar key to mark focused tasks as complete using the existing PATCH /tasks/{taskId} API with optimistic updates and comprehensive error handling.",
+      "why": "Provides the primary keyboard action for task completion, enabling users to mark tasks done without mouse clicks while maintaining data consistency through proper error handling.",
+      "implementation_notes": "Use existing PATCH /tasks/{taskId} API with X-User-Id header for status updates. Implement optimistic UI updates with revert on API failure. Show loading indicators during API calls and disable spacebar to prevent duplicate requests. Display error messages with retry capability while maintaining focus on the task. Handle network failures, server errors, and authentication issues gracefully.",
+      "contract_references": "Uses existing PATCH /tasks/{taskId} endpoint from tasks-api.json with status field and X-User-Id header requirement.",
+      "acceptance_criteria": [
+        "Tests pass (`npm test`)",
+        "Spacebar changes focused task status to 'done' using PATCH API",
+        "Status updates use existing PATCH /tasks/{taskId} API with X-User-Id header",
+        "Spacebar is disabled during pending API calls with loading indicator",
+        "API failures show error messages and allow retry while maintaining focus",
+        "Optimistic updates revert on API failure with user feedback",
+        "Completed tasks remain visible with visual styling (strikethrough/dimmed)",
+        "Keyboard shortcuts work alongside existing mouse interactions"
+      ],
+      "estimated_lines": 160,
+      "depends_on": []
+    },
+    {
+      "repo": "frontend",
+      "wave": 1,
+      "priority": "high",
+      "execution": "supervised", 
+      "slug": "focus-advancement-and-boundaries",
+      "description": "Implement focus advancement after task completion and handle edge cases like completing the last task, with proper boundary conditions and focus flow management.",
+      "why": "Maintains smooth keyboard navigation flow by automatically advancing focus after task completion, handling edge cases to prevent focus loss and maintain predictable user experience.",
+      "implementation_notes": "After successful task completion via spacebar, automatically advance focus to the next available task in the list. When completing the last task, move focus to the previous task. If completing the only task, focus remains on the completed task. Ensure focus advancement works correctly with the visual focus indicators and maintains accessibility attributes. Handle dynamic list changes and maintain focus stability during API operations.",
+      "contract_references": "No API changes required - manages client-side focus state in response to successful PATCH /tasks/{taskId} operations.",
+      "acceptance_criteria": [
+        "Tests pass (`npm test`)",
+        "After spacebar completion, focus moves to the next available task",
+        "Focus moves to previous task when completing the last task in list", 
+        "Focus remains on completed task when it's the only task in list",
+        "Focus advancement maintains visual indicators and accessibility attributes",
+        "Focus management works correctly during API loading states",
+        "Focus behavior is predictable and consistent across different list sizes",
+        "Edge cases are handled gracefully without focus loss"
+      ],
+      "estimated_lines": 120,
+      "depends_on": []
+    }
+  ],
+  "decisions": [
+    "Single wave approach: All tasks are independent frontend enhancements using existing APIs, enabling full parallelization across 3 agents",
+    "No shared infrastructure wave: Existing PATCH /tasks/{taskId} API is sufficient, no backend changes needed",
+    "Task separation by interaction type: Arrow navigation, spacebar completion, and focus advancement are distinct user interaction patterns that can be developed independently",
+    "No cross-task dependencies: Each task handles a complete user story slice and touches different aspects of keyboard interaction to minimize merge conflicts",
+    "Estimated lines conservative: Includes comprehensive test coverage, error handling, accessibility features, and edge case management as required by TDD approach"
+  ]
+}
