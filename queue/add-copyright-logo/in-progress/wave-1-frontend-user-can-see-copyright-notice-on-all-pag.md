@@ -1,12 +1,15 @@
 ---
 task-id: user-can-see-copyright-notice-on-all-pag
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: medium
 feature: add-copyright-logo
 type: feature
+claimed-by: agent-Christians-MacBook-Air-26174
+claimed-at: 2026-03-31T15:54:28Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
