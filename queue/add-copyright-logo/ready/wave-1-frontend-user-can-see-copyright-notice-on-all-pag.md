@@ -1,21 +1,12 @@
 ---
 task-id: user-can-see-copyright-notice-on-all-pag
-status: in-progress
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: medium
 feature: add-copyright-logo
 type: feature
-claimed-by: agent-Christians-MacBook-Air-87364
-claimed-at: 2026-03-31T15:06:35Z
-claimed-on: Christians-MacBook-Air
-cost-usd: 0.67637805
-input-tokens: 34
-output-tokens: 7871
-duration-ms: 233702
-pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/77
-pr-number: 77
 ---
 
 ## Description
