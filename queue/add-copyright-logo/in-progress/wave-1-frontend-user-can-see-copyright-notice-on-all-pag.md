@@ -1,6 +1,6 @@
 ---
 task-id: user-can-see-copyright-notice-on-all-pag
-status: blocked
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -8,7 +8,7 @@ priority: medium
 feature: add-copyright-logo
 type: feature
 claimed-by: agent-Christians-MacBook-Air-87364
-claimed-at: 2026-03-31T14:53:59Z
+claimed-at: 2026-03-31T15:06:35Z
 claimed-on: Christians-MacBook-Air
 cost-usd: 0.67637805
 input-tokens: 34
