@@ -1357,7 +1357,7 @@ function generateComplianceReport() {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ period: 90, format: 'pdf' })
   }).then(function(r) {
-    if (r.ok) showToast('Report generation started — check Inbox when done', 'success');
+    if (r.ok) showToast('Report generation started — PDF will be saved to reports/', 'success');
     else r.json().then(function(d) { showToast('Failed: ' + (d.error || 'unknown'), 'error'); }).catch(function() { showToast('Failed to start report', 'error'); });
   }).catch(function() { showToast('Start relay serve first', 'error'); });
 }
