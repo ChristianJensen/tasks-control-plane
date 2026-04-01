@@ -1,6 +1,6 @@
 ---
 task-id: keyboard-navigation-foundation
-status: ready
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
