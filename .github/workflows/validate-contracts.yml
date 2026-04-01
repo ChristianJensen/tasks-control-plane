@@ -1,11 +1,60 @@
+# Validate Contracts — lint OpenAPI specs on push/PR.
+# Synced to control planes by upgrade.sh.
+
 name: Validate Contracts
+
 on:
   push:
     branches: [main]
     paths: ['contracts/**']
   pull_request:
     paths: ['contracts/**']
+
 jobs:
   lint:
-    uses: ChristianJensen/Relay/.github/workflows/validate-contracts.yml@main
-    secrets: inherit
+    name: Lint OpenAPI Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Find contract files
+        id: contracts
+        run: |
+          FILES=$(find contracts -name '*.json' -o -name '*.yaml' -o -name '*.yml' | grep -v '.gitkeep' | head -50)
+          if [ -z "$FILES" ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate JSON syntax
+        if: steps.contracts.outputs.found == 'true'
+        run: |
+          EXIT=0
+          for f in contracts/*.json; do
+            [ -f "$f" ] || continue
+            [ "$(basename "$f")" = ".gitkeep" ] && continue
+            if ! python3 -m json.tool "$f" > /dev/null 2>&1; then
+              echo "::error file=$f::Invalid JSON syntax"
+              EXIT=1
+            fi
+          done
+          exit $EXIT
+
+      - name: Install Redocly CLI
+        if: steps.contracts.outputs.found == 'true'
+        run: npm install -g @redocly/cli@latest
+
+      - name: Lint OpenAPI specs
+        if: steps.contracts.outputs.found == 'true'
+        run: |
+          EXIT=0
+          for f in contracts/*.json contracts/*.yaml contracts/*.yml; do
+            [ -f "$f" ] || continue
+            [ "$(basename "$f")" = ".gitkeep" ] && continue
+            echo "Linting: $f"
+            if ! redocly lint "$f" --format=github-actions 2>/dev/null; then
+              EXIT=1
+            fi
+          done
+          exit $EXIT

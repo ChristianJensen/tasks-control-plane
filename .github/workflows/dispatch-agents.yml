@@ -1,3 +1,8 @@
+# Dispatch Agents — scans the task queue and fires repository_dispatch events
+# to target code repos with parallel instance counts.
+#
+# Synced to control planes by upgrade.sh. Requires: DISPATCH_PAT secret.
+
 name: Dispatch Agents
 on:
   push:
