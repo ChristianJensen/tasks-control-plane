@@ -1,6 +1,6 @@
 ---
 task-id: spacebar-task-completion
-status: pending
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 2
