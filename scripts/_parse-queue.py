@@ -18,10 +18,6 @@ import os
 import re
 import sys
 
-# Add scripts directory to path for _workflow import
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _workflow import parse_frontmatter_string
-
 PRIORITY_RANK = {"critical": 0, "high": 1, "normal": 2, "low": 3}
 
 # Known task status directory names
@@ -31,8 +27,36 @@ FEATURE_PHASES = {"draft", "active", "completed", "cancelled"}
 
 
 def parse_frontmatter(content):
-    """Wrapper for compatibility. Delegates to _workflow parser."""
-    return parse_frontmatter_string(content)
+    """Extract YAML frontmatter key-value pairs from a markdown string."""
+    m = re.match(r"^---\s*\n(.*?)\n---", content, re.DOTALL)
+    if not m:
+        return {}
+    front = m.group(1)
+    fields = {}
+    current_key = None
+    for line in front.split("\n"):
+        # List item under a key
+        list_match = re.match(r"^\s+-\s+(.+)", line)
+        if list_match and current_key:
+            if not isinstance(fields[current_key], list):
+                fields[current_key] = []
+            fields[current_key].append(list_match.group(1).strip())
+            continue
+        # Key-value pair
+        kv_match = re.match(r"^(\S+):\s*(.*)", line)
+        if kv_match:
+            key = kv_match.group(1)
+            value = kv_match.group(2).strip()
+            # Strip inline comments
+            value = re.sub(r"\s+#.*$", "", value)
+            if value:
+                fields[key] = value
+            else:
+                fields[key] = []
+            current_key = key
+        else:
+            current_key = None
+    return fields
 
 
 def status_from_path(path):
