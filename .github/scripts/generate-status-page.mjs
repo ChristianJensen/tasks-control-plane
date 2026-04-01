@@ -1387,11 +1387,11 @@ function dispatchAgent(slug, mode, target, agents) {
   if (!pat) { showToast('Set GitHub PAT in Settings first', 'warn'); switchView('settings', document.querySelector('[onclick*="settings"]')); return; }
   var repo = 'ChristianJensen/tasks-control-plane';
   showToast('Dispatching cloud agent in ' + modeLabels[mode] + ' mode...', 'info');
-  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/set-execution-mode.yml/dispatches', {
+  fetch('https://api.github.com/repos/' + repo + '/actions/workflows/dispatch-agents.yml/dispatches', {
     method: 'POST', headers: { 'Authorization': 'token ' + pat, 'Accept': 'application/vnd.github.v3+json' },
-    body: JSON.stringify({ ref: 'main', inputs: { slug: slug, execution_mode: mode } })
+    body: JSON.stringify({ ref: 'main' })
   }).then(function(r) {
-    if (r.ok || r.status === 204) showToast('Cloud agent dispatched in ' + modeLabels[mode] + ' mode', 'success');
+    if (r.ok || r.status === 204) showToast('Cloud agent dispatch triggered', 'success');
     else r.text().then(function(t) { showToast('Failed: ' + t, 'error'); });
   }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
 }
