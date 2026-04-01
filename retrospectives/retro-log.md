@@ -118,3 +118,63 @@ Agent failed: budget exceeded. [TODO: describe what went wrong]
 
 **Upstream fix applied:**
 [TODO]
+
+### 2026-04-01 — Agent blocked: wave-1-frontend-keyboard-navigation-foundation.md
+
+**Signal:** status:blocked
+**Root Cause:** [TODO]
+**Task File:** queue/add-keyboard-shortcuts-for-task-navigation-and-actions/blocked/wave-1-frontend-keyboard-navigation-foundation.md
+
+**What happened:**
+Agent failed: exit 1. [TODO: describe what went wrong]
+
+**What would have prevented it:**
+[TODO]
+
+**Upstream fix applied:**
+[TODO]
+
+### 2026-04-01 — Agent blocked: wave-1-frontend-keyboard-navigation-foundation.md
+
+**Signal:** status:blocked
+**Root Cause:** [TODO]
+**Task File:** queue/add-keyboard-shortcuts-for-task-navigation-and-actions/blocked/wave-1-frontend-keyboard-navigation-foundation.md
+
+**What happened:**
+Agent failed: exit 1. [TODO: describe what went wrong]
+
+**What would have prevented it:**
+[TODO]
+
+**Upstream fix applied:**
+[TODO]
+
+### 2026-04-01 — Agent blocked: wave-1-frontend-keyboard-navigation-foundation.md
+
+**Signal:** status:blocked
+**Root Cause:** [TODO]
+**Task File:** queue/add-keyboard-shortcuts-for-task-navigation-and-actions/blocked/wave-1-frontend-keyboard-navigation-foundation.md
+
+**What happened:**
+Agent failed: exit 1. [TODO: describe what went wrong]
+
+**What would have prevented it:**
+[TODO]
+
+**Upstream fix applied:**
+[TODO]
+
+### 2026-04-01 — Agent blocked: wave-1-frontend-keyboard-navigation-foundation.md
+
+**Signal:** status:blocked
+**Root Cause:** [TODO]
+**Task File:** queue/add-keyboard-shortcuts-for-task-navigation-and-actions/blocked/wave-1-frontend-keyboard-navigation-foundation.md
+
+**What happened:**
+Agent failed: exit 1. [TODO: describe what went wrong]
+
+**What would have prevented it:**
+[TODO]
+
+**Upstream fix applied:**
+[TODO]
