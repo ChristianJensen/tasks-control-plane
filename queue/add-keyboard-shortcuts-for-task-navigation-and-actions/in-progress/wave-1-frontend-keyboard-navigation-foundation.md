@@ -1,12 +1,15 @@
 ---
 task-id: keyboard-navigation-foundation
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: add-keyboard-shortcuts-for-task-navigation-and-actions
 type: feature
+claimed-by: cloud-Christians-MacBook-Air-19485
+claimed-at: 2026-04-01T20:59:54Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
