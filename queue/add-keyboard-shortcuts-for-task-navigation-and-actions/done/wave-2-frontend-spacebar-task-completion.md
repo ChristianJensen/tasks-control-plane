@@ -1,6 +1,6 @@
 ---
 task-id: spacebar-task-completion
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -10,6 +10,10 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-70173
 claimed-at: 2026-04-01T21:53:05Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.7261606999999999
+input-tokens: 60
+output-tokens: 28362
+duration-ms: 698703
 ---
 
 ## Description
