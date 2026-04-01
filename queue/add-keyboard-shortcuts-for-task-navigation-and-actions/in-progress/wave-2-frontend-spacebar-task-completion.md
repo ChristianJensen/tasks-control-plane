@@ -1,12 +1,15 @@
 ---
 task-id: spacebar-task-completion
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
 priority: high
 feature: add-keyboard-shortcuts-for-task-navigation-and-actions
 type: feature
+claimed-by: cloud-Christians-MacBook-Air-70173
+claimed-at: 2026-04-01T21:53:05Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
