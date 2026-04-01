@@ -1,0 +1,35 @@
+%% System Architecture — replace placeholders with your actual system
+%% Render: paste into https://mermaid.live or view in any Mermaid-compatible viewer
+%% Keep this diagram updated when features change system boundaries.
+
+graph TB
+    subgraph Users
+        user["End User<br/><i>Browser / Mobile</i>"]
+    end
+
+    subgraph System ["Your System"]
+        frontend["Frontend<br/><i>React / Next.js / etc.</i>"]
+        api["API<br/><i>Express / FastAPI / etc.</i>"]
+        db[("Database<br/><i>PostgreSQL / etc.</i>")]
+    end
+
+    subgraph External ["External Services"]
+        auth["Auth Provider<br/><i>OAuth / SAML</i>"]
+        ext_api["Third-Party API<br/><i>Describe service</i>"]
+    end
+
+    user -->|HTTPS| frontend
+    frontend -->|REST / GraphQL| api
+    api -->|SQL| db
+    api -->|OAuth| auth
+    api -->|HTTP| ext_api
+
+    classDef system fill:#1a1a2e,stroke:#818cf8,color:#e8ecf4
+    classDef external fill:#0a0e27,stroke:#60a5fa,color:#94a3b8
+    classDef user fill:#0a0e27,stroke:#34d399,color:#e8ecf4
+    classDef db fill:#1a1a2e,stroke:#fbbf24,color:#e8ecf4
+
+    class frontend,api system
+    class auth,ext_api external
+    class user user
+    class db db

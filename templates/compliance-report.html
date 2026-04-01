@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ title }}</title>
+<link rel="stylesheet" href="compliance-report.css">
+</head>
+<body>
+
+<!-- ── Cover Page ─────────────────────────────────────────────── -->
+<section class="cover">
+  <div class="cover-content">
+    <h1 class="cover-title">Compliance Posture Report</h1>
+    <p class="cover-subtitle">SOC 2 &amp; ISO 27001</p>
+    <div class="cover-meta">
+      <p class="cover-app">{{ app_name }}</p>
+      <p class="cover-org">{{ organization }}</p>
+      <p>Report Period: {{ period_start }} &mdash; {{ period_end }}</p>
+      <p>Generated: {{ generated_at }}</p>
+      <p>Scope: {{ scope }}</p>
+    </div>
+    <div class="cover-badge">
+      <span class="score-ring" style="--pct: {{ overall_score_pct }}">
+        <span class="score-value">{{ overall_score_pct }}%</span>
+      </span>
+      <p class="score-label">Automated Controls Passing</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Executive Summary ──────────────────────────────────────── -->
+<section class="exec-summary" id="executive-summary">
+  <h2>Executive Summary</h2>
+  <p>
+    This report assesses the compliance posture of <strong>{{ app_name }}</strong>
+    ({{ organization }}) against SOC 2 Trust Service Criteria and ISO 27001:2022 Annex A controls.
+    It is generated from automated evidence collection and is intended for
+    internal readiness assessment, customer due diligence, and pre-audit preparation.
+  </p>
+
+  <div class="summary-cards">
+    <div class="card pass">
+      <span class="card-num">{{ counts.passed }}</span>
+      <span class="card-label">Passed</span>
+    </div>
+    <div class="card partial">
+      <span class="card-num">{{ counts.partial }}</span>
+      <span class="card-label">Partial</span>
+    </div>
+    <div class="card fail">
+      <span class="card-num">{{ counts.failed }}</span>
+      <span class="card-label">Failed</span>
+    </div>
+    <div class="card manual">
+      <span class="card-num">{{ counts.manual }}</span>
+      <span class="card-label">Manual Review</span>
+    </div>
+  </div>
+
+  <!-- Category breakdown bar -->
+  <h3>By Category</h3>
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Pass</th>
+        <th>Partial</th>
+        <th>Fail</th>
+        <th>Manual</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cat in categories %}
+      <tr>
+        <td>{{ cat.name }}</td>
+        <td class="num pass-text">{{ cat.passed }}</td>
+        <td class="num partial-text">{{ cat.partial }}</td>
+        <td class="num fail-text">{{ cat.failed }}</td>
+        <td class="num manual-text">{{ cat.manual }}</td>
+        <td class="num">
+          <span class="score-bar">
+            <span class="score-fill {{ cat.score_class }}" style="width: {{ cat.score_pct }}%"></span>
+          </span>
+          {{ cat.score_pct }}%
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- ── Change Traceability ────────────────────────────────────── -->
+<section class="traceability" id="change-traceability">
+  <h2>Change Traceability</h2>
+  <p>
+    Every production change is traceable in both directions: from business
+    requirement (feature spec) through planned work (task specs) to code
+    review (pull requests), and from any PR back to its originating spec
+    via SHA-pinned permalinks embedded in the PR description.
+  </p>
+  <div class="trace-legend">
+    <span class="trace-legend-item"><span class="check-icon pass">&#10003;</span> PR contains back-links to feature spec &amp; task file</span>
+  </div>
+
+  {% if features %}
+  {% for f in features %}
+  <div class="trace-feature">
+    <div class="trace-feature-header">
+      <strong>{{ f.name }}</strong>
+      <span class="muted">&nbsp;&mdash; {{ f.priority }} priority
+        {% if f.repos %} &middot; {{ f.repos | join(", ") }}{% endif %}
+      </span>
+      <span class="muted" style="margin-left: auto;">
+        {{ f.created_at or "?" }} &rarr; {{ f.completed_at or "ongoing" }}
+      </span>
+    </div>
+
+    <table class="trace-table">
+      <thead>
+        <tr>
+          <th>Task Spec</th>
+          <th>Repo</th>
+          <th>Wave</th>
+          <th>Status</th>
+          <th>PR</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in f.tasks %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td>{{ t.target_repo or "—" }}</td>
+          <td class="num">{{ t.wave or "—" }}</td>
+          <td><span class="badge badge-{{ t.status }}">{{ t.status }}</span></td>
+          <td>
+            {% if t.pr_url %}
+            <a href="{{ t.pr_url }}">#{{ t.pr_number }}</a> <span class="check-icon pass" title="PR links back to feature spec &amp; task">&#10003;</span>
+            {% else %}
+            <span class="muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="muted">No completed features found in this report period.</p>
+  {% endif %}
+</section>
+
+<!-- ── Controls ────────────────────────────────────────────────── -->
+<section class="controls-section" id="controls">
+  <h2>Controls Assessment</h2>
+  <p>
+    Each control is mapped to both SOC 2 Trust Service Criteria and
+    ISO 27001:2022 Annex A where applicable.
+  </p>
+
+  {% for cat_name, controls in all_by_category.items() %}
+  <h3>{{ cat_name }}</h3>
+  {% for ctrl in controls %}
+  <div class="control-card status-{{ ctrl.status }}">
+    <div class="control-header">
+      <span class="control-id">{{ ctrl.id }}</span>
+      <span class="control-title">{{ ctrl.title }}</span>
+      <span class="status-badge {{ ctrl.status }}">{{ ctrl.status_label }}</span>
+    </div>
+    <p class="control-desc">{{ ctrl.description }}</p>
+    {% if ctrl.iso27001_map %}
+    <p class="control-xref">ISO 27001: {{ ctrl.iso27001_map | join(", ") }}</p>
+    {% endif %}
+    {% if ctrl.soc2_map %}
+    <p class="control-xref">SOC 2: {{ ctrl.soc2_map | join(", ") }}</p>
+    {% endif %}
+    {% if ctrl.checks %}
+    <table class="evidence-table">
+      <thead><tr><th>Check</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        {% for chk in ctrl.checks %}
+        <tr>
+          <td>{{ chk.evidence_label }}</td>
+          <td><span class="check-icon {{ chk.status }}">{{ chk.icon }}</span></td>
+          <td class="evidence-detail">{{ chk.detail or "" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% endfor %}
+</section>
+
+<!-- ── Cross-Reference Matrix ─────────────────────────────────── -->
+<section id="cross-reference">
+  <h2>Cross-Reference Matrix</h2>
+  <p>Controls that satisfy both frameworks simultaneously.</p>
+  <table class="xref-table">
+    <thead>
+      <tr><th>Area</th><th>SOC 2</th><th>ISO 27001</th></tr>
+    </thead>
+    <tbody>
+      {% for xref in cross_references %}
+      <tr>
+        <td>{{ xref.area }}</td>
+        <td>{{ xref.soc2 }}</td>
+        <td>{{ xref.iso27001 | join(", ") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- ── Evidence Inventory ─────────────────────────────────────── -->
+<section id="evidence-inventory">
+  <h2>Evidence Inventory</h2>
+  <table class="inventory-table">
+    <thead>
+      <tr><th>#</th><th>Source</th><th>Type</th><th>Description</th><th>Collected</th></tr>
+    </thead>
+    <tbody>
+      {% for ev in evidence_inventory %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ ev.source }}</td>
+        <td>{{ ev.type }}</td>
+        <td>{{ ev.description }}</td>
+        <td>{{ ev.collected_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- ── Gap Analysis ───────────────────────────────────────────── -->
+<section id="gap-analysis">
+  <h2>Gap Analysis</h2>
+  {% if gaps %}
+  <table class="gap-table">
+    <thead>
+      <tr><th>Control</th><th>Framework</th><th>Issue</th><th>Remediation</th></tr>
+    </thead>
+    <tbody>
+      {% for gap in gaps %}
+      <tr>
+        <td><strong>{{ gap.id }}</strong></td>
+        <td>{{ gap.framework }}</td>
+        <td>{{ gap.issue }}</td>
+        <td>{{ gap.remediation }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="pass-text">No gaps identified. All automated controls are passing.</p>
+  {% endif %}
+</section>
+
+</body>
+</html>

@@ -1,0 +1,354 @@
+/* Compliance Report — Print Stylesheet for WeasyPrint */
+
+/* ── Page Setup ───────────────────────────────────────────────── */
+@page {
+  size: A4;
+  margin: 20mm 18mm 25mm 18mm;
+
+  @bottom-center {
+    content: "Confidential — " attr(data-org);
+    font-size: 8pt;
+    color: #999;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-size: 8pt;
+    color: #999;
+  }
+}
+
+@page :first {
+  margin: 0;
+  @bottom-center { content: none; }
+  @bottom-right { content: none; }
+}
+
+/* ── Base ─────────────────────────────────────────────────────── */
+:root {
+  --pass: #16a34a;
+  --partial: #d97706;
+  --fail: #dc2626;
+  --manual: #6366f1;
+  --muted: #94a3b8;
+  --border: #e2e8f0;
+  --bg-light: #f8fafc;
+  --text: #1e293b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+h2 {
+  font-size: 16pt;
+  color: #0f172a;
+  border-bottom: 2px solid var(--text);
+  padding-bottom: 4pt;
+  margin-top: 24pt;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-size: 12pt;
+  color: #334155;
+  margin-top: 16pt;
+  page-break-after: avoid;
+}
+
+a { color: #2563eb; text-decoration: none; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 9pt; background: #f1f5f9; padding: 1pt 3pt; border-radius: 2pt; }
+
+/* ── Cover Page ───────────────────────────────────────────────── */
+.cover {
+  page-break-after: always;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  color: white;
+  text-align: center;
+}
+
+.cover-title {
+  font-size: 32pt;
+  font-weight: 700;
+  margin: 0 0 4pt;
+  letter-spacing: -0.5pt;
+}
+
+.cover-subtitle {
+  font-size: 16pt;
+  font-weight: 300;
+  opacity: 0.85;
+  margin: 0 0 32pt;
+}
+
+.cover-app {
+  font-size: 18pt;
+  font-weight: 700;
+  margin: 0 0 4pt;
+}
+
+.cover-org {
+  font-size: 12pt;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.cover-meta {
+  font-size: 10pt;
+  opacity: 0.8;
+  margin-bottom: 32pt;
+}
+
+.cover-meta p { margin: 4pt 0; }
+
+.cover-badge {
+  margin-top: 24pt;
+}
+
+.score-ring {
+  display: inline-block;
+  width: 90pt;
+  height: 90pt;
+  border-radius: 50%;
+  border: 6pt solid rgba(255,255,255,0.2);
+  border-top-color: white;
+  line-height: 78pt;
+  text-align: center;
+}
+
+.score-value {
+  font-size: 24pt;
+  font-weight: 700;
+}
+
+.score-label {
+  font-size: 9pt;
+  opacity: 0.7;
+  margin-top: 8pt;
+}
+
+/* ── Executive Summary ────────────────────────────────────────── */
+.exec-summary { page-break-after: always; }
+
+.summary-cards {
+  display: flex;
+  gap: 12pt;
+  margin: 16pt 0;
+}
+
+.card {
+  flex: 1;
+  border: 1pt solid var(--border);
+  border-radius: 6pt;
+  padding: 12pt;
+  text-align: center;
+}
+
+.card-num { font-size: 24pt; font-weight: 700; display: block; }
+.card-label { font-size: 9pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5pt; }
+
+.card.pass { border-left: 4pt solid var(--pass); }
+.card.pass .card-num { color: var(--pass); }
+.card.partial { border-left: 4pt solid var(--partial); }
+.card.partial .card-num { color: var(--partial); }
+.card.fail { border-left: 4pt solid var(--fail); }
+.card.fail .card-num { color: var(--fail); }
+.card.manual { border-left: 4pt solid var(--manual); }
+.card.manual .card-num { color: var(--manual); }
+
+/* ── Tables ───────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0 16pt;
+  font-size: 9pt;
+}
+
+th {
+  background: var(--bg-light);
+  font-weight: 600;
+  text-align: left;
+  padding: 6pt 8pt;
+  border-bottom: 2pt solid var(--border);
+}
+
+td {
+  padding: 5pt 8pt;
+  border-bottom: 1pt solid var(--border);
+  vertical-align: top;
+}
+
+.num { text-align: center; }
+
+.summary-table { margin-top: 12pt; }
+
+/* Score bar */
+.score-bar {
+  display: inline-block;
+  width: 60pt;
+  height: 8pt;
+  background: #e2e8f0;
+  border-radius: 4pt;
+  overflow: hidden;
+  vertical-align: middle;
+  margin-right: 4pt;
+}
+
+.score-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4pt;
+}
+
+.score-fill.high { background: var(--pass); }
+.score-fill.medium { background: var(--partial); }
+.score-fill.low { background: var(--fail); }
+
+/* ── Control Cards ────────────────────────────────────────────── */
+.control-card {
+  border: 1pt solid var(--border);
+  border-radius: 6pt;
+  padding: 10pt 12pt;
+  margin: 8pt 0;
+  page-break-inside: avoid;
+}
+
+.control-card.status-pass { border-left: 4pt solid var(--pass); }
+.control-card.status-partial { border-left: 4pt solid var(--partial); }
+.control-card.status-fail { border-left: 4pt solid var(--fail); }
+.control-card.status-manual { border-left: 4pt solid var(--manual); }
+
+.control-header {
+  display: flex;
+  align-items: center;
+  gap: 8pt;
+  margin-bottom: 4pt;
+}
+
+.control-id {
+  font-weight: 700;
+  font-size: 10pt;
+  color: #475569;
+  min-width: 60pt;
+}
+
+.control-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.control-desc {
+  font-size: 9pt;
+  color: #64748b;
+  margin: 2pt 0 6pt;
+}
+
+.control-xref {
+  font-size: 8pt;
+  color: var(--muted);
+  margin: 0 0 6pt;
+}
+
+/* Status badges */
+.status-badge {
+  font-size: 8pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5pt;
+  padding: 2pt 8pt;
+  border-radius: 10pt;
+  white-space: nowrap;
+}
+
+.status-badge.pass { background: #dcfce7; color: var(--pass); }
+.status-badge.partial { background: #fef3c7; color: var(--partial); }
+.status-badge.fail { background: #fee2e2; color: var(--fail); }
+.status-badge.manual { background: #e0e7ff; color: var(--manual); }
+
+/* Evidence table within control cards */
+.evidence-table { font-size: 8.5pt; margin: 4pt 0 0; }
+.evidence-table th { font-size: 8pt; padding: 3pt 6pt; }
+.evidence-table td { padding: 3pt 6pt; }
+
+.evidence-detail {
+  color: #64748b;
+  max-width: 200pt;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.check-icon {
+  font-weight: 700;
+  font-size: 11pt;
+}
+
+.check-icon.pass { color: var(--pass); }
+.check-icon.fail { color: var(--fail); }
+.check-icon.partial { color: var(--partial); }
+
+.manual-note {
+  font-size: 9pt;
+  color: var(--manual);
+  font-style: italic;
+  margin: 6pt 0 0;
+  padding: 6pt;
+  background: #f5f3ff;
+  border-radius: 4pt;
+}
+
+/* ── Traceability ─────────────────────────────────────────────── */
+.traceability { page-break-after: always; }
+
+.trace-legend { margin: 8pt 0 12pt; font-size: 9pt; color: var(--muted); }
+.trace-legend-item { display: inline-flex; align-items: center; gap: 4pt; }
+
+.trace-feature {
+  border: 1pt solid var(--border);
+  border-radius: 6pt;
+  margin: 10pt 0;
+  page-break-inside: avoid;
+}
+
+.trace-feature-header {
+  display: flex;
+  align-items: baseline;
+  padding: 8pt 10pt 4pt;
+  border-bottom: 1pt solid var(--border);
+  font-size: 10pt;
+}
+
+.trace-table { margin: 0; }
+.trace-table td { font-size: 9pt; }
+.trace-table small { font-size: 8pt; }
+
+.badge {
+  font-size: 8pt;
+  padding: 1pt 6pt;
+  border-radius: 8pt;
+  font-weight: 600;
+}
+
+.badge-done { background: #dcfce7; color: var(--pass); }
+.badge-in-progress { background: #dbeafe; color: #1d4ed8; }
+.badge-ready { background: #fef3c7; color: #92400e; }
+.badge-pending { background: #f1f5f9; color: #64748b; }
+.badge-blocked { background: #fee2e2; color: var(--fail); }
+
+/* ── Gap Analysis ─────────────────────────────────────────────── */
+.gap-table td:nth-child(3) { color: var(--fail); }
+.gap-table td:nth-child(4) { color: #475569; font-style: italic; }
+
+/* ── Utilities ────────────────────────────────────────────────── */
+.muted { color: var(--muted); }
+.pass-text { color: var(--pass); }
+.partial-text { color: var(--partial); }
+.fail-text { color: var(--fail); }
+.manual-text { color: var(--manual); }

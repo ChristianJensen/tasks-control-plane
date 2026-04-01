@@ -1,0 +1,153 @@
+# Compliance Control Definitions — v1
+# Focused on Change Management and Secure Development — the areas
+# where Relay provides strong automated evidence.
+
+controls:
+
+  # ── Change Management ──────────────────────────────────────────
+
+  - id: CC8.1
+    framework: soc2
+    category: Change Management
+    title: "Authorization and management of system changes"
+    description: >
+      Changes to infrastructure and software are authorized, designed,
+      developed, configured, documented, tested, approved, and implemented.
+    iso27001_map: ["A.8.32", "A.8.25"]
+    severity: high
+    checks:
+      - name: branch_protection_enabled
+        collector: github_api
+        evidence_label: "Main branch has protection rules requiring PR reviews"
+      - name: ci_workflows_exist
+        collector: filesystem
+        path_glob: "process/workflows/*.yml"
+        evidence_label: "CI/CD workflow definitions present"
+      - name: prs_have_approvals
+        collector: github_api
+        evidence_label: "Recent merged PRs have at least one approval"
+      - name: changes_traceable_to_features
+        collector: relay_queue
+        evidence_label: "Completed tasks link back to feature specs via queue"
+      - name: prs_backlink_to_specs
+        collector: relay_queue
+        evidence_label: "PRs contain SHA-pinned back-links to feature specs and task files"
+
+  - id: CC5.1
+    framework: soc2
+    category: Change Management
+    title: "Work is planned and tracked before execution"
+    description: >
+      The entity selects and develops control activities that contribute
+      to the mitigation of risks to the achievement of objectives.
+      Work is authorized via feature specs before task execution begins.
+    iso27001_map: ["A.8.25"]
+    severity: high
+    checks:
+      - name: feature_specs_precede_work
+        collector: relay_features
+        evidence_label: "Feature specs exist in features/ before tasks are queued"
+      - name: work_assigned_and_tracked
+        collector: relay_queue
+        evidence_label: "Tasks have assignment tracking (claimed-by and claimed-at)"
+
+  - id: CC8.1-REVIEW
+    framework: soc2
+    category: Change Management
+    title: "Peer review of changes before deployment"
+    description: >
+      Changes are reviewed by someone other than the author before being
+      merged to production branches.
+    iso27001_map: ["A.8.25", "A.8.28"]
+    severity: high
+    checks:
+      - name: prs_have_reviews
+        collector: github_api
+        evidence_label: "Recent merged PRs have review comments or approvals"
+      - name: git_audit_trail
+        collector: git
+        evidence_label: "Git provides immutable audit trail (author, timestamp, message)"
+
+  # ── Secure Development ─────────────────────────────────────────
+
+  - id: A.8.25
+    framework: iso27001
+    category: Secure Development
+    title: "Secure development life cycle"
+    description: >
+      Rules for the secure development of software and systems shall be
+      established and applied.
+    soc2_map: ["CC8.1"]
+    severity: high
+    checks:
+      - name: sdlc_process_defined
+        collector: filesystem
+        path_glob: "process/relay.md"
+        evidence_label: "SDLC methodology documented in relay.md"
+      - name: testing_rules_defined
+        collector: filesystem
+        path_glob: "process/rules/testing.md"
+        evidence_label: "Testing rules and standards documented"
+      - name: api_design_rules_defined
+        collector: filesystem
+        path_glob: "process/rules/api-design.md"
+        evidence_label: "API design standards documented"
+
+  - id: A.8.26
+    framework: iso27001
+    category: Secure Development
+    title: "Application security requirements"
+    description: >
+      Information security requirements shall be identified, specified and
+      approved when developing or acquiring applications.
+    soc2_map: ["CC8.1"]
+    severity: medium
+    checks:
+      - name: contract_validation_ci
+        collector: filesystem
+        path_glob: "process/workflows/validate-contracts.yml"
+        evidence_label: "Contract validation runs in CI pipeline"
+
+  - id: A.8.28
+    framework: iso27001
+    category: Secure Development
+    title: "Secure coding"
+    description: >
+      Secure coding principles shall be applied to software development.
+    soc2_map: ["CC8.1"]
+    severity: high
+    checks:
+      - name: security_rules_defined
+        collector: filesystem
+        path_glob: "process/rules/security.md"
+        evidence_label: "Security coding rules documented (OWASP, input validation, auth)"
+
+  - id: A.8.29
+    framework: iso27001
+    category: Secure Development
+    title: "Security testing in development and acceptance"
+    description: >
+      Security testing processes shall be defined and implemented.
+    soc2_map: ["CC8.1"]
+    severity: medium
+    checks:
+      - name: testing_rules_defined
+        collector: filesystem
+        path_glob: "process/rules/testing.md"
+        evidence_label: "Testing requirements including security testing documented"
+      - name: ci_workflows_exist
+        collector: filesystem
+        path_glob: "process/workflows/*.yml"
+        evidence_label: "CI pipelines run automated tests"
+
+# Cross-reference — only the areas we cover
+cross_references:
+  - soc2: CC8.1
+    iso27001: [A.8.32, A.8.25, A.8.28, A.8.29]
+    area: Change Management & Secure Development
+  - soc2: CC5.1
+    iso27001: [A.8.25]
+    area: Work Authorization & Planning
+  - soc2: CC8.1-REVIEW
+    iso27001: [A.8.25, A.8.28]
+    area: Code Review & Audit Trail

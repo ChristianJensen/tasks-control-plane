@@ -4,9 +4,14 @@ on:
     branches: [main]
     paths: ['queue/**']
   workflow_dispatch: {}
+
 jobs:
   dispatch:
-    uses: ChristianJensen/Relay/.github/workflows/dispatch-agents.yml@main
-    with:
-      relay_nwo: ChristianJensen/tasks-control-plane
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan queue and dispatch agents
+        env:
+          GH_TOKEN: ${{ secrets.DISPATCH_PAT }}
+        run: python3 scripts/dispatch-agents.py --cp-dir "$GITHUB_WORKSPACE"
