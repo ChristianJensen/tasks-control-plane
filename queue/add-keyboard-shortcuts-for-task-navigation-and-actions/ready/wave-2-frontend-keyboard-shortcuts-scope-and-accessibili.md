@@ -1,15 +1,12 @@
 ---
 task-id: keyboard-shortcuts-scope-and-accessibili
-status: in-progress
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 2
 priority: medium
 feature: add-keyboard-shortcuts-for-task-navigation-and-actions
 type: feature
-claimed-by: cloud-Christians-MacBook-Air-86328
-claimed-at: 2026-04-01T23:25:54Z
-claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
