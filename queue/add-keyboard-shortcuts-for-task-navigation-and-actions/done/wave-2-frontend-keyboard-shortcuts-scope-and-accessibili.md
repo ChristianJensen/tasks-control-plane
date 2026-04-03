@@ -1,6 +1,6 @@
 ---
 task-id: keyboard-shortcuts-scope-and-accessibili
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -10,6 +10,12 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-19256
 claimed-at: 2026-04-03T10:13:31Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 2.6780163
+input-tokens: 70
+output-tokens: 52408
+duration-ms: 1081840
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/87
+pr-number: 87
 ---
 
 ## Description
