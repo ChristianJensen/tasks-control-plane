@@ -223,3 +223,18 @@ Agent failed: exit 124. [TODO: describe what went wrong]
 
 **Upstream fix applied:**
 [TODO]
+
+### 2026-04-03 — Agent blocked: wave-1-frontend-accessibility-enhancements.md
+
+**Signal:** status:blocked
+**Root Cause:** [TODO]
+**Task File:** queue/space-bar-task-completion/blocked/wave-1-frontend-accessibility-enhancements.md
+
+**What happened:**
+Agent failed: exit 127. [TODO: describe what went wrong]
+
+**What would have prevented it:**
+[TODO]
+
+**Upstream fix applied:**
+[TODO]
