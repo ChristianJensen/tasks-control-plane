@@ -442,6 +442,61 @@ function collectBugFiles(cpDir) {
   return results;
 }
 
+// ── Exit code classification ───────────────────────────────────
+
+const EXIT_CODE_MAP = {
+  1:   { cat: "general-error",     desc: "General script error",        action: "Inspect handoff; check agent environment" },
+  2:   { cat: "misuse",            desc: "Shell builtin misuse",        action: "Check task instructions for syntax issues" },
+  99:  { cat: "budget-exceeded",   desc: "Agent exceeded cost budget",  action: "Increase budget or simplify task" },
+  124: { cat: "timeout",           desc: "Agent timed out",             action: "Increase timeout or split task" },
+  126: { cat: "permission-denied", desc: "Command not executable",      action: "Check file permissions" },
+  127: { cat: "command-not-found", desc: "Missing command or tool",     action: "Install missing tool or fix PATH" },
+  130: { cat: "interrupted",       desc: "Agent interrupted (Ctrl-C)",  action: "Retry — likely transient" },
+  137: { cat: "killed",            desc: "Agent killed (OOM)",          action: "Check memory limits" },
+};
+
+function classifyExit(code) {
+  return EXIT_CODE_MAP[code] || { cat: "unknown", desc: `Unexpected exit ${code}`, action: "Inspect handoff and agent logs" };
+}
+
+// ── Handoff collection ─────────────────────────────────────────
+
+function collectHandoffFiles(cpDir) {
+  const handoffMap = {};
+  const handoffsDir = join(cpDir, "handoffs");
+  if (!existsSync(handoffsDir)) return handoffMap;
+  for (const feature of listFiles(handoffsDir)) {
+    const featureDir = join(handoffsDir, feature);
+    if (!statSync(featureDir).isDirectory()) continue;
+    for (const file of listFiles(featureDir)) {
+      if (!file.endsWith("-handoff.md")) continue;
+      try {
+        const content = readFileSync(join(featureDir, file), "utf8");
+        const { fields, body } = parseFrontmatter(content);
+        // Extract exit code from session summary line
+        const exitMatch = body.match(/\*\*Exit:\*\*\s*(\d+)/);
+        const exitCode = exitMatch ? Number(exitMatch[1]) : null;
+        // Extract "What Was Done" commits
+        const commitsMatch = body.match(/## What Was Done\s*\n([\s\S]*?)(?=\n##|\n*$)/);
+        const commits = commitsMatch ? commitsMatch[1].trim() : "";
+        // Extract "Files Changed"
+        const filesMatch = body.match(/## Files Changed\s*\n([\s\S]*?)(?=\n##|\n*$)/);
+        const filesChanged = filesMatch ? filesMatch[1].trim() : "";
+        // Derive task filename from handoff filename
+        const taskFilename = file.replace(/-handoff\.md$/, ".md");
+        const key = `${feature}/${taskFilename}`;
+        const classified = exitCode !== null ? classifyExit(exitCode) : null;
+        handoffMap[key] = {
+          exitCode, category: classified?.cat || "", description: classified?.desc || "",
+          action: classified?.action || "", commits, filesChanged,
+          agent: fields.agent || "", timestamp: fields.timestamp || "",
+        };
+      } catch { /* skip malformed handoff */ }
+    }
+  }
+  return handoffMap;
+}
+
 // ── PR matching ─────────────────────────────────────────────────
 
 function matchPRsToFeatures(prData) {
@@ -904,7 +959,7 @@ function renderCSS_Kanban() {
 .dp-task-chevron { font-size: 10px; color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
 .dp-task.expanded .dp-task-chevron { transform: rotate(90deg); }
 .dp-task-expand { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-.dp-task.expanded .dp-task-expand { max-height: 300px; }
+.dp-task.expanded .dp-task-expand { max-height: 500px; }
 .dp-task-detail { padding: 0 12px 12px 30px; font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
 .dp-task-detail-row { display: flex; gap: 8px; margin-top: 6px; }
 .dp-task-detail-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; min-width: 50px; }
@@ -921,6 +976,19 @@ function renderCSS_Kanban() {
 .dp-task-pr-btn.awaiting-review { border-color: var(--amber); color: var(--amber); animation: pulse-review 2s ease-in-out infinite; }
 .dp-task-pr-btn.awaiting-review:hover { background: var(--amber); color: var(--bg); }
 @keyframes pulse-review { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+.blocked-diag { background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 12px; margin-top: 10px; }
+.blocked-diag-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.blocked-diag-cat { font-size: 12px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 0.5px; }
+.blocked-diag-exit { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 1px 6px; border-radius: 4px; }
+.blocked-diag-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.blocked-diag-action { font-size: 12px; color: var(--amber); margin-top: 6px; }
+.blocked-diag-commits { font-size: 11px; color: var(--text-muted); margin-top: 6px; font-family: var(--font-mono); }
+.blocked-diag-buttons { display: flex; gap: 8px; margin-top: 10px; }
+.blocked-btn-reset, .blocked-btn-triage { font-size: 11px; font-weight: 600; padding: 5px 14px; border-radius: 6px; border: 1px solid; cursor: pointer; font-family: var(--font-body); transition: var(--transition); }
+.blocked-btn-reset { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.3); color: var(--red); }
+.blocked-btn-reset:hover { background: rgba(248,113,113,0.2); border-color: rgba(248,113,113,0.5); }
+.blocked-btn-triage { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--amber); }
+.blocked-btn-triage:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.5); }
 .cost-row { display: flex; align-items: center; gap: 16px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); }
 .cost-item { display: flex; align-items: center; gap: 6px; }
 .cost-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
@@ -1194,13 +1262,19 @@ function buildFeaturesJSON(features, prsByFeature, linkContext) {
       cost: f.cost && f.cost.usd > 0 ? { usd: f.cost.usd, tokens: f.cost.tokens } : null,
       bugDigest: f.bugDigest || null, severity: f.severity || null,
       prs: prs.map(p => ({ number: p.number, title: p.title, url: p.url })),
-      taskList: sorted.map(t => ({
-        name: t.title || t.filename.replace(".md", ""), status: t.status,
-        wave: t.wave || 0, repo: t.repo || "", priority: t.priority || "normal",
-        desc: t.description || "", relPath: t.relPath || "", sha: t.sha || "",
-        claimed_by: t.claimed_by || "", claimed_at: t.claimed_at || "",
-        pr_url: t.pr_url || "", pr_number: t.pr_number || "",
-      })),
+      taskList: sorted.map(t => {
+        const handoffKey = `${f.slug}/${t.filename}`;
+        const handoff = t.status === "blocked" ? (handoffMap[handoffKey] || null) : null;
+        return {
+          name: t.title || t.filename.replace(".md", ""), status: t.status,
+          filename: t.filename || "",
+          wave: t.wave || 0, repo: t.repo || "", priority: t.priority || "normal",
+          desc: t.description || "", relPath: t.relPath || "", sha: t.sha || "",
+          claimed_by: t.claimed_by || "", claimed_at: t.claimed_at || "",
+          pr_url: t.pr_url || "", pr_number: t.pr_number || "",
+          handoff: handoff,
+        };
+      }),
     };
   });
 }
@@ -1292,7 +1366,39 @@ function openDetail(slug) {
         var tLink = tUrl ? '<a href="'+tUrl+'" target="_blank" rel="noopener" class="dp-task-spec-link" onclick="event.stopPropagation()">'+fileIcon+' spec '+extIcon+'</a>' : '';
         var prBtn = t.pr_url ? '<a href="'+t.pr_url+'" target="_blank" rel="noopener" class="dp-task-pr-btn'+(t.status==='in-progress'?' awaiting-review':'')+'" onclick="event.stopPropagation()" title="'+(t.status==='in-progress'?'Awaiting review':'View PR')+'">PR #'+t.pr_number+'</a>' : '';
         var workerHtml = t.claimed_by ? '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Worker</span><span class="dp-task-detail-value"><span class="worker-name">'+t.claimed_by.replace(/^agent-/,'').replace(/^cloud-/,'cloud: ')+'</span></span></div>' : '';
-        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div>'+prBtn+'<div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+workerHtml+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+'</div></div></div>';
+        var blockedDiagHtml = '';
+        if (t.status === 'blocked' && t.handoff) {
+          var h = t.handoff;
+          var taskStem = (t.filename || '').replace(/\\.md$/, '');
+          blockedDiagHtml = '<div class="blocked-diag">' +
+            '<div class="blocked-diag-header">' +
+              '<svg width="14" height="14" viewBox="0 0 16 16" fill="var(--red)"><path d="M8.982 1.566a1.13 1.13 0 00-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 01-1.1 0L7.1 5.995A.905.905 0 018 5zm.002 6a1 1 0 110 2 1 1 0 010-2z"/></svg>' +
+              '<span class="blocked-diag-cat">'+(h.category||'unknown')+'</span>' +
+              '<span class="blocked-diag-exit">exit '+(h.exitCode||'?')+'</span>' +
+            '</div>' +
+            '<div class="blocked-diag-desc">'+(h.description||'')+'</div>' +
+            '<div class="blocked-diag-action"><strong>Suggested:</strong> '+(h.action||'Inspect logs')+'</div>' +
+            (h.commits && h.commits !== '(no commits)' ? '<div class="blocked-diag-commits"><span class="dp-task-detail-label">Last activity</span> '+h.commits.split('\\n')[0]+'</div>' : '') +
+            '<div class="blocked-diag-buttons">' +
+              '<button class="blocked-btn-reset" onclick="event.stopPropagation();resetTask(\\''+f.slug+'\\',\\''+taskStem+'\\')">Reset Task</button>' +
+              '<button class="blocked-btn-triage" onclick="event.stopPropagation();triageFeature(\\''+f.slug+'\\')">Triage Feature</button>' +
+            '</div>' +
+          '</div>';
+        } else if (t.status === 'blocked' && !t.handoff) {
+          var taskStem2 = (t.filename || '').replace(/\\.md$/, '');
+          blockedDiagHtml = '<div class="blocked-diag">' +
+            '<div class="blocked-diag-header">' +
+              '<svg width="14" height="14" viewBox="0 0 16 16" fill="var(--red)"><path d="M8.982 1.566a1.13 1.13 0 00-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 01-1.1 0L7.1 5.995A.905.905 0 018 5zm.002 6a1 1 0 110 2 1 1 0 010-2z"/></svg>' +
+              '<span class="blocked-diag-cat">blocked</span>' +
+            '</div>' +
+            '<div class="blocked-diag-desc">No handoff data available. Run triage for details.</div>' +
+            '<div class="blocked-diag-buttons">' +
+              '<button class="blocked-btn-reset" onclick="event.stopPropagation();resetTask(\\''+f.slug+'\\',\\''+taskStem2+'\\')">Reset Task</button>' +
+              '<button class="blocked-btn-triage" onclick="event.stopPropagation();triageFeature(\\''+f.slug+'\\')">Triage Feature</button>' +
+            '</div>' +
+          '</div>';
+        }
+        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div>'+prBtn+'<div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+workerHtml+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+blockedDiagHtml+'</div></div></div>';
       }).join('') + '</div></div>';
   }
 
@@ -1395,6 +1501,53 @@ function dispatchAgent(slug, mode, target, agents) {
     if (r.ok || r.status === 204) showToast('Cloud agent dispatch triggered', 'success');
     else r.text().then(function(t) { showToast('Failed: ' + t, 'error'); });
   }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+}
+
+// ── Task Reset & Triage ──
+function resetTask(feature, task) {
+  showToast('Resetting task...', 'info');
+  fetch('http://localhost:7433/api/task/reset', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ feature: feature, task: task })
+  }).then(function(r) {
+    return r.json().then(function(d) {
+      if (r.ok) {
+        showToast('Task reset to ready — refreshing...', 'success');
+        setTimeout(function() { location.reload(); }, 1500);
+      } else {
+        showToast('Reset failed: ' + (d.error || 'unknown'), 'error');
+      }
+    });
+  }).catch(function() {
+    navigator.clipboard.writeText('relay reset ' + feature + ' --task ' + task).then(function() {
+      showToast('Server offline — command copied to clipboard', 'warn');
+    }).catch(function() {
+      showToast('Server offline. Run: relay reset ' + feature + ' --task ' + task, 'error');
+    });
+  });
+}
+
+function triageFeature(feature) {
+  showToast('Running triage...', 'info');
+  fetch('http://localhost:7433/api/task/triage', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ feature: feature })
+  }).then(function(r) {
+    return r.json().then(function(d) {
+      if (r.ok) {
+        var count = (d.tasks || []).length;
+        showToast('Triage complete: ' + count + ' blocked task(s). Check terminal for details.', 'success');
+      } else {
+        showToast('Triage failed: ' + (d.error || 'unknown'), 'error');
+      }
+    });
+  }).catch(function() {
+    navigator.clipboard.writeText('relay triage ' + feature).then(function() {
+      showToast('Server offline — command copied to clipboard', 'warn');
+    }).catch(function() {
+      showToast('Server offline. Run: relay triage ' + feature, 'error');
+    });
+  });
 }
 
 // ── Compliance Report ──
@@ -1743,6 +1896,7 @@ const archivedTaskFiles = collectArchivedTaskFiles(cpDir);
 console.log(`  Features: ${featureFiles.length}, Bugs: ${bugFiles.length}`);
 console.log(`  Active tasks: ${activeTaskFiles.length}, Archived: ${archivedTaskFiles.length}`);
 
+const handoffMap = collectHandoffFiles(cpDir);
 const boardState = buildBoardState({ featureFiles, bugFiles, activeTaskFiles, archivedTaskFiles });
 
 // Link context from environment (GitHub Actions provides GITHUB_* automatically)
