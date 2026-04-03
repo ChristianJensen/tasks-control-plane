@@ -1360,6 +1360,7 @@ function toggleChip(chip) {
 
 // ── Toast ──
 function showToast(msg, type) {
+  document.querySelectorAll('.toast').forEach(function(el) { el.remove(); });
   var t = document.createElement('div');
   t.className = 'toast toast-' + (type || 'info');
   t.textContent = msg;
