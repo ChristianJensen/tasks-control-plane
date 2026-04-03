@@ -1,4 +1,4 @@
-# Status Page — generates a self-contained HTML dashboard and deploys to GitHub Pages.
+# Command Center — generates a self-contained HTML dashboard and deploys to GitHub Pages.
 #
 # This is a standalone workflow copied into each control plane at bootstrap.
 # No cross-repo dependencies — the generator script is also copied locally.
@@ -6,7 +6,7 @@
 # Prerequisites:
 #   In the control plane repo: Settings > Pages > Source > "GitHub Actions"
 
-name: Status Page
+name: Command Center
 
 on:
   push:
@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    name: Build & Deploy Status Page
+    name: Build & Deploy Command Center
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -42,7 +42,7 @@ jobs:
       - name: Generate status page
         env:
           JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
-        run: node .github/scripts/generate-status-page.mjs --cp-dir . --pr-data pr-data.json --output status-page/index.html
+        run: node .github/scripts/generate-command-center.mjs --cp-dir . --pr-data pr-data.json --output command-center/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -50,7 +50,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: status-page
+          path: command-center
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * generate-status-page.mjs — Self-contained static HTML status dashboard generator.
+ * generate-command-center.mjs — Self-contained static HTML status dashboard generator.
  *
  * Reads a control plane's features/, queue/, and optional PR data,
  * then generates a self-contained HTML page suitable for GitHub Pages.
@@ -8,7 +8,7 @@
  * Zero external dependencies — all aggregation logic is inlined.
  *
  * Usage:
- *   node generate-status-page.mjs --cp-dir <path> [--pr-data <path>] [--output <path>] [--title <string>]
+ *   node generate-command-center.mjs --cp-dir <path> [--pr-data <path>] [--output <path>] [--title <string>]
  */
 
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from "node:fs";
@@ -320,7 +320,7 @@ function parseRelayConfig(cpDir) {
   if (!existsSync(configPath)) return config;
   const content = readFileSync(configPath, "utf8");
   for (const line of content.split("\n")) {
-    const m = line.match(/^(status-page-\S+):\s*(.+)/);
+    const m = line.match(/^((?:status-page|command-center)-\S+):\s*(.+)/);
     if (m) config[m[1]] = m[2].trim();
   }
   return config;
@@ -329,7 +329,7 @@ function parseRelayConfig(cpDir) {
 // ── CLI args ────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { cpDir: ".", output: "status-page/index.html", prData: null, title: null };
+  const args = { cpDir: ".", output: "command-center/index.html", prData: null, title: null };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case "--cp-dir": args.cpDir = argv[++i]; break;
@@ -337,7 +337,7 @@ function parseArgs(argv) {
       case "--pr-data": args.prData = argv[++i]; break;
       case "--title": args.title = argv[++i]; break;
       case "--help":
-        console.log("Usage: node generate-status-page.mjs --cp-dir <path> [--pr-data <path>] [--output <path>] [--title <string>]");
+        console.log("Usage: node generate-command-center.mjs --cp-dir <path> [--pr-data <path>] [--output <path>] [--title <string>]");
         process.exit(0);
     }
   }
@@ -1727,10 +1727,10 @@ const cpDir = resolve(args.cpDir);
 const relayConfig = parseRelayConfig(cpDir);
 
 // CLI args override config, config overrides defaults
-const title = args.title || relayConfig["status-page-title"] || "Task Tracker - Delivery Report";
+const title = args.title || relayConfig["command-center-title"] || relayConfig["status-page-title"] || "Command Center";
 const branding = {
-  logo: relayConfig["status-page-logo"] || "R",
-  footer: relayConfig["status-page-footer"] || "",
+  logo: relayConfig["command-center-logo"] || relayConfig["status-page-logo"] || "R",
+  footer: relayConfig["command-center-footer"] || relayConfig["status-page-footer"] || "",
 };
 
 console.log(`Generating status page from: ${cpDir}`);
