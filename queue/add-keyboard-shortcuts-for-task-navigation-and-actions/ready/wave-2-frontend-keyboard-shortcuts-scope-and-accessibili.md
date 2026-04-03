@@ -1,6 +1,6 @@
 ---
 task-id: keyboard-shortcuts-scope-and-accessibili
-status: blocked
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 2
