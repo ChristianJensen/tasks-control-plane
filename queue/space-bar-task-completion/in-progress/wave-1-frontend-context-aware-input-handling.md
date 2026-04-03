@@ -1,12 +1,15 @@
 ---
 task-id: context-aware-input-handling
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: medium
 feature: space-bar-task-completion
 type: feature
+claimed-by: cloud-Christians-MacBook-Air-8686
+claimed-at: 2026-04-03T11:58:26Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
