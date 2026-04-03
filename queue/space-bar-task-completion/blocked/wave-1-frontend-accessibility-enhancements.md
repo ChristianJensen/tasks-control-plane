@@ -1,6 +1,6 @@
 ---
 task-id: accessibility-enhancements
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
