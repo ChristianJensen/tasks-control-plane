@@ -1,5 +1,5 @@
 ---
-lifecycle: draft
+lifecycle: active
 execution: autonomous
 model: ""
 priority: medium
