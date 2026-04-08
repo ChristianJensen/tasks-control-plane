@@ -1,0 +1,88 @@
+---
+task: wave-1-frontend-analytics-clean-redesign.md
+feature: new-look-and-feel
+branch: agent/new-look-and-feel-w1-analytics-clean-redesign
+status: blocked
+timestamp: 2026-04-08T13:36:52Z
+agent: cloud-Christians-MacBook-Air-11608
+---
+## Session Summary
+**Task:** Transform analytics dashboard from cyberpunk aesthetic to clean, professional design. Update chart styling, card layouts, and data visualization to match reference site while maintaining Chart.js functionality.  |  **Status:** blocked  |  **Exit:** 127
+
+## What Was Done
+8d811f9 claim: cloud-Christians-MacBook-Air-11608
+
+## Files Changed
+(no files changed)
+
+## PR Status
+(no PR found)
+
+## What's Next
+**Error Category:** command-not-found
+**Description:** Command not found (bad PATH or missing tool)
+
+### Suggested Action
+Install missing tool or fix PATH in agent environment
+
+To reset this task: `relay reset new-look-and-feel --task wave-1-frontend-analytics-clean-redesign`
+To see all blocked tasks: `relay triage new-look-and-feel`
+
+## Resume Prompt
+```
+You are resuming work on branch agent/new-look-and-feel-w1-analytics-clean-redesign for task wave-1-frontend-analytics-clean-redesign.md.
+
+---
+task-id: analytics-clean-redesign
+status: blocked
+execution: supervised
+target-repo: frontend
+wave: 1
+priority: high
+feature: new-look-and-feel
+type: feature
+scenario-refs:
+  - BDD-4
+claimed-by: cloud-Christians-MacBook-Air-11608
+claimed-at: 2026-04-08T13:36:45Z
+claimed-on: Christians-MacBook-Air
+---
+
+## Description
+
+Transform analytics dashboard from cyberpunk aesthetic to clean, professional design. Update chart styling, card layouts, and data visualization to match reference site while maintaining Chart.js functionality.
+
+## Why
+
+Analytics dashboard currently uses neon colors and cyberpunk styling that detracts from professional data presentation. Clean design improves data readability and professional appearance.
+
+## Implementation Notes
+
+Update src/AnalyticsPage.jsx styling and Chart.js configuration to use clean, professional colors. Replace neon chart colors with subtle, professional palette. Update card layouts, headers, and data presentation styling. Ensure chart interactivity and data export functionality remains unchanged. Focus on clean typography and subtle visual hierarchy.
+
+## Contract References
+
+Uses existing /tasks/analytics and /tasks/analytics/csv endpoints - no API changes needed.
+
+## Acceptance Criteria
+
+### Behaviors
+
+- **GIVEN** user navigates to analytics dashboard
+  **WHEN** analytics load
+  **THEN** charts and data visualizations display with clean, professional styling _(implements BDD-4)_
+
+### Invariants
+
+- [ ] Tests pass
+- [ ] Chart.js functionality preserved
+- [ ] CSV export works
+- [ ] Data accuracy maintained
+- [ ] Mobile responsive analytics
+
+
+Previous session: blocked. Commits:
+8d811f9 claim: cloud-Christians-MacBook-Air-11608
+
+Continue from where the previous agent left off.
+```
