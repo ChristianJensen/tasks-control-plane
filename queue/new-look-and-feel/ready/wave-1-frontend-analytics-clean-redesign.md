@@ -1,6 +1,6 @@
 ---
 task-id: analytics-clean-redesign
-status: blocked
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -9,9 +9,6 @@ feature: new-look-and-feel
 type: feature
 scenario-refs:
   - BDD-4
-claimed-by: cloud-Christians-MacBook-Air-11608
-claimed-at: 2026-04-08T13:36:45Z
-claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
