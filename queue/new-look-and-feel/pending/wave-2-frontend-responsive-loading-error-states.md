@@ -1,7 +1,7 @@
 ---
 task-id: responsive-loading-error-states
 status: pending
-execution: autonomous
+execution: supervised
 target-repo: frontend
 wave: 2
 priority: medium

@@ -1,7 +1,7 @@
 ---
 task-id: analytics-clean-redesign
 status: ready
-execution: autonomous
+execution: supervised
 target-repo: frontend
 wave: 1
 priority: high

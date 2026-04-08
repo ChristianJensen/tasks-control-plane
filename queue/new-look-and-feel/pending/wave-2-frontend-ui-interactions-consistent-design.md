@@ -1,7 +1,7 @@
 ---
 task-id: ui-interactions-consistent-design
 status: pending
-execution: autonomous
+execution: supervised
 target-repo: frontend
 wave: 2
 priority: medium
