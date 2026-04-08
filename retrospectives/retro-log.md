@@ -283,3 +283,33 @@ Install missing tool or fix PATH in agent environment
 
 **Upstream fix applied:**
 [TODO — apply fix and update this entry]
+
+### 2026-04-08 — Agent blocked: wave-1-frontend-smart-focus-management.md
+
+**Signal:** status:blocked
+**Root Cause:** command-not-found — Command not found (bad PATH or missing tool)
+**Task File:** queue/space-bar-task-completion/blocked/wave-1-frontend-smart-focus-management.md
+
+**What happened:**
+Agent failed with exit code 127 (command-not-found). Command not found (bad PATH or missing tool).
+
+**What would have prevented it:**
+Install missing tool or fix PATH in agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-08 — Agent blocked: wave-1-frontend-basic-space-bar-completion.md
+
+**Signal:** status:blocked
+**Root Cause:** command-not-found — Command not found (bad PATH or missing tool)
+**Task File:** queue/space-bar-task-completion/blocked/wave-1-frontend-basic-space-bar-completion.md
+
+**What happened:**
+Agent failed with exit code 127 (command-not-found). Command not found (bad PATH or missing tool).
+
+**What would have prevented it:**
+Install missing tool or fix PATH in agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
