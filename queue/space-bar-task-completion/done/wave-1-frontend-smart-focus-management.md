@@ -1,6 +1,6 @@
 ---
 task-id: smart-focus-management
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,12 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-19245
 claimed-at: 2026-04-10T21:23:29Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 2.624337150000001
+input-tokens: 76
+output-tokens: 43993
+duration-ms: 886120
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/88
+pr-number: 88
 ---
 
 ## Description
