@@ -1,15 +1,12 @@
 ---
 task-id: smart-focus-management
-status: blocked
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: space-bar-task-completion
 type: feature
-claimed-by: cloud-Christians-MacBook-Air-21641
-claimed-at: 2026-04-08T14:05:15Z
-claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
