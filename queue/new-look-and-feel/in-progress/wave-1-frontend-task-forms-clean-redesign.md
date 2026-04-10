@@ -1,6 +1,6 @@
 ---
 task-id: task-forms-clean-redesign
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -9,6 +9,9 @@ feature: new-look-and-feel
 type: feature
 scenario-refs:
   - BDD-3
+claimed-by: cloud-Christians-MacBook-Air-40228
+claimed-at: 2026-04-10T13:24:41Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
