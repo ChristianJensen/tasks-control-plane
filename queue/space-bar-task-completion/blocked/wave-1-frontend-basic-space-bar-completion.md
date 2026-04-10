@@ -1,6 +1,6 @@
 ---
 task-id: basic-space-bar-completion
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,10 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-4445
 claimed-at: 2026-04-10T21:11:17Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.8676297000000002
+input-tokens: 32
+output-tokens: 14666
+duration-ms: 352184
 ---
 
 ## Description
