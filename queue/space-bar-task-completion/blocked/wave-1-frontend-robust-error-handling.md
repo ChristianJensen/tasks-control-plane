@@ -1,6 +1,6 @@
 ---
 task-id: robust-error-handling
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
