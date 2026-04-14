@@ -316,11 +316,18 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
 
 function parseRelayConfig(cpDir) {
   const configPath = join(cpDir, ".relay-config");
-  const config = {};
+  const config = { repos: {} };
   if (!existsSync(configPath)) return config;
   const content = readFileSync(configPath, "utf8");
+  let inRepos = false;
   for (const line of content.split("\n")) {
-    const m = line.match(/^((?:status-page|command-center)-\S+):\s*(.+)/);
+    if (/^repos:\s*$/.test(line)) { inRepos = true; continue; }
+    if (inRepos) {
+      const rm = line.match(/^\s+(\S+):\s*(\S+)/);
+      if (rm) { config.repos[rm[1]] = rm[2]; continue; }
+      if (!line.startsWith(" ")) inRepos = false;
+    }
+    const m = line.match(/^([\w-]+):\s*(.+)/);
     if (m) config[m[1]] = m[2].trim();
   }
   return config;
@@ -1267,7 +1274,8 @@ function buildFeaturesJSON(features, prsByFeature, linkContext) {
         const handoff = t.status === "blocked" ? (handoffMap[handoffKey] || null) : null;
         return {
           name: t.title || t.filename.replace(".md", ""), status: t.status,
-          filename: t.filename || "",
+          filename: t.filename || "", type: t.type || "feature",
+          feature: f.slug || "",
           wave: t.wave || 0, repo: t.repo || "", priority: t.priority || "normal",
           desc: t.description || "", relPath: t.relPath || "", sha: t.sha || "",
           claimed_by: t.claimed_by || "", claimed_at: t.claimed_at || "",
@@ -1364,8 +1372,30 @@ function openDetail(slug) {
       f.taskList.map(function(t) {
         var tUrl = specUrl(t.relPath, t.sha);
         var tLink = tUrl ? '<a href="'+tUrl+'" target="_blank" rel="noopener" class="dp-task-spec-link" onclick="event.stopPropagation()">'+fileIcon+' spec '+extIcon+'</a>' : '';
-        var prBtn = t.pr_url ? '<a href="'+t.pr_url+'" target="_blank" rel="noopener" class="dp-task-pr-btn'+(t.status==='in-progress'?' awaiting-review':'')+'" onclick="event.stopPropagation()" title="'+(t.status==='in-progress'?'Awaiting review':'View PR')+'">PR #'+t.pr_number+'</a>' : '';
+        var cmpUrl = compareUrl(t);
+        var prBtn = t.pr_url
+          ? '<a href="'+t.pr_url+'" target="_blank" rel="noopener" class="dp-task-pr-btn'+(t.status==='in-progress'?' awaiting-review':'')+'" onclick="event.stopPropagation()" title="'+(t.status==='in-progress'?'Awaiting review':'View PR')+'">PR #'+t.pr_number+'</a>'
+          : (cmpUrl && (t.status === 'in-progress' || t.status === 'done')
+            ? '<a href="'+cmpUrl+'" target="_blank" rel="noopener" class="dp-task-pr-btn" onclick="event.stopPropagation()" title="View branch diff">diff</a>'
+            : '');
         var workerHtml = t.claimed_by ? '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Worker</span><span class="dp-task-detail-value"><span class="worker-name">'+t.claimed_by.replace(/^agent-/,'').replace(/^cloud-/,'cloud: ')+'</span></span></div>' : '';
+        var inProgressHtml = '';
+        if (t.pr_url && t.status === 'done') {
+          inProgressHtml = '<div class="dp-task-detail-row"><span class="dp-task-detail-label">PR</span><span class="dp-task-detail-value"><a href="'+t.pr_url+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">PR #'+t.pr_number+'</a></span></div>';
+        }
+        if (t.status === 'in-progress' && t.claimed_at) {
+          var ago = timeAgo(t.claimed_at);
+          var agoMs = Date.now() - new Date(t.claimed_at).getTime();
+          var isStale = agoMs > 15 * 60000 && !t.pr_url;
+          var taskStemIp = (t.filename || '').replace(/\\.md$/, '');
+          inProgressHtml = '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Claimed</span><span class="dp-task-detail-value">' + ago + (isStale ? ' <span style="background:var(--amber);color:#000;padding:1px 6px;border-radius:3px;font-size:10px;margin-left:6px">stale</span>' : '') + '</span></div>';
+          if (isStale) {
+            inProgressHtml += '<div class="blocked-diag-buttons" style="margin-top:8px">' +
+              '<button class="blocked-btn-reset" onclick="event.stopPropagation();resetTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Reset Task</button>' +
+              '<button class="blocked-btn-triage" style="background:var(--accent)" onclick="event.stopPropagation();resumeTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Resume</button>' +
+            '</div>';
+          }
+        }
         var blockedDiagHtml = '';
         if (t.status === 'blocked' && t.handoff) {
           var h = t.handoff;
@@ -1398,7 +1428,7 @@ function openDetail(slug) {
             '</div>' +
           '</div>';
         }
-        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div>'+prBtn+'<div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+workerHtml+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+blockedDiagHtml+'</div></div></div>';
+        return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')"><div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div><div class="dp-task-name">'+t.name+'</div>'+prBtn+'<div class="dp-task-wave">W'+t.wave+'</div><div class="dp-task-chevron">&#9654;</div></div><div class="dp-task-expand"><div class="dp-task-detail">'+(t.desc||'')+'<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div><div class="dp-task-detail-row"><span class="dp-task-detail-label">Repo</span><span class="dp-task-detail-value">'+t.repo+'</span></div>'+workerHtml+inProgressHtml+(tLink?'<div class="dp-task-detail-row" style="margin-top:8px">'+tLink+'</div>':'')+blockedDiagHtml+'</div></div></div>';
       }).join('') + '</div></div>';
   }
 
@@ -1548,6 +1578,51 @@ function triageFeature(feature) {
       showToast('Server offline. Run: relay triage ' + feature, 'error');
     });
   });
+}
+
+function resumeTask(feature, task) {
+  showToast('Resuming task...', 'info');
+  fetch('http://localhost:7433/api/dispatch/local', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug: feature, mode: 'supervised', agents: 1 })
+  }).then(function(r) {
+    if (r.ok) {
+      showToast('Agent launched to resume task', 'success');
+    } else {
+      r.json().then(function(d) { showToast('Resume failed: ' + (d.error || 'unknown'), 'error'); });
+    }
+  }).catch(function() {
+    showToast('Start relay serve first', 'error');
+  });
+}
+
+function deriveBranchSlug(t) {
+  if (!t.filename || !t.repo || !t.feature) return '';
+  var stem = t.filename.replace(/\\.md$/, '');
+  var waveMatch = stem.match(/^wave-(\\d+)-/);
+  var waveNum = waveMatch ? waveMatch[1] : '0';
+  var taskSlug = stem.replace(new RegExp('^wave-\\\\d+-' + t.repo + '-'), '');
+  var prefix = t.type === 'bug' ? 'fix' : 'agent';
+  return prefix + '/' + t.feature + '-w' + waveNum + '-' + taskSlug;
+}
+
+function compareUrl(t) {
+  var nwo = REPO_MAP[t.repo];
+  if (!nwo) return '';
+  var branch = deriveBranchSlug(t);
+  if (!branch) return '';
+  return 'https://github.com/' + nwo + '/compare/main...' + encodeURIComponent(branch);
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '';
+  var ms = Date.now() - new Date(isoStr).getTime();
+  var min = Math.floor(ms / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return min + 'm ago';
+  var hr = Math.floor(min / 60);
+  if (hr < 24) return hr + 'h ' + (min % 60) + 'm ago';
+  return Math.floor(hr / 24) + 'd ago';
 }
 
 // ── Compliance Report ──
@@ -1851,7 +1926,7 @@ ${renderCSS_TriageCompat()}
 
 <div id="toastContainer"></div>
 
-<script>var FEATURES = ${JSON.stringify(featuresJSON)};<\/script>
+<script>var FEATURES = ${JSON.stringify(featuresJSON)};var REPO_MAP = ${JSON.stringify(relayConfig.repos || {})};<\/script>
 ${renderClientJS(linkContext)}
 
 </body>
