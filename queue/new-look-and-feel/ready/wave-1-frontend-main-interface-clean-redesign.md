@@ -1,6 +1,6 @@
 ---
 task-id: main-interface-clean-redesign
-status: blocked
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1

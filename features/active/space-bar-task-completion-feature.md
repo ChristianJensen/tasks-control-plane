@@ -3,7 +3,7 @@ lifecycle: active
 execution: supervised
 model: ""
 priority: medium
-total-budget: 5
+total-budget: ""
 total-cost-usd: ""
 total-tokens: ""
 epic: ""
