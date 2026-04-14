@@ -1,6 +1,6 @@
 ---
 task-id: space-key-focus-to-new-task-input
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -14,6 +14,12 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-34467
 claimed-at: 2026-04-14T10:42:06Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.0251961499999998
+input-tokens: 43
+output-tokens: 16440
+duration-ms: 516151
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/89
+pr-number: 89
 ---
 
 ## Description
