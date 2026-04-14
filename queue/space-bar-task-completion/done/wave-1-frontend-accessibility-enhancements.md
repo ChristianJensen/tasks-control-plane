@@ -1,6 +1,6 @@
 ---
 task-id: accessibility-enhancements
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,12 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-53039
 claimed-at: 2026-04-14T20:12:09Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.0652372999999997
+input-tokens: 50
+output-tokens: 15176
+duration-ms: 527422
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/93
+pr-number: 93
 ---
 
 ## Description
