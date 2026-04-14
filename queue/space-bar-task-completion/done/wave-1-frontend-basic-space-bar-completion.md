@@ -1,6 +1,6 @@
 ---
 task-id: basic-space-bar-completion
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,12 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-47076
 claimed-at: 2026-04-14T19:59:07Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.810183
+input-tokens: 96
+output-tokens: 11001
+duration-ms: 370212
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/91
+pr-number: 91
 ---
 
 ## Description
