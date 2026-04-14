@@ -1,6 +1,6 @@
 ---
 task-id: main-interface-clean-redesign
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,9 @@ type: feature
 scenario-refs:
   - BDD-1
   - BDD-2
+claimed-by: cloud-Christians-MacBook-Air-80830
+claimed-at: 2026-04-14T16:15:45Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
