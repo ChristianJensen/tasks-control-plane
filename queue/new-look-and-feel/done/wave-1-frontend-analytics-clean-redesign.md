@@ -1,6 +1,6 @@
 ---
 task-id: analytics-clean-redesign
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -12,6 +12,12 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-49262
 claimed-at: 2026-04-14T20:05:50Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.9309749999999999
+input-tokens: 35
+output-tokens: 15515
+duration-ms: 332133
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/92
+pr-number: 92
 ---
 
 ## Description
