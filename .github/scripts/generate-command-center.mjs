@@ -242,12 +242,14 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       waves: tasks.length > 0 ? groupByWave(tasks) : [],
       repos: tasks.length > 0 ? groupByRepo(tasks) : {},
       missing: status !== "shipped"
-        ? tasks.filter((t) => t.status !== "done").map((t) => ({
+        ? tasks.map((t) => ({
             filename: t.filename, status: t.status, priority: t.priority,
             wave: t.wave, claimed_by: t.claimed_by || null,
             claimed_at: t.claimed_at || null,
             description: t.description || "", title: t.title || "",
+            repo: t.repo || "", type: t.type || "feature",
             sha: t.sha || null, relPath: t.relPath || "",
+            pr_url: t.pr_url || "", pr_number: t.pr_number || "",
           }))
         : [],
       allTasks: tasks.map((t) => ({
@@ -255,8 +257,9 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
         wave: t.wave, claimed_by: t.claimed_by || null,
         claimed_at: t.claimed_at || null,
         description: t.description || "", title: t.title || "",
-        repo: t.repo || "",
+        repo: t.repo || "", type: t.type || "feature",
         sha: t.sha || null, relPath: t.relPath || "",
+        pr_url: t.pr_url || "", pr_number: t.pr_number || "",
       })),
     };
 
@@ -995,6 +998,8 @@ function renderCSS_Kanban() {
 .blocked-btn-reset { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.3); color: var(--red); }
 .blocked-btn-reset:hover { background: rgba(248,113,113,0.2); border-color: rgba(248,113,113,0.5); }
 .blocked-btn-triage { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: var(--amber); }
+.blocked-btn-resume { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.3); color: var(--accent); }
+.blocked-btn-resume:hover { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.5); }
 .blocked-btn-triage:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.5); }
 .cost-row { display: flex; align-items: center; gap: 16px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xs); }
 .cost-item { display: flex; align-items: center; gap: 6px; }
@@ -1392,7 +1397,7 @@ function openDetail(slug) {
           if (isStale) {
             inProgressHtml += '<div class="blocked-diag-buttons" style="margin-top:8px">' +
               '<button class="blocked-btn-reset" onclick="event.stopPropagation();resetTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Reset Task</button>' +
-              '<button class="blocked-btn-triage" style="background:var(--accent)" onclick="event.stopPropagation();resumeTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Resume</button>' +
+              '<button class="blocked-btn-resume" onclick="event.stopPropagation();resumeTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Resume</button>' +
             '</div>';
           }
         }
