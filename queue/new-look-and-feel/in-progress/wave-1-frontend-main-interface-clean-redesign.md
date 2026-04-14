@@ -1,6 +1,6 @@
 ---
 task-id: main-interface-clean-redesign
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,8 +10,8 @@ type: feature
 scenario-refs:
   - BDD-1
   - BDD-2
-claimed-by: cloud-Christians-MacBook-Air-37254
-claimed-at: 2026-04-14T22:31:28Z
+claimed-by: cloud-Christians-MacBook-Air-47063
+claimed-at: 2026-04-14T22:42:47Z
 claimed-on: Christians-MacBook-Air
 cost-usd: 2.043086399999999
 input-tokens: 67
