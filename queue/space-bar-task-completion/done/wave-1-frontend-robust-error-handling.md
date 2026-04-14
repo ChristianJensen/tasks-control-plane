@@ -1,6 +1,6 @@
 ---
 task-id: robust-error-handling
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,12 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-43249
 claimed-at: 2026-04-14T10:51:39Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.1100049499999998
+input-tokens: 34
+output-tokens: 26941
+duration-ms: 726797
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/90
+pr-number: 90
 ---
 
 ## Description
