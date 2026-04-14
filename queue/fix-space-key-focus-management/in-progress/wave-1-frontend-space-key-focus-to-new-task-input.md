@@ -1,6 +1,6 @@
 ---
 task-id: space-key-focus-to-new-task-input
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -11,6 +11,9 @@ scenario-refs:
   - BDD-1
   - BDD-2
   - BDD-3
+claimed-by: cloud-Christians-MacBook-Air-34467
+claimed-at: 2026-04-14T10:42:06Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
