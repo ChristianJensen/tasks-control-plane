@@ -1,6 +1,6 @@
 ---
 task-id: context-aware-input-handling
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,12 @@ type: feature
 claimed-by: cloud-Christians-MacBook-Air-14241
 claimed-at: 2026-04-14T21:59:06Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.9561835500000001
+input-tokens: 34
+output-tokens: 18976
+duration-ms: 454301
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/95
+pr-number: 95
 ---
 
 ## Description
