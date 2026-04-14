@@ -1,12 +1,15 @@
 ---
 task-id: basic-space-bar-completion
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: high
 feature: space-bar-task-completion
 type: feature
+claimed-by: cloud-Christians-MacBook-Air-47076
+claimed-at: 2026-04-14T19:59:07Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
