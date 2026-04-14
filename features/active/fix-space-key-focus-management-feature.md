@@ -1,5 +1,5 @@
 ---
-lifecycle: draft
+lifecycle: active
 execution: supervised
 model: ""
 priority: medium
@@ -17,7 +17,6 @@ completed-at: ""
 deployed-at: ""
 deployed-env: ""
 ---
-
 # Feature Spec: Fix Space Key Focus Management for Task Completion
 
 ## Sources
