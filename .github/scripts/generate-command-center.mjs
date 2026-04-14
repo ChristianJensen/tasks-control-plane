@@ -1390,16 +1390,12 @@ function openDetail(slug) {
         }
         if (t.status === 'in-progress' && t.claimed_at) {
           var ago = timeAgo(t.claimed_at);
-          var agoMs = Date.now() - new Date(t.claimed_at).getTime();
-          var isStale = agoMs > 15 * 60000 && !t.pr_url;
           var taskStemIp = (t.filename || '').replace(/\\.md$/, '');
-          inProgressHtml = '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Claimed</span><span class="dp-task-detail-value">' + ago + (isStale ? ' <span style="background:var(--amber);color:#000;padding:1px 6px;border-radius:3px;font-size:10px;margin-left:6px">stale</span>' : '') + '</span></div>';
-          if (isStale) {
-            inProgressHtml += '<div class="blocked-diag-buttons" style="margin-top:8px">' +
-              '<button class="blocked-btn-reset" onclick="event.stopPropagation();resetTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Reset Task</button>' +
-              '<button class="blocked-btn-resume" onclick="event.stopPropagation();resumeTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Resume</button>' +
-            '</div>';
-          }
+          inProgressHtml = '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Claimed</span><span class="dp-task-detail-value">' + ago + '</span></div>';
+          inProgressHtml += '<div class="blocked-diag-buttons" style="margin-top:8px">' +
+            '<button class="blocked-btn-reset" onclick="event.stopPropagation();resetTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Reset</button>' +
+            '<button class="blocked-btn-resume" onclick="event.stopPropagation();resumeTask(\\''+f.slug+'\\',\\''+taskStemIp+'\\')">Resume</button>' +
+          '</div>';
         }
         var blockedDiagHtml = '';
         if (t.status === 'blocked' && t.handoff) {
