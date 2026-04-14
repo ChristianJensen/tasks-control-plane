@@ -1,6 +1,6 @@
 ---
 task-id: main-interface-clean-redesign
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -13,10 +13,10 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-47063
 claimed-at: 2026-04-14T22:42:47Z
 claimed-on: Christians-MacBook-Air
-cost-usd: 2.043086399999999
-input-tokens: 67
-output-tokens: 26626
-duration-ms: 7733156
+cost-usd: 0
+input-tokens: 0
+output-tokens: 0
+duration-ms: 452
 ---
 
 ## Description
