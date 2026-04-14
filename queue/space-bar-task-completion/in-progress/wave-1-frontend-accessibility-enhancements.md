@@ -1,12 +1,15 @@
 ---
 task-id: accessibility-enhancements
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
 priority: medium
 feature: space-bar-task-completion
 type: feature
+claimed-by: cloud-Christians-MacBook-Air-53039
+claimed-at: 2026-04-14T20:12:09Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
