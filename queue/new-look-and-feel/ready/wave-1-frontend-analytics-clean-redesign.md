@@ -1,6 +1,6 @@
 ---
 task-id: analytics-clean-redesign
-status: in-progress
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1

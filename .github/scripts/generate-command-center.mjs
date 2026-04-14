@@ -182,7 +182,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       execution: fields.execution || "supervised",
       epic: (typeof fields.epic === "string" && fields.epic) ? fields.epic : "",
       epicTitle: (typeof fields["epic-title"] === "string" && fields["epic-title"]) ? fields["epic-title"] : "",
-      title: extractTitle(body, slug), problem: extractProblemStatement(body),
+      title: fields.title || extractTitle(body, slug), problem: extractProblemStatement(body),
       bugDigest: isBug ? extractBugDigest(body) : undefined,
       severity: isBug ? fields.severity || "" : undefined,
       reportedBy: isBug ? fields["reported-by"] || "" : undefined,
