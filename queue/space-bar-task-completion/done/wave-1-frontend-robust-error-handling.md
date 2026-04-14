@@ -1,6 +1,6 @@
 ---
 task-id: robust-error-handling
-status: ready
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
