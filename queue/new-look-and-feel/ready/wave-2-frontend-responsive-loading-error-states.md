@@ -1,6 +1,6 @@
 ---
 task-id: responsive-loading-error-states
-status: pending
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 2

@@ -313,3 +313,33 @@ Install missing tool or fix PATH in agent environment
 
 **Upstream fix applied:**
 [TODO — apply fix and update this entry]
+
+### 2026-04-15 — Agent blocked: wave-1-frontend-main-interface-clean-redesign.md
+
+**Signal:** status:blocked
+**Root Cause:** general-error — General script error (missing dir, bad args)
+**Task File:** queue/new-look-and-feel/blocked/wave-1-frontend-main-interface-clean-redesign.md
+
+**What happened:**
+Agent failed with exit code 1 (general-error). General script error (missing dir, bad args).
+
+**What would have prevented it:**
+Inspect handoff note; check agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-15 — Agent blocked: wave-1-frontend-main-interface-clean-redesign.md
+
+**Signal:** status:blocked
+**Root Cause:** general-error — General script error (missing dir, bad args)
+**Task File:** queue/new-look-and-feel/blocked/wave-1-frontend-main-interface-clean-redesign.md
+
+**What happened:**
+Agent failed with exit code 1 (general-error). General script error (missing dir, bad args).
+
+**What would have prevented it:**
+Inspect handoff note; check agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
