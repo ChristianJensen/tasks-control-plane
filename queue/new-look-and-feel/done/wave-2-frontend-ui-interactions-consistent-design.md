@@ -1,6 +1,6 @@
 ---
 task-id: ui-interactions-consistent-design
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -12,6 +12,12 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-93185
 claimed-at: 2026-04-15T10:06:24Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 2.3251171500000005
+input-tokens: 5444
+output-tokens: 30361
+duration-ms: 444633
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/97
+pr-number: 97
 ---
 
 ## Description
