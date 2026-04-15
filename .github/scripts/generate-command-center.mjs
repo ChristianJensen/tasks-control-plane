@@ -611,7 +611,7 @@ function ddToggle(cls) {
 function renderDispatchBar(slug) {
   return `<div class="dispatch-bar">
     <div class="db-controls">
-      <div class="db-group"><span class="db-label">Target</span><div class="dd-toggle"><button class="dd-target-btn active" data-target="cloud" ${ddToggle("dd-target-btn")} title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn" data-target="local" ${ddToggle("dd-target-btn")} title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
+      <div class="db-group"><span class="db-label">Target</span><div class="dd-toggle"><button class="dd-target-btn" data-target="cloud" ${ddToggle("dd-target-btn")} title="Run in GitHub Actions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg> Cloud</button><button class="dd-target-btn active" data-target="local" ${ddToggle("dd-target-btn")} title="Run on this machine"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Local</button></div></div>
       <div class="db-group"><span class="db-label">Agents</span><div class="dd-parallel-btns"><button class="dd-par-btn active" data-n="1" ${ddToggle("dd-par-btn")}>1</button><button class="dd-par-btn" data-n="2" ${ddToggle("dd-par-btn")}>2</button><button class="dd-par-btn" data-n="3" ${ddToggle("dd-par-btn")}>3</button><button class="dd-par-btn" data-n="4" ${ddToggle("dd-par-btn")}>4</button></div></div>
       <div class="db-group"><span class="db-label">Mode</span><div class="dd-toggle"><button class="dd-mode-btn active" data-mode="supervised" ${ddToggle("dd-mode-btn")} title="Agent opens a PR. You review before merge."><span class="dd-color" style="background:var(--accent)"></span> Supervised</button><button class="dd-mode-btn" data-mode="autonomous" ${ddToggle("dd-mode-btn")} title="Agent auto-merges. No human review."><span class="dd-color" style="background:var(--green)"></span> Autonomous</button></div></div>
     </div>
@@ -902,7 +902,12 @@ function renderCSS_Kanban() {
 .kanban-column:nth-child(3) { animation-delay: 0.12s; }
 .kanban-column:nth-child(4) { animation-delay: 0.18s; }
 .kanban-column:nth-child(5) { animation-delay: 0.24s; }
-.kanban-column-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.kanban-column-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; cursor: pointer; user-select: none; }
+.kanban-column-header:hover { background: rgba(255,255,255,0.03); }
+.kanban-column-chevron { font-size: 12px; color: var(--text-muted); transition: transform 0.2s ease; margin-left: 8px; }
+.kanban-column.collapsed .kanban-column-chevron { transform: rotate(-90deg); }
+.kanban-column.collapsed .kanban-column-body { display: none; }
+.kanban-column.collapsed { min-width: 180px; width: 180px; }
 .kanban-column-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
 .kanban-column-dot { width: 8px; height: 8px; border-radius: 50%; }
 .kanban-column-count { font-size: 12px; font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 8px; }
@@ -1215,9 +1220,9 @@ function renderKanbanBoard(features) {
 
   return `<div class="kanban">${KANBAN_COLUMNS.map(col => {
     const items = columns[col.key];
-    return `<div class="kanban-column ${col.cssClass}">
-      <div class="kanban-column-header">
-        <div class="kanban-column-title"><span class="kanban-column-dot"></span>${col.label}</div>
+    return `<div class="kanban-column ${col.cssClass}" data-col-key="${col.key}">
+      <div class="kanban-column-header" onclick="toggleKanbanCol(this)">
+        <div class="kanban-column-title"><span class="kanban-column-dot"></span>${col.label}<span class="kanban-column-chevron">&#9662;</span></div>
         <span class="kanban-column-count" data-col="${col.key}">${items.length}</span>
       </div>
       <div class="kanban-column-body">${items.map(f => renderKanbanCard(f)).join("\n")}</div>
@@ -1496,6 +1501,24 @@ function toggleChip(chip) {
 }
 
 // ── Toast ──
+function toggleKanbanCol(header) {
+  var col = header.closest('.kanban-column');
+  var key = col.dataset.colKey;
+  col.classList.toggle('collapsed');
+  var stored = JSON.parse(localStorage.getItem('kanban_collapsed') || '{}');
+  stored[key] = col.classList.contains('collapsed');
+  localStorage.setItem('kanban_collapsed', JSON.stringify(stored));
+}
+(function restoreKanbanState() {
+  var stored = JSON.parse(localStorage.getItem('kanban_collapsed') || '{}');
+  Object.keys(stored).forEach(function(key) {
+    if (stored[key]) {
+      var col = document.querySelector('.kanban-column[data-col-key="' + key + '"]');
+      if (col) col.classList.add('collapsed');
+    }
+  });
+})();
+
 function showToast(msg, type) {
   document.querySelectorAll('.toast').forEach(function(el) { el.remove(); });
   var t = document.createElement('div');
