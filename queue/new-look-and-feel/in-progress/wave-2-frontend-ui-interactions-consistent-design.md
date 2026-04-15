@@ -1,6 +1,6 @@
 ---
 task-id: ui-interactions-consistent-design
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -9,6 +9,9 @@ feature: new-look-and-feel
 type: feature
 scenario-refs:
   - BDD-5
+claimed-by: cloud-Christians-MacBook-Air-93185
+claimed-at: 2026-04-15T10:06:24Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
