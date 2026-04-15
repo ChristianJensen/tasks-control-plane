@@ -1,6 +1,6 @@
 ---
 task-id: responsive-loading-error-states
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -11,6 +11,9 @@ scenario-refs:
   - BDD-6
   - BDD-7
   - BDD-8
+claimed-by: cloud-Christians-MacBook-Air-5101
+claimed-at: 2026-04-15T10:23:15Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
