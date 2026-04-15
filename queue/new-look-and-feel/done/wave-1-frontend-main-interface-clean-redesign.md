@@ -1,6 +1,6 @@
 ---
 task-id: main-interface-clean-redesign
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,13 +10,15 @@ type: feature
 scenario-refs:
   - BDD-1
   - BDD-2
-cost-usd: 0
-input-tokens: 0
-output-tokens: 0
-duration-ms: 826
+cost-usd: 4.4698025999999995
+input-tokens: 95
+output-tokens: 64428
+duration-ms: 1297920
 claimed-by: cloud-Christians-MacBook-Air-60951
 claimed-at: 2026-04-15T06:32:47Z
 claimed-on: Christians-MacBook-Air
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/96
+pr-number: 96
 ---
 
 ## Description
