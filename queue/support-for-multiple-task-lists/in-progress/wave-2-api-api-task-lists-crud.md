@@ -1,6 +1,6 @@
 ---
 task-id: api-task-lists-crud
-status: ready
+status: in-progress
 execution: supervised
 target-repo: api
 wave: 2
@@ -13,6 +13,9 @@ scenario-refs:
   - BDD-7
   - BDD-10
   - BDD-11
+claimed-by: cloud-Christians-MacBook-Air-73402
+claimed-at: 2026-04-16T09:06:46Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
