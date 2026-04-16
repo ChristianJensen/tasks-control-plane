@@ -1,6 +1,6 @@
 ---
 task-id: management-modal-sync-with-switcher
-status: in-progress
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1
