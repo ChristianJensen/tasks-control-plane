@@ -1,6 +1,6 @@
 ---
 task-id: switcher-error-resilience
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,9 @@ type: feature
 scenario-refs:
   - BDD-8
   - BDD-13
+claimed-by: cloud-Christians-MacBook-Air-10931
+claimed-at: 2026-04-16T19:18:36Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
