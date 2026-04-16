@@ -163,6 +163,10 @@ function parseTask(content, filename, featureSlug, isArchived, sha, relPath) {
     cost_usd: parseFloat(fields["cost-usd"]) || 0,
     input_tokens: parseInt(fields["input-tokens"]) || 0,
     output_tokens: parseInt(fields["output-tokens"]) || 0,
+    // "billed" absent = legacy task (assume billed, was run before auth tagging).
+    // Explicit "false" means Max-plan OAuth — notional cost only.
+    billed: String(fields["billed"] ?? "").toLowerCase() !== "false",
+    auth_mode: fields["auth-mode"] || "",
     description: extractTaskDescription(body),
     title: deriveTaskTitle(filename),
     sha: sha || null,
@@ -231,6 +235,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
 
     const cost = {
       usd: tasks.reduce((s, t) => s + (t.cost_usd || 0), 0),
+      usd_billed: tasks.reduce((s, t) => s + (t.billed ? (t.cost_usd || 0) : 0), 0),
       input_tokens: tasks.reduce((s, t) => s + (t.input_tokens || 0), 0),
       output_tokens: tasks.reduce((s, t) => s + (t.output_tokens || 0), 0),
     };
@@ -280,8 +285,11 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     features.push(feature);
   }
 
-  // Grand total cost
+  // Grand total cost. total_cost_usd is the notional sum (includes Max-plan
+  // work that didn't hit a bill); total_billed_cost_usd is the real spend —
+  // use that for any "you were charged" UI.
   summary.total_cost_usd = features.reduce((s, f) => s + (f.cost?.usd || 0), 0);
+  summary.total_billed_cost_usd = features.reduce((s, f) => s + (f.cost?.usd_billed || 0), 0);
   summary.total_tokens = features.reduce((s, f) => s + (f.cost?.tokens || 0), 0);
 
   // Execution mode counts

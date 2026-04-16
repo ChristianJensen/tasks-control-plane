@@ -3,3 +3,4 @@ relay
 .relay/inbox.db-shm
 .relay/inbox.db-wal
 .relay/env
+.relay/logs/
