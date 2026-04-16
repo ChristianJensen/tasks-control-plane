@@ -1,6 +1,6 @@
 ---
 task-id: header-shows-active-list-name
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -13,6 +13,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-96460
 claimed-at: 2026-04-16T18:39:09Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 2.2643751
+input-tokens: 49
+output-tokens: 59785
+duration-ms: 1455218
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/105
+pr-number: 105
 ---
 
 ## Description
