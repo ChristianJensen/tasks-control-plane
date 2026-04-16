@@ -1,6 +1,6 @@
 ---
 task-id: management-modal-sync-with-switcher
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -11,6 +11,9 @@ scenario-refs:
   - BDD-6
   - BDD-14
   - BDD-15
+claimed-by: cloud-Christians-MacBook-Air-78679
+claimed-at: 2026-04-16T18:08:02Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
