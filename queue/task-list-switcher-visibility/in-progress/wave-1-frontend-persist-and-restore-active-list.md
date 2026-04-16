@@ -1,6 +1,6 @@
 ---
 task-id: persist-and-restore-active-list
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -11,6 +11,9 @@ scenario-refs:
   - BDD-5
   - BDD-9
   - BDD-10
+claimed-by: cloud-Christians-MacBook-Air-61234
+claimed-at: 2026-04-16T17:40:12Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
