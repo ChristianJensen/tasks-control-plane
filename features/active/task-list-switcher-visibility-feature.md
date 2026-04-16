@@ -1,6 +1,6 @@
 ---
 title: "Visible current task list name and list switcher"
-lifecycle: draft
+lifecycle: active
 execution: supervised
 model: ""
 priority: medium
