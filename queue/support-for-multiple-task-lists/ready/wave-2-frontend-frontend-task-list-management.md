@@ -1,7 +1,7 @@
 ---
 task-id: frontend-task-list-management
 status: ready
-execution: autonomous
+execution: supervised
 target-repo: frontend
 wave: 2
 priority: high

@@ -1,7 +1,7 @@
 ---
 task-id: api-task-lists-crud
 status: ready
-execution: autonomous
+execution: supervised
 target-repo: api
 wave: 2
 priority: high
