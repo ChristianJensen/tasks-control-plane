@@ -1,6 +1,6 @@
 ---
 task-id: persist-and-restore-active-list
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -14,6 +14,12 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-61234
 claimed-at: 2026-04-16T17:40:12Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.15650195
+input-tokens: 217
+output-tokens: 31263
+duration-ms: 741903
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/103
+pr-number: 103
 ---
 
 ## Description
