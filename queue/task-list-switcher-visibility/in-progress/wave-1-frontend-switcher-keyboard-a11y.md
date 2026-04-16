@@ -1,6 +1,6 @@
 ---
 task-id: switcher-keyboard-a11y
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -12,6 +12,9 @@ scenario-refs:
   - BDD-16
   - BDD-17
   - BDD-18
+claimed-by: cloud-Christians-MacBook-Air-66798
+claimed-at: 2026-04-16T17:53:27Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
