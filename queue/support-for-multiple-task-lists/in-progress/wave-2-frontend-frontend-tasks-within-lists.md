@@ -1,6 +1,6 @@
 ---
 task-id: frontend-tasks-within-lists
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -10,6 +10,9 @@ type: feature
 scenario-refs:
   - BDD-4
   - BDD-8
+claimed-by: cloud-Christians-MacBook-Air-92942
+claimed-at: 2026-04-16T09:27:38Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
