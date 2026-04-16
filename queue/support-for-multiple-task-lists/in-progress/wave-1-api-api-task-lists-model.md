@@ -1,6 +1,6 @@
 ---
 task-id: api-task-lists-model
-status: ready
+status: in-progress
 execution: supervised
 target-repo: api
 wave: 1
@@ -9,6 +9,9 @@ feature: support-for-multiple-task-lists
 type: feature
 scenario-refs:
   - BDD-9
+claimed-by: cloud-Christians-MacBook-Air-62242
+claimed-at: 2026-04-16T08:57:35Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
