@@ -1,6 +1,6 @@
 ---
 task-id: switcher-keyboard-a11y
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -15,6 +15,12 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-66798
 claimed-at: 2026-04-16T17:53:27Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.97042695
+input-tokens: 3004
+output-tokens: 23761
+duration-ms: 489979
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/104
+pr-number: 104
 ---
 
 ## Description
