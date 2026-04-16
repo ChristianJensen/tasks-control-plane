@@ -1,6 +1,6 @@
 ---
 task-id: switcher-dropdown-open-and-select
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -12,6 +12,9 @@ scenario-refs:
   - BDD-4
   - BDD-7
   - BDD-11
+claimed-by: cloud-Christians-MacBook-Air-56806
+claimed-at: 2026-04-16T17:31:47Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
