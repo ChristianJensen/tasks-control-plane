@@ -1,6 +1,6 @@
 ---
 title: "Support for Multiple Task Lists"
-lifecycle: draft
+lifecycle: active
 execution: autonomous
 model: ""
 priority: high
