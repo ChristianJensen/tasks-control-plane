@@ -1,6 +1,6 @@
 ---
 task-id: api-tasks-scoped-to-lists
-status: ready
+status: in-progress
 execution: supervised
 target-repo: api
 wave: 2
@@ -10,6 +10,9 @@ type: feature
 scenario-refs:
   - BDD-4
   - BDD-8
+claimed-by: cloud-Christians-MacBook-Air-67503
+claimed-at: 2026-04-16T09:01:10Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
