@@ -37,6 +37,8 @@ function parseFrontmatter(content) {
     if (kvMatch) {
       const key = kvMatch[1];
       let value = kvMatch[2].trim().replace(/\s+#.*$/, "");
+      const quoted = value.match(/^(["'])(.*)\1$/);
+      if (quoted) value = quoted[2];
       fields[key] = value || [];
       currentKey = key;
     } else {
