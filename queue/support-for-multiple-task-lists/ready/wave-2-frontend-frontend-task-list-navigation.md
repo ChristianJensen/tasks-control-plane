@@ -1,7 +1,7 @@
 ---
 task-id: frontend-task-list-navigation
 status: ready
-execution: autonomous
+execution: supervised
 target-repo: frontend
 wave: 2
 priority: high

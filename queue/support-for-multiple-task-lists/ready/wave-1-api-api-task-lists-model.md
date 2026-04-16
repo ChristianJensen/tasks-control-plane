@@ -1,7 +1,7 @@
 ---
 task-id: api-task-lists-model
 status: ready
-execution: autonomous
+execution: supervised
 target-repo: api
 wave: 1
 priority: high
