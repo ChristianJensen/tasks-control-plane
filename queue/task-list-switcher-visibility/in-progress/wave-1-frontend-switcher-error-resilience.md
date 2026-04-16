@@ -10,8 +10,8 @@ type: feature
 scenario-refs:
   - BDD-8
   - BDD-13
-claimed-by: cloud-Christians-MacBook-Air-10931
-claimed-at: 2026-04-16T19:18:36Z
+claimed-by: cloud-Christians-MacBook-Air-24659
+claimed-at: 2026-04-16T20:02:00Z
 claimed-on: Christians-MacBook-Air
 ---
 
