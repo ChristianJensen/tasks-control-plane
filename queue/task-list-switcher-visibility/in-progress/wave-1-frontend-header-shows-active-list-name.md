@@ -1,6 +1,6 @@
 ---
 task-id: header-shows-active-list-name
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,9 @@ type: feature
 scenario-refs:
   - BDD-1
   - BDD-2
+claimed-by: cloud-Christians-MacBook-Air-96460
+claimed-at: 2026-04-16T18:39:09Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
