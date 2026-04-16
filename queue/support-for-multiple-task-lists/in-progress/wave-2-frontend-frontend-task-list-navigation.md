@@ -1,6 +1,6 @@
 ---
 task-id: frontend-task-list-navigation
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -11,6 +11,9 @@ scenario-refs:
   - BDD-2
   - BDD-3
   - BDD-1
+claimed-by: cloud-Christians-MacBook-Air-67542
+claimed-at: 2026-04-16T09:01:10Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
