@@ -1,6 +1,6 @@
 ---
 task-id: api-task-lists-crud
-status: in-progress
+status: done
 execution: supervised
 target-repo: api
 wave: 2
@@ -16,6 +16,12 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-73402
 claimed-at: 2026-04-16T09:06:46Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.4078266499999996
+input-tokens: 944
+output-tokens: 14200
+duration-ms: 256144
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-api/pull/32
+pr-number: 32
 ---
 
 ## Description
