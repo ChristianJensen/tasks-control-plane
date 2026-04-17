@@ -343,3 +343,18 @@ Inspect handoff note; check agent environment
 
 **Upstream fix applied:**
 [TODO — apply fix and update this entry]
+
+### 2026-04-17 — Agent blocked: wave-1-frontend-switcher-error-resilience.md
+
+**Signal:** status:blocked
+**Root Cause:** general-error — General script error (missing dir, bad args)
+**Task File:** queue/task-list-switcher-visibility/blocked/wave-1-frontend-switcher-error-resilience.md
+
+**What happened:**
+Agent failed with exit code 1 (general-error). General script error (missing dir, bad args).
+
+**What would have prevented it:**
+Inspect handoff note; check agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]

@@ -1,6 +1,6 @@
 ---
 task-id: switcher-error-resilience
-status: blocked
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,13 +10,6 @@ type: feature
 scenario-refs:
   - BDD-8
   - BDD-13
-claimed-by: cloud-Christians-MacBook-Air-24659
-claimed-at: 2026-04-16T20:02:00Z
-claimed-on: Christians-MacBook-Air
-cost-usd: 0.26782335
-input-tokens: 2499
-output-tokens: 2142
-duration-ms: 7235433
 auth-mode: max-oauth
 billed: false
 ---
