@@ -1,6 +1,6 @@
 ---
 task-id: management-modal-sync-with-switcher
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -14,6 +14,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-27917
 claimed-at: 2026-04-17T02:41:37Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 4.925748299999998
+input-tokens: 77
+output-tokens: 140221
+duration-ms: 14517205
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/106
+pr-number: 106
 ---
 
 ## Description
