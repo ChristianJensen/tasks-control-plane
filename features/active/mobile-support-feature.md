@@ -1,10 +1,14 @@
 ---
 title: "Mobile Responsive Web Support"
-lifecycle: draft
+lifecycle: active
 execution: supervised
 model: ""
 priority: medium
-dimensions: [assumptions, edges, ux, scope]
+dimensions:
+  - assumptions
+  - edges
+  - ux
+  - scope
 total-budget: ""
 total-cost-usd: ""
 total-tokens: ""
