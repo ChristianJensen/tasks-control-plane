@@ -1,6 +1,6 @@
 ---
 task-id: mobile-viewport-and-timestamp-primitives
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -12,6 +12,9 @@ scenario-refs:
   - BDD-8
   - BDD-10
   - BDD-12
+claimed-by: cloud-Christians-MacBook-Air-41108
+claimed-at: 2026-04-19T22:36:20Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
