@@ -19,7 +19,6 @@ completed-at: ""
 deployed-at: ""
 deployed-env: ""
 ---
-
 # Mobile Responsive Web Support
 
 ## Sources
