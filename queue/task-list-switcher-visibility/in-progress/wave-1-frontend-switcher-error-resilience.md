@@ -1,6 +1,6 @@
 ---
 task-id: switcher-error-resilience
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -12,6 +12,9 @@ scenario-refs:
   - BDD-13
 auth-mode: max-oauth
 billed: false
+claimed-by: cloud-Christians-MacBook-Air-28333
+claimed-at: 2026-04-19T11:52:50Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
