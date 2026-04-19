@@ -6,9 +6,14 @@
 
 ```
 .
+./.github
+./.github/workflows
 ./public
 ./src
 ./src/assets
+./src/components
+./src/components/mobile
+./src/hooks
 ./tests
 ```
 
@@ -42,8 +47,13 @@
 
 | File | Lines |
 |------|-------|
-| `./src/App.jsx` | ~2190 |
+| `./src/App.jsx` | ~3040 |
+| `./src/AnalyticsPage.jsx` | ~532 |
+| `./src/components/mobile/FullScreenModal.jsx` | ~88 |
+| `./src/components/mobile/OverflowMenu.jsx` | ~81 |
 | `./src/theme.js` | ~57 |
+| `./src/components/mobile/FloatingActionButton.jsx` | ~37 |
+| `./src/components/mobile/BottomSheet.jsx` | ~34 |
 
 ---
 

@@ -6,6 +6,8 @@
 
 ```
 .
+./.github
+./.github/workflows
 ./src
 ./tests
 ```
@@ -38,7 +40,7 @@
 
 | File | Lines |
 |------|-------|
-| `./src/app.js` | ~539 |
+| `./src/app.js` | ~681 |
 
 ---
 
