@@ -1,6 +1,6 @@
 ---
 task-id: mobile-analytics
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -15,6 +15,9 @@ scenario-refs:
   - BDD-7
   - BDD-9
   - BDD-8
+claimed-by: cloud-Christians-MacBook-Air-43125
+claimed-at: 2026-04-19T22:40:16Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
