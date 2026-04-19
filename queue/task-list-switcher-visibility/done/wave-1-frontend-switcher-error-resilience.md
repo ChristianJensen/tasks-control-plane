@@ -1,6 +1,6 @@
 ---
 task-id: switcher-error-resilience
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -15,6 +15,12 @@ billed: false
 claimed-by: cloud-Christians-MacBook-Air-28333
 claimed-at: 2026-04-19T11:52:50Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.16025855
+input-tokens: 45
+output-tokens: 15431
+duration-ms: 322047
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/107
+pr-number: 107
 ---
 
 ## Description
