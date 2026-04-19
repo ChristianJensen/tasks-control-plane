@@ -1,6 +1,6 @@
 ---
 task-id: mobile-analytics
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -18,6 +18,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-43125
 claimed-at: 2026-04-19T22:40:16Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 2.0275947
+input-tokens: 64
+output-tokens: 37488
+duration-ms: 675062
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/110
+pr-number: 110
 ---
 
 ## Description
