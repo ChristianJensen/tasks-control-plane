@@ -358,3 +358,78 @@ Inspect handoff note; check agent environment
 
 **Upstream fix applied:**
 [TODO — apply fix and update this entry]
+
+### 2026-04-17 — Agent blocked: wave-1-frontend-switcher-error-resilience.md
+
+**Signal:** status:blocked
+**Root Cause:** unknown — Unexpected exit code 128
+**Task File:** queue/task-list-switcher-visibility/ready/wave-1-frontend-switcher-error-resilience.md
+
+**What happened:**
+Agent failed with exit code 128 (unknown). Unexpected exit code 128.
+
+**What would have prevented it:**
+Inspect handoff note and agent logs
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-18 — Agent blocked: wave-1-frontend-switcher-error-resilience.md
+
+**Signal:** status:blocked
+**Root Cause:** unknown — Unexpected exit code 128
+**Task File:** queue/task-list-switcher-visibility/ready/wave-1-frontend-switcher-error-resilience.md
+
+**What happened:**
+Agent failed with exit code 128 (unknown). Unexpected exit code 128.
+
+**What would have prevented it:**
+Inspect handoff note and agent logs
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-18 — Agent blocked: wave-1-frontend-switcher-error-resilience.md
+
+**Signal:** status:blocked
+**Root Cause:** unknown — Unexpected exit code 128
+**Task File:** queue/task-list-switcher-visibility/ready/wave-1-frontend-switcher-error-resilience.md
+
+**What happened:**
+Agent failed with exit code 128 (unknown). Unexpected exit code 128.
+
+**What would have prevented it:**
+Inspect handoff note and agent logs
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-18 — Agent blocked: wave-1-frontend-switcher-error-resilience.md
+
+**Signal:** status:blocked
+**Root Cause:** unknown — Unexpected exit code 128
+**Task File:** queue/task-list-switcher-visibility/ready/wave-1-frontend-switcher-error-resilience.md
+
+**What happened:**
+Agent failed with exit code 128 (unknown). Unexpected exit code 128.
+
+**What would have prevented it:**
+Inspect handoff note and agent logs
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-18 — Agent blocked: wave-1-frontend-switcher-error-resilience.md
+
+**Signal:** status:blocked
+**Root Cause:** unknown — Unexpected exit code 128
+**Task File:** queue/task-list-switcher-visibility/ready/wave-1-frontend-switcher-error-resilience.md
+
+**What happened:**
+Agent failed with exit code 128 (unknown). Unexpected exit code 128.
+
+**What would have prevented it:**
+Inspect handoff note and agent logs
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
