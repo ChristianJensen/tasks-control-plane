@@ -1,6 +1,6 @@
 ---
 task-id: mobile-ui-primitives
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -14,6 +14,9 @@ scenario-refs:
   - BDD-19
   - BDD-20
   - BDD-22
+claimed-by: cloud-Christians-MacBook-Air-36088
+claimed-at: 2026-04-19T22:25:44Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
