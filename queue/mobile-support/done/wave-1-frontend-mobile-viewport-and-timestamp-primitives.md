@@ -1,6 +1,6 @@
 ---
 task-id: mobile-viewport-and-timestamp-primitives
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -15,6 +15,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-41108
 claimed-at: 2026-04-19T22:36:20Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.7063058999999998
+input-tokens: 897
+output-tokens: 13046
+duration-ms: 211700
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/109
+pr-number: 109
 ---
 
 ## Description
