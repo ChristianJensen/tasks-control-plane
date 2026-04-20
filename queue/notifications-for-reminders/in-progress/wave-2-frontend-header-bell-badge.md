@@ -1,6 +1,6 @@
 ---
 task-id: header-bell-badge
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -17,6 +17,9 @@ scenario-refs:
   - BDD-12
   - BDD-18
   - BDD-19
+claimed-by: cloud-Christians-MacBook-Air-82923
+claimed-at: 2026-04-20T17:02:26Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
