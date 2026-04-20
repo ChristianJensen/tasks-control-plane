@@ -1,6 +1,6 @@
 ---
 task-id: bell-drawer-navigation
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -17,6 +17,9 @@ scenario-refs:
   - BDD-8
   - BDD-9
   - BDD-16
+claimed-by: cloud-Christians-MacBook-Air-91873
+claimed-at: 2026-04-20T17:16:25Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
