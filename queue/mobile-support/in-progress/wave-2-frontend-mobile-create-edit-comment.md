@@ -1,6 +1,6 @@
 ---
 task-id: mobile-create-edit-comment
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -17,6 +17,9 @@ scenario-refs:
   - BDD-14
   - BDD-20
   - BDD-22
+claimed-by: cloud-Christians-MacBook-Air-58257
+claimed-at: 2026-04-20T06:10:59Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
