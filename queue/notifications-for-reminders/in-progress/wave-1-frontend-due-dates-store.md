@@ -1,6 +1,6 @@
 ---
 task-id: due-dates-store
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -10,6 +10,9 @@ type: feature
 estimated-lines: 180
 scenario-refs:
   - BDD-17
+claimed-by: cloud-Christians-MacBook-Air-74415
+claimed-at: 2026-04-20T16:43:31Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
