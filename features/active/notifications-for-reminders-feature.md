@@ -1,10 +1,15 @@
 ---
 title: "Notifications for Reminders"
-lifecycle: draft
+lifecycle: active
 execution: supervised
 model: ""
 priority: medium
-dimensions: [assumptions, edges, scope, arch, ux]
+dimensions:
+  - assumptions
+  - edges
+  - scope
+  - arch
+  - ux
 total-budget: ""
 total-cost-usd: ""
 total-tokens: ""
