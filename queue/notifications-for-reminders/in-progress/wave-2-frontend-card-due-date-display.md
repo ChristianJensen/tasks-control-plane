@@ -1,6 +1,6 @@
 ---
 task-id: card-due-date-display
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -15,6 +15,9 @@ scenario-refs:
   - BDD-4
   - BDD-13
   - BDD-14
+claimed-by: cloud-Christians-MacBook-Air-88687
+claimed-at: 2026-04-20T17:09:31Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
