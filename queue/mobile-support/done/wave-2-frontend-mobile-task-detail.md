@@ -1,6 +1,6 @@
 ---
 task-id: mobile-task-detail
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -21,6 +21,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-63146
 claimed-at: 2026-04-20T06:38:40Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 2.923199549999999
+input-tokens: 64
+output-tokens: 45898
+duration-ms: 950414
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/112
+pr-number: 112
 ---
 
 ## Description
