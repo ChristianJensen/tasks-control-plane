@@ -1,6 +1,6 @@
 ---
 task-id: mobile-create-edit-comment
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -20,6 +20,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-58257
 claimed-at: 2026-04-20T06:10:59Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 3.7225572
+input-tokens: 76
+output-tokens: 50752
+duration-ms: 1631899
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/111
+pr-number: 111
 ---
 
 ## Description
