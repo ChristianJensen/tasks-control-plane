@@ -1,6 +1,6 @@
 ---
 task-id: header-bell-badge
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -20,6 +20,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-82923
 claimed-at: 2026-04-20T17:02:26Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.0576983500000001
+input-tokens: 39
+output-tokens: 18941
+duration-ms: 403355
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/117
+pr-number: 117
 ---
 
 ## Description
