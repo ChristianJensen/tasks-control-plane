@@ -1,6 +1,6 @@
 ---
 task-id: due-date-form-input
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -14,6 +14,9 @@ scenario-refs:
   - BDD-1
   - BDD-2
   - BDD-15
+claimed-by: cloud-Christians-MacBook-Air-77071
+claimed-at: 2026-04-20T16:48:18Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
