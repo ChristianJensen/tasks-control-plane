@@ -1,6 +1,6 @@
 ---
 task-id: mobile-filters
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -15,6 +15,9 @@ scenario-refs:
   - BDD-2
   - BDD-17
   - BDD-10
+claimed-by: cloud-Christians-MacBook-Air-66295
+claimed-at: 2026-04-20T06:54:57Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
