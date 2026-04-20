@@ -1,6 +1,6 @@
 ---
 task-id: mobile-task-detail
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -18,6 +18,9 @@ scenario-refs:
   - BDD-15
   - BDD-21
   - BDD-20
+claimed-by: cloud-Christians-MacBook-Air-63146
+claimed-at: 2026-04-20T06:38:40Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
