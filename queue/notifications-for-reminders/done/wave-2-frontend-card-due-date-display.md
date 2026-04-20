@@ -1,6 +1,6 @@
 ---
 task-id: card-due-date-display
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -18,6 +18,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-88687
 claimed-at: 2026-04-20T17:09:31Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.9205812
+input-tokens: 69
+output-tokens: 17575
+duration-ms: 388567
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/118
+pr-number: 118
 ---
 
 ## Description
