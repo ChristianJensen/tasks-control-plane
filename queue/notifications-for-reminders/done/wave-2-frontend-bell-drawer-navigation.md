@@ -1,6 +1,6 @@
 ---
 task-id: bell-drawer-navigation
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -20,14 +20,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-28757
 claimed-at: 2026-04-21T19:51:02Z
 claimed-on: Christians-MacBook-Air
-cost-usd: 0.40360050000000003
-input-tokens: 21
-output-tokens: 3779
-duration-ms: 8913114
+cost-usd: 3.846795399999999
+input-tokens: 78
+output-tokens: 59895
+duration-ms: 2155091
 auth-mode: max-oauth
 billed: false
-pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/119
-pr-number: 119
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/120
+pr-number: 120
 ---
 
 ## Description
