@@ -1,6 +1,6 @@
 ---
 task-id: bell-drawer-navigation
-status: in-progress
+status: blocked
 execution: supervised
 target-repo: frontend
 wave: 2
