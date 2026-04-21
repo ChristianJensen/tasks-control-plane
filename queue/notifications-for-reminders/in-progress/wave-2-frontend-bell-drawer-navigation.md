@@ -1,6 +1,6 @@
 ---
 task-id: bell-drawer-navigation
-status: blocked
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -17,8 +17,8 @@ scenario-refs:
   - BDD-8
   - BDD-9
   - BDD-16
-claimed-by: cloud-Christians-MacBook-Air-14640
-claimed-at: 2026-04-21T02:51:15Z
+claimed-by: cloud-Christians-MacBook-Air-16531
+claimed-at: 2026-04-21T08:32:09Z
 claimed-on: Christians-MacBook-Air
 cost-usd: 0.460599
 input-tokens: 10
