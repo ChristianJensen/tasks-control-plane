@@ -1,10 +1,13 @@
 ---
 title: "Confetti on last task complete"
-lifecycle: draft
+lifecycle: active
 execution: supervised
 model: ""
 priority: medium
-dimensions: [assumptions, edges, ux]
+dimensions:
+  - assumptions
+  - edges
+  - ux
 total-budget: ""
 total-cost-usd: ""
 total-tokens: ""
