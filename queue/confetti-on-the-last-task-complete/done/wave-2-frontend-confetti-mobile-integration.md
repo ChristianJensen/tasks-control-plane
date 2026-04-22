@@ -1,6 +1,6 @@
 ---
 task-id: confetti-mobile-integration
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -16,6 +16,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-2054
 claimed-at: 2026-04-22T13:59:30Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 1.3461343500000005
+input-tokens: 39
+output-tokens: 27566
+duration-ms: 491970
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/123
+pr-number: 123
 ---
 
 ## Description
