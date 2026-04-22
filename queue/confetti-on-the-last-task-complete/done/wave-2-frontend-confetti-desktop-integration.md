@@ -1,6 +1,6 @@
 ---
 task-id: confetti-desktop-integration
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -24,6 +24,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-94915
 claimed-at: 2026-04-22T10:07:54Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 3.6303702000000007
+input-tokens: 83
+output-tokens: 58960
+duration-ms: 5917798
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/122
+pr-number: 122
 ---
 
 ## Description
