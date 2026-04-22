@@ -1,6 +1,6 @@
 ---
 task-id: confetti-shared-helpers
-status: in-progress
+status: done
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -15,6 +15,14 @@ scenario-refs:
 claimed-by: cloud-Christians-MacBook-Air-91419
 claimed-at: 2026-04-22T09:53:27Z
 claimed-on: Christians-MacBook-Air
+cost-usd: 0.62905785
+input-tokens: 33
+output-tokens: 7440
+duration-ms: 186453
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/121
+pr-number: 121
 ---
 
 ## Description
