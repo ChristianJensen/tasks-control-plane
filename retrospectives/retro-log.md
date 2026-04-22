@@ -433,3 +433,63 @@ Inspect handoff note and agent logs
 
 **Upstream fix applied:**
 [TODO — apply fix and update this entry]
+
+### 2026-04-21 — Agent blocked: wave-2-frontend-bell-drawer-navigation.md
+
+**Signal:** status:blocked
+**Root Cause:** general-error — General script error (missing dir, bad args)
+**Task File:** queue/notifications-for-reminders/blocked/wave-2-frontend-bell-drawer-navigation.md
+
+**What happened:**
+Agent failed with exit code 1 (general-error). General script error (missing dir, bad args).
+
+**What would have prevented it:**
+Inspect handoff note; check agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-21 — Agent blocked: wave-2-frontend-bell-drawer-navigation.md
+
+**Signal:** status:blocked
+**Root Cause:** general-error — General script error (missing dir, bad args)
+**Task File:** queue/notifications-for-reminders/blocked/wave-2-frontend-bell-drawer-navigation.md
+
+**What happened:**
+Agent failed with exit code 1 (general-error). General script error (missing dir, bad args).
+
+**What would have prevented it:**
+Inspect handoff note; check agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-21 — Agent blocked: wave-2-frontend-bell-drawer-navigation.md
+
+**Signal:** status:blocked
+**Root Cause:** general-error — General script error (missing dir, bad args)
+**Task File:** queue/notifications-for-reminders/blocked/wave-2-frontend-bell-drawer-navigation.md
+
+**What happened:**
+Agent failed with exit code 1 (general-error). General script error (missing dir, bad args).
+
+**What would have prevented it:**
+Inspect handoff note; check agent environment
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]
+
+### 2026-04-21 — Agent blocked: wave-2-frontend-bell-drawer-navigation.md
+
+**Signal:** status:blocked
+**Root Cause:** unknown — Unexpected exit code 128
+**Task File:** queue/notifications-for-reminders/ready/wave-2-frontend-bell-drawer-navigation.md
+
+**What happened:**
+Agent failed with exit code 128 (unknown). Unexpected exit code 128.
+
+**What would have prevented it:**
+Inspect handoff note and agent logs
+
+**Upstream fix applied:**
+[TODO — apply fix and update this entry]

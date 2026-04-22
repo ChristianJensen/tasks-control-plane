@@ -1,6 +1,6 @@
 ---
 task-id: confetti-mobile-integration
-status: in-progress
+status: ready
 execution: supervised
 target-repo: frontend
 wave: 2
@@ -13,9 +13,6 @@ depends-on:
 scenario-refs:
   - BDD-3
   - BDD-15
-claimed-by: cloud-Christians-MacBook-Air-97924
-claimed-at: 2026-04-22T11:46:54Z
-claimed-on: Christians-MacBook-Air
 ---
 
 ## Description

@@ -1,0 +1,135 @@
+---
+task: wave-2-frontend-card-due-date-display.md
+feature: notifications-for-reminders
+branch: agent/notifications-for-reminders-w2-card-due-date-display
+status: done
+timestamp: 2026-04-20T17:16:10Z
+agent: cloud-Christians-MacBook-Air-88687
+---
+## Session Summary
+**Task:** Update the call site of the existing `DueDateDisplay` in `SortableTaskItem` (App.jsx ~747) so it renders using the effective due date: `task.dueDate ?? localDueDateMap[task.id]`. The existing component already handles fuchsia "today" and rose "Overdue by N days" styling \u2014 do not modify the component's presentation logic. If the effective date is absent, render nothing (unchanged). Orphan `localStorage` entries (task IDs no longer returned by the API) render nothing because the card for that ID doesn't exist \u2014 no errors thrown. When the user clears browser storage, cards render without locally-stored labels and the app continues to function.  |  **Status:** done  |  **Exit:** 0
+
+## Cost
+**Cost:** $0.9206 _(Max plan — not billed)_  |  **Tokens:** 69 in / 17,575 out  |  **Duration:** 389s
+
+## What Was Done
+8ed0208 feat(card-due-date-display): wire effective dueDate from localStorage to DueDateDisplay (BDD-3, BDD-4, BDD-13, BDD-14)
+
+## Files Changed
+src/App.jsx
+src/components/ReminderBell.jsx
+tests/card-due-date-display.test.jsx
+tests/reminder-bell.test.jsx
+
+## PR Status
+PR #118 (OPEN): https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/118
+
+## What's Next
+No tasks were blocked on this one.
+
+## Resume Prompt
+```
+You are resuming work on branch agent/notifications-for-reminders-w2-card-due-date-display for task wave-2-frontend-card-due-date-display.md.
+
+---
+task-id: card-due-date-display
+status: done
+execution: supervised
+target-repo: frontend
+wave: 2
+priority: high
+feature: notifications-for-reminders
+type: feature
+estimated-lines: 140
+depends-on:
+  - due-dates-store
+scenario-refs:
+  - BDD-3
+  - BDD-4
+  - BDD-13
+  - BDD-14
+claimed-by: cloud-Christians-MacBook-Air-88687
+claimed-at: 2026-04-20T17:09:31Z
+claimed-on: Christians-MacBook-Air
+cost-usd: 0.9205812
+input-tokens: 69
+output-tokens: 17575
+duration-ms: 388567
+auth-mode: max-oauth
+billed: false
+pr-url: https://github.com/ChristianJensen/agentic-sdlc-frontend/pull/118
+pr-number: 118
+---
+
+## Description
+
+Update the call site of the existing `DueDateDisplay` in `SortableTaskItem` (App.jsx ~747) so it renders using the effective due date: `task.dueDate ?? localDueDateMap[task.id]`. The existing component already handles fuchsia "today" and rose "Overdue by N days" styling \u2014 do not modify the component's presentation logic. If the effective date is absent, render nothing (unchanged). Orphan `localStorage` entries (task IDs no longer returned by the API) render nothing because the card for that ID doesn't exist \u2014 no errors thrown. When the user clears browser storage, cards render without locally-stored labels and the app continues to function.
+
+## Why
+
+Surfaces the due date on every task card without introducing a second label or new styling \u2014 satisfies UX1 (reuse existing DueDateDisplay as the single due-date surface). Independent of form input and bell surfaces; multiple agents can work in parallel.
+
+## Files to Modify
+
+- `src/App.jsx:740-760` (edit) — Resolve effective dueDate via useDueDate(task.id) and pass to DueDateDisplay; do not modify the DueDateDisplay component internals at lines 542-597
+
+## Reference Patterns
+
+- `src/App.jsx:542-597` — DueDateDisplay internals — DO NOT modify, just feed an effective due date in
+- `src/App.jsx:598-750` — SortableTaskItem shape — where DueDateDisplay is already rendered at ~747
+- `src/hooks/useDueDates.js` — Store hook (from due-dates-store task) — DO NOT modify
+
+## Test Plan
+
+- `tests/card-due-date-display.test.jsx` (new) covers BDD-3, BDD-4, BDD-13, BDD-14
+
+## Out of Scope
+
+- src/App.jsx DueDateDisplay component internals at lines 542-597 (must remain unchanged — UX1 explicitly reuses it as-is)
+- Create/edit form (owned by due-date-form-input)
+- Bell + badge (owned by header-bell-badge)
+- Drawer (owned by bell-drawer-navigation)
+- Active orphan cleanup (deferred per A1)
+
+## Verification
+
+- npm test -- tests/card-due-date-display.test.jsx passes
+- npm test passes overall
+- npm run build passes
+- Manual: seed localStorage with dueDate:{id} for today and yesterday, reload, verify fuchsia + rose styling on the right cards
+
+## Contract References
+
+
+
+## Acceptance Criteria
+
+### Behaviors
+
+- **GIVEN** a non-terminal-status task whose effective due date equals today
+  **WHEN** the app loads
+  **THEN** its card renders in fuchsia via the existing DueDateDisplay component _(implements BDD-3)_
+
+- **GIVEN** a non-terminal-status task whose effective due date is earlier than today
+  **WHEN** the app loads
+  **THEN** its card renders in rose and shows 'Overdue by N days' _(implements BDD-4)_
+
+- **GIVEN** a localStorage due-date entry exists for a task ID that is no longer returned by the API
+  **WHEN** the app loads
+  **THEN** the orphaned entry is ignored when rendering cards and no errors are thrown _(implements BDD-13)_
+
+- **GIVEN** the user has cleared browser storage
+  **WHEN** they reload the app
+  **THEN** all tasks render without locally-stored due-date labels and the app functions normally _(implements BDD-14)_
+
+### Invariants
+
+- [ ] Tests pass
+- [ ] Contract-compliant
+
+
+Previous session: done. Commits:
+8ed0208 feat(card-due-date-display): wire effective dueDate from localStorage to DueDateDisplay (BDD-3, BDD-4, BDD-13, BDD-14)
+
+Continue from where the previous agent left off.
+```
