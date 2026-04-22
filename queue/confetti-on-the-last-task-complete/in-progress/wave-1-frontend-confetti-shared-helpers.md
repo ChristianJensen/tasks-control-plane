@@ -1,6 +1,6 @@
 ---
 task-id: confetti-shared-helpers
-status: ready
+status: in-progress
 execution: supervised
 target-repo: frontend
 wave: 1
@@ -12,6 +12,9 @@ scenario-refs:
   - BDD-2
   - BDD-5
   - BDD-7
+claimed-by: cloud-Christians-MacBook-Air-91419
+claimed-at: 2026-04-22T09:53:27Z
+claimed-on: Christians-MacBook-Air
 ---
 
 ## Description
