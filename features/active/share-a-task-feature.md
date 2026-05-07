@@ -36,7 +36,7 @@ Users sometimes need to show a task to someone who doesn't use the app — a col
 
 ### US-1: As a task owner, I want to copy a public link to a task so that I can share it with someone who doesn't have an account
 
-Status: pending
+Status: in-progress
 Repos: api, frontend
 PR-api:
 PR-frontend:
