@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Tasks API",
-    "version": "0.11.0",
+    "version": "0.12.0",
     "description": "Shared contract between api and frontend repos"
   },
   "paths": {
@@ -477,6 +477,105 @@
         }
       }
     },
+    "/tasks/{taskId}/share": {
+      "post": {
+        "operationId": "createOrGetShareToken",
+        "summary": "Generate or return the share token for a task",
+        "description": "Idempotently returns a public share token for the task. If the task already has a token, returns it unchanged. Otherwise generates a new 22-character URL-safe base64 token, persists it on the task, and returns it. Requires X-User-Id header for ownership.",
+        "tags": [
+          "tasks",
+          "share"
+        ],
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/XUserId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Share token returned (existing or newly generated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing X-User-Id header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/tasks/{token}": {
+      "get": {
+        "operationId": "getPublicSharedTask",
+        "summary": "Fetch a publicly shared task by share token",
+        "description": "Returns a minimal read-only payload for the task associated with the given share token. No authentication or X-User-Id header required. Returns 404 indistinguishably for unknown, malformed, and deleted-task tokens to prevent enumeration.",
+        "tags": [
+          "share"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "22-character URL-safe base64 share token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public task payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSharedTask"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Token unknown, malformed, or task deleted (responses are indistinguishable)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tasks/{taskId}/comments": {
       "post": {
         "operationId": "createComment",
@@ -704,6 +803,14 @@
             "description": "Organizational category. Null means uncategorized.",
             "x-data-classification": "internal"
           },
+          "shareToken": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "22-character URL-safe base64 public share token. Null until a share link has been generated. Only returned on authenticated task fetches; never echoed on the public endpoint.",
+            "x-data-classification": "internal"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -713,6 +820,41 @@
             "type": "string",
             "format": "date-time",
             "x-data-classification": "internal"
+          }
+        }
+      },
+      "ShareTokenResponse": {
+        "type": "object",
+        "required": [
+          "shareToken"
+        ],
+        "properties": {
+          "shareToken": {
+            "type": "string",
+            "description": "22-character URL-safe base64 share token for the task",
+            "x-data-classification": "internal"
+          }
+        }
+      },
+      "PublicSharedTask": {
+        "type": "object",
+        "required": [
+          "title",
+          "status"
+        ],
+        "description": "Minimal public payload for a shared task. Intentionally omits id, owner, timestamps, comments, history, and category to limit data exposure to unauthenticated viewers.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "x-data-classification": "public"
+          },
+          "description": {
+            "type": "string",
+            "x-data-classification": "public"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus",
+            "x-data-classification": "public"
           }
         }
       },
