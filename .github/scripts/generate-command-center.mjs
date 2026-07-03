@@ -14,6 +14,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { execSync } from "node:child_process";
+import assert from "node:assert";
 
 // ── Frontmatter parser (inlined from dashboard/worker/lib/frontmatter.js) ───
 
@@ -50,10 +51,10 @@ function parseFrontmatter(content) {
 
 // ── Board state aggregation (inlined from dashboard/worker/lib/board-state.js) ─
 
-function deriveFeatureStatus(tasks, isArchived) {
-  if (isArchived || tasks.every((t) => t.status === "done")) return "shipped";
-  if (tasks.some((t) => t.status === "blocked")) return "blocked";
-  if (tasks.some((t) => t.status === "done" || t.status === "in-progress")) return "in-progress";
+function deriveFeatureStatus(units, isArchived) {
+  if (isArchived || (units.length > 0 && units.every((u) => u.status === "done"))) return "shipped";
+  if (units.some((u) => u.status === "blocked")) return "blocked";
+  if (units.some((u) => u.status === "done" || u.status === "in-progress")) return "in-progress";
   return "not-started";
 }
 
@@ -176,6 +177,32 @@ function parseTask(content, filename, featureSlug, isArchived, sha, relPath) {
   };
 }
 
+function taskToWorkUnit(t) {
+  return {
+    kind: "task", id: t.filename, filename: t.filename,
+    title: t.title || t.filename.replace(/\.md$/, ""), description: t.description || "",
+    status: t.status, priority: t.priority || "normal", wave: t.wave || 0,
+    repo: t.repo || "", type: t.type || "feature",
+    claimed_by: t.claimed_by || "", claimed_at: t.claimed_at || "",
+    sha: t.sha || null, relPath: t.relPath || "",
+    pr_url: t.pr_url || "", pr_number: t.pr_number || "",
+    repos: t.repo ? [t.repo] : [], prs: t.pr_number ? { [t.repo || ""]: t.pr_number } : {},
+    scenarios: [],
+  };
+}
+
+function sliceToWorkUnit(s) {
+  return {
+    kind: "slice", id: s.id, filename: "",
+    title: s.title, description: "",
+    status: s.status, priority: "normal", wave: 0,
+    repo: s.repos.join(", "), type: "feature",
+    claimed_by: "", claimed_at: "", sha: null, relPath: "",
+    pr_url: "", pr_number: "",
+    repos: s.repos, prs: s.prs, scenarios: s.scenarios,
+  };
+}
+
 // A draft spec is "ready to activate" once every Readiness Checklist item is
 // ticked — the same gate validate.py enforces at Approve & Activate. Both the
 // web wizard and the CLI tick these deterministically via
@@ -194,13 +221,46 @@ function isSpecComplete(body) {
   return checked > 0 && unchecked === 0;
 }
 
-function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [], archivedTaskFiles = [] }) {
+// Single-line `Field: value` inside a US-N story body. Mirrors _bdd.py::_extract_field.
+function extractStoryField(body, name) {
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = body.match(new RegExp("(?:^|\\n)" + esc + "[ \\t]*:[ \\t]*([^\\n]*)"));
+  return m ? m[1] : null;
+}
+
+// Parse `## User Stories` → US-N slices. Faithful JS mirror of
+// _bdd.py::parse_user_stories (that file stays the source of truth).
+function parseUserStories(body) {
+  const section = body.match(/(?:^|\n)##[ \t]+User Stories[ \t]*\n([\s\S]*?)(?=\n##[ \t]|$)/);
+  if (!section) return [];
+  const sectionBody = section[1];
+  const storyRe = /(?:^|\n)###[ \t]+US-(\d+):[ \t]*([^\n]*)\n([\s\S]*?)(?=\n###[ \t]+US-\d+:|$)/g;
+  const stories = [];
+  let m;
+  while ((m = storyRe.exec(sectionBody)) !== null) {
+    const id = `US-${m[1]}`;
+    const title = m[2].trim();
+    const sBody = m[3];
+    const status = (extractStoryField(sBody, "Status") || "pending").trim();
+    const reposField = extractStoryField(sBody, "Repos") || "";
+    const repos = reposField.split(",").map((r) => r.trim()).filter(Boolean);
+    const prs = {};
+    for (const repo of repos) prs[repo] = (extractStoryField(sBody, `PR-${repo}`) || "").trim();
+    const nums = [...sBody.matchAll(/\*\*BDD-(\d+)\*?\*?/g)].map((x) => Number(x[1]));
+    const scenarios = [...new Set(nums)].sort((a, b) => a - b).map((n) => `BDD-${n}`);
+    stories.push({ id, title, status, repos, prs, scenarios, raw: sBody });
+  }
+  return stories;
+}
+
+function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [], archivedTaskFiles = [], implLogFiles = {} }) {
   const specs = {};
   for (const f of [...featureFiles, ...bugFiles]) {
     const bname = f.path.split("/").pop();
     const slug = bname.replace(/-feature\.md$/, "").replace(/-bug\.md$/, "");
     const isBug = bname.endsWith("-bug.md");
     const { fields, body } = parseFrontmatter(f.content);
+    const slices = isBug ? [] : parseUserStories(body);
     specs[slug] = {
       slug, type: isBug ? "bug" : "feature", lifecycle: fields.lifecycle || "draft",
       execution: fields.execution || "supervised",
@@ -215,6 +275,9 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       completedAt: fields["completed-at"] || "",
       sha: f.sha || null,
       specPath: f.path || "",
+      slices,
+      totalCostUsd: parseFloat(fields["total-cost-usd"]) || 0,
+      totalTokens: parseInt(fields["total-tokens"]) || 0,
     };
   }
 
@@ -245,55 +308,48 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
   for (const slug of allSlugs) {
     const spec = specs[slug] || { slug, type: "feature", lifecycle: "unknown", execution: "supervised", epic: "", epicTitle: "", title: slug, problem: "" };
     const tasks = tasksByFeature[slug] || [];
-    const isArchived = tasks.length > 0 && tasks.every((t) =>
+    const isArchived = tasks.length > 0 && tasks.every(() =>
       archivedTaskFiles.some((f) => f.path.includes(`/_done/${slug}/`))
     );
-    // No decomposed tasks yet: a draft or a freshly-activated feature is
+    const hasQueueTasks = tasks.length > 0;
+    const units = hasQueueTasks
+      ? tasks.map(taskToWorkUnit)
+      : (spec.slices || []).map(sliceToWorkUnit);
+    const unitKind = hasQueueTasks ? "task" : (units.length ? "slice" : "none");
+    // No decomposed tasks/slices yet: a draft or a freshly-activated feature is
     // "not-started" (stays visible — Draft/Ready column), NOT "orphaned".
     // Reserve "orphaned" (hidden from the board) for specs that are closed out
     // or a lifecycle we don't recognize, so finishing a spec never makes it
     // vanish while it's waiting to be planned.
-    const status = tasks.length > 0
-      ? deriveFeatureStatus(tasks, isArchived)
+    const status = units.length > 0
+      ? deriveFeatureStatus(units, isArchived)
       : (spec.lifecycle === "draft" || spec.lifecycle === "active"
           ? "not-started" : "orphaned");
 
-    const cost = {
+    const cost = hasQueueTasks ? {
       usd: tasks.reduce((s, t) => s + (t.cost_usd || 0), 0),
       usd_billed: tasks.reduce((s, t) => s + (t.billed ? (t.cost_usd || 0) : 0), 0),
       input_tokens: tasks.reduce((s, t) => s + (t.input_tokens || 0), 0),
       output_tokens: tasks.reduce((s, t) => s + (t.output_tokens || 0), 0),
+    } : {
+      usd: spec.totalCostUsd || 0, usd_billed: 0,
+      input_tokens: 0, output_tokens: spec.totalTokens || 0,
     };
     cost.tokens = cost.input_tokens + cost.output_tokens;
 
     const feature = {
       slug, title: spec.title, type: spec.type, lifecycle: spec.lifecycle, status,
+      unitKind,
       specComplete: !!spec.specComplete,
       execution: spec.execution, epic: spec.epic, epicTitle: spec.epicTitle,
       createdAt: spec.createdAt || "", completedAt: spec.completedAt || "", specSha: spec.sha || null, specPath: spec.specPath || "",
-      problem: spec.problem, cost, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
-      waves: tasks.length > 0 ? groupByWave(tasks) : [],
-      repos: tasks.length > 0 ? groupByRepo(tasks) : {},
-      missing: status !== "shipped"
-        ? tasks.map((t) => ({
-            filename: t.filename, status: t.status, priority: t.priority,
-            wave: t.wave, claimed_by: t.claimed_by || null,
-            claimed_at: t.claimed_at || null,
-            description: t.description || "", title: t.title || "",
-            repo: t.repo || "", type: t.type || "feature",
-            sha: t.sha || null, relPath: t.relPath || "",
-            pr_url: t.pr_url || "", pr_number: t.pr_number || "",
-          }))
-        : [],
-      allTasks: tasks.map((t) => ({
-        filename: t.filename, status: t.status, priority: t.priority,
-        wave: t.wave, claimed_by: t.claimed_by || null,
-        claimed_at: t.claimed_at || null,
-        description: t.description || "", title: t.title || "",
-        repo: t.repo || "", type: t.type || "feature",
-        sha: t.sha || null, relPath: t.relPath || "",
-        pr_url: t.pr_url || "", pr_number: t.pr_number || "",
-      })),
+      problem: spec.problem, cost,
+      tasks: units.length > 0 ? taskCounts(units) : null,
+      waves: units.length > 0 ? groupByWave(units) : [],
+      repos: units.length > 0 ? groupByRepo(units) : {},
+      missing: status !== "shipped" ? units : [],
+      allTasks: units,
+      implLogDigest: implLogDigest(implLogFiles[slug] || ""),
     };
 
     if (spec.type === "bug") {
@@ -375,13 +431,14 @@ function parseRelayConfig(cpDir) {
 // ── CLI args ────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { cpDir: ".", output: "command-center/index.html", prData: null, title: null };
+  const args = { cpDir: ".", output: "command-center/index.html", prData: null, title: null, selfTest: false };
   for (let i = 2; i < argv.length; i++) {
     switch (argv[i]) {
       case "--cp-dir": args.cpDir = argv[++i]; break;
       case "--output": args.output = argv[++i]; break;
       case "--pr-data": args.prData = argv[++i]; break;
       case "--title": args.title = argv[++i]; break;
+      case "--self-test": args.selfTest = true; break;
       case "--help":
         console.log("Usage: node generate-command-center.mjs --cp-dir <path> [--pr-data <path>] [--output <path>] [--title <string>]");
         process.exit(0);
@@ -486,6 +543,46 @@ function collectBugFiles(cpDir) {
     }
   }
   return results;
+}
+
+function collectImplLogFiles(cpDir) {
+  const map = {};
+  const featDir = join(cpDir, "features");
+  if (!existsSync(featDir)) return map;
+  for (const phase of listFiles(featDir)) {
+    const phaseDir = join(featDir, phase);
+    if (!(existsSync(phaseDir) && statSync(phaseDir).isDirectory() && FEATURE_PHASES.has(phase))) continue;
+    for (const file of listFiles(phaseDir)) {
+      if (file.endsWith("-impl-log.md")) {
+        const slug = file.replace(/-impl-log\.md$/, "");
+        map[slug] = readFileSync(join(phaseDir, file), "utf8");
+      }
+    }
+  }
+  return map;
+}
+
+// Compact digest of an append-only impl-log. Each entry is a
+// `## <ts> — US-N / repo — … — RELAY-COMPLETE: BDD-…` section followed by
+// ### Decisions/Discoveries/Spec gaps. Returns null for a header-only stub.
+function implLogDigest(content) {
+  if (!content) return null;
+  const entryRe = /(?:^|\n)##[ \t]+([^\n]*RELAY-COMPLETE[^\n]*)\n([\s\S]*?)(?=\n##[ \t]|$)/g;
+  const entries = [];
+  let m;
+  while ((m = entryRe.exec(content)) !== null) entries.push({ header: m[1].trim(), body: m[2] });
+  if (entries.length === 0) return null;
+  const last = entries[entries.length - 1];
+  const rc = (last.header.match(/RELAY-COMPLETE:\s*(.+)$/) || [])[1] || "";
+  const bdd = [...rc.matchAll(/BDD-\d+/g)].map((x) => x[0]);
+  const grab = (name) => {
+    const mm = last.body.match(new RegExp("###[ \\t]+" + name + "[ \\t]*\\n([\\s\\S]*?)(?=\\n###[ \\t]|$)"));
+    return mm ? mm[1].trim() : "";
+  };
+  return {
+    count: entries.length, latestHeader: last.header, bdd,
+    decisions: grab("Decisions"), discoveries: grab("Discoveries"), specGaps: grab("Spec gaps"),
+  };
 }
 
 // ── Exit code classification ───────────────────────────────────
@@ -1242,7 +1339,7 @@ function renderKanbanCard(feature) {
   </div>
   ${tasks.total > 0 ? `<div class="card-progress"><div class="card-progress-fill" style="width:${pct}%;background:${progressColor}${progressGlow ? ";box-shadow:" + progressGlow : ""}"></div></div>
   <div class="card-footer">
-    <span class="card-tasks">${tasks.done}/${tasks.total} tasks</span>
+    <span class="card-tasks">${tasks.done}/${tasks.total} ${feature.unitKind === "slice" ? "slices" : "tasks"}</span>
     ${feature.epic ? `<span class="card-epic">epic: ${escHTML(feature.epic)}</span>` : ""}
   </div>` : `<div class="card-footer">${feature.epic ? `<span class="card-epic">epic: ${escHTML(feature.epic)}</span>` : ""}</div>`}
 </div>`;
@@ -1316,6 +1413,9 @@ function buildFeaturesJSON(features, prsByFeature, linkContext) {
       slug: f.slug, title: f.title, type: f.type, status: f.status, lifecycle: f.lifecycle,
       execution: f.execution || "supervised", epic: f.epic || "", epicTitle: f.epicTitle || "",
       problem: f.problem || "", specPath: f.specPath || "", specSha: f.specSha || "",
+      unitKind: f.unitKind || "task",
+      unitNoun: f.unitKind === "slice" ? "slices" : "tasks",
+      implLog: f.implLogDigest || null,
       priority: derivePriority(f), tasks, progress: pct,
       cost: f.cost && f.cost.usd > 0 ? { usd: f.cost.usd, tokens: f.cost.tokens } : null,
       bugDigest: f.bugDigest || null, severity: f.severity || null,
@@ -1331,6 +1431,10 @@ function buildFeaturesJSON(features, prsByFeature, linkContext) {
           desc: t.description || "", relPath: t.relPath || "", sha: t.sha || "",
           claimed_by: t.claimed_by || "", claimed_at: t.claimed_at || "",
           pr_url: t.pr_url || "", pr_number: t.pr_number || "",
+          kind: t.kind || "task", id: t.id || t.filename || "",
+          scenarios: t.scenarios || [], repos: t.repos || [],
+          bdd: (t.scenarios || []).length,
+          prs: t.prs || {},
           handoff: handoff,
         };
       }),
@@ -1392,9 +1496,7 @@ function openDetail(slug) {
   var dispatchHtml = '';
   var hasReadyTasks = f.taskList && f.taskList.some(function(t) { return t.status === 'ready'; });
   var inProgressTasks = f.taskList ? f.taskList.filter(function(t) { return t.status === 'in-progress' && t.claimed_by; }) : [];
-  if (f.lifecycle === 'draft') {
-    dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Actions</div><button class="dd-go-btn" style="width:100%" onclick="event.stopPropagation();window.open(\\'http://localhost:7433/plan/'+slug+'\\',\\'_blank\\')" title="Plan this feature">&#9998; Plan this feature</button></div>';
-  } else if (!hasReadyTasks && inProgressTasks.length > 0) {
+  if (!hasReadyTasks && inProgressTasks.length > 0) {
     var agentRows = {};
     inProgressTasks.forEach(function(t) {
       if (!agentRows[t.claimed_by]) agentRows[t.claimed_by] = [];
@@ -1417,10 +1519,26 @@ function openDetail(slug) {
     }).join('') + '</div>';
   }
 
-  var tasksHtml = '';
+  var unitsHtml = '';
   if (f.taskList && f.taskList.length) {
-    tasksHtml = '<div class="dp-section"><div class="dp-section-title">Tasks</div><div class="dp-task-list">' +
+    var unitTitle = f.unitKind === 'slice' ? 'Slices' : 'Tasks';
+    unitsHtml = '<div class="dp-section"><div class="dp-section-title">'+unitTitle+'</div><div class="dp-task-list">' +
       f.taskList.map(function(t) {
+        if (t.kind === 'slice') {
+          var prLinks = (t.repos || []).map(function(r) {
+            var pr = (t.prs && t.prs[r]) || '';
+            return '<span class="dp-task-detail-value">'+r+(pr ? ' '+pr : '')+'</span>';
+          }).join(', ');
+          return '<div class="dp-task" onclick="this.classList.toggle(\\'expanded\\')">' +
+            '<div class="dp-task-header"><div class="dp-task-status" style="background:'+(statusColors[t.status]||'var(--text-muted)')+'"></div>' +
+            '<div class="dp-task-name">'+t.id+': '+t.name+'</div>' +
+            '<div class="dp-task-wave">'+t.bdd+' BDD</div><div class="dp-task-chevron">&#9654;</div></div>' +
+            '<div class="dp-task-expand"><div class="dp-task-detail">' +
+              '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Status</span><span class="dp-task-detail-value" style="color:'+(statusColors[t.status]||'var(--text-muted)')+'">'+t.status+'</span></div>' +
+              '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Repos</span>'+(prLinks||'<span class="dp-task-detail-value">—</span>')+'</div>' +
+              '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Scenarios</span><span class="dp-task-detail-value">'+(t.scenarios||[]).join(', ')+'</span></div>' +
+            '</div></div></div>';
+        }
         var tUrl = specUrl(t.relPath, t.sha);
         var tLink = tUrl ? '<a href="'+tUrl+'" target="_blank" rel="noopener" class="dp-task-spec-link" onclick="event.stopPropagation()">'+fileIcon+' spec '+extIcon+'</a>' : '';
         var cmpUrl = compareUrl(t);
@@ -1479,11 +1597,26 @@ function openDetail(slug) {
       }).join('') + '</div></div>';
   }
 
+  var implLogHtml = '';
+  if (f.implLog) {
+    var il = f.implLog;
+    var bddChips = (il.bdd || []).map(function(b) { return '<span class="card-tag tag-feature">'+b+'</span>'; }).join(' ');
+    var blocks = '';
+    if (il.decisions)   blocks += '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Decisions</span><span class="dp-task-detail-value">'+il.decisions+'</span></div>';
+    if (il.discoveries) blocks += '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Discoveries</span><span class="dp-task-detail-value">'+il.discoveries+'</span></div>';
+    if (il.specGaps && il.specGaps !== 'None.') blocks += '<div class="dp-task-detail-row"><span class="dp-task-detail-label">Spec gaps</span><span class="dp-task-detail-value">'+il.specGaps+'</span></div>';
+    var logUrl = specUrl((f.specPath||'').replace(/-feature\\.md$/, '-impl-log.md'), f.specSha);
+    var logLink = logUrl ? '<a href="'+logUrl+'" target="_blank" rel="noopener" class="dp-spec-link">'+fileIcon+' full log '+extIcon+'</a>' : '';
+    implLogHtml = '<div class="dp-section"><div class="dp-section-title">Implementation Log</div>' +
+      '<div class="dp-desc" style="margin-bottom:8px">'+il.count+' merged '+(il.count===1?'entry':'entries')+(bddChips?' · '+bddChips:'')+'</div>' +
+      blocks + (logLink ? '<div style="margin-top:8px">'+logLink+'</div>' : '') + '</div>';
+  }
+
   document.getElementById('dpBody').innerHTML =
     '<div class="dp-section"><div class="dp-section-title">Description</div><div class="dp-desc">'+(f.problem||'No description.')+'</div>'+(specHtml?'<div style="margin-top:12px">'+specHtml+'</div>':'')+'</div>' +
     '<div class="dp-section"><div class="dp-meta-grid"><div class="dp-meta-item"><div class="dp-meta-label">Status</div><div class="dp-meta-value" style="color:'+pColor+'">'+sl+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Priority</div><div class="dp-meta-value" style="color:'+(f.priority==='p0'?'var(--red)':f.priority==='p1'?'var(--amber)':'var(--text-secondary)')+'">'+f.priority.toUpperCase()+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Execution</div><div class="dp-meta-value">'+f.execution+'</div></div><div class="dp-meta-item"><div class="dp-meta-label">Epic</div><div class="dp-meta-value">'+(f.epic||'—')+'</div></div></div></div>' +
-    (f.tasks.total > 0 ? '<div class="dp-section"><div class="dp-section-title">Progress</div><div class="dp-progress-bar"><div class="dp-progress-fill" style="width:'+f.progress+'%;background:'+pColor+'"></div></div><div class="dp-progress-label">'+f.tasks.done+' of '+f.tasks.total+' tasks complete</div></div>' : '') +
-    costHtml + dispatchHtml + prsHtml + tasksHtml;
+    (f.tasks.total > 0 ? '<div class="dp-section"><div class="dp-section-title">Progress</div><div class="dp-progress-bar"><div class="dp-progress-fill" style="width:'+f.progress+'%;background:'+pColor+'"></div></div><div class="dp-progress-label">'+f.tasks.done+' of '+f.tasks.total+' '+f.unitNoun+' complete</div></div>' : '') +
+    costHtml + dispatchHtml + prsHtml + unitsHtml + implLogHtml;
 
   document.getElementById('detailOverlay').classList.add('open');
 }
@@ -1737,11 +1870,6 @@ function updateTime() {
   if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 updateTime(); setInterval(updateTime, 60000);
-
-// ── Plan button enablement ──
-fetch('http://localhost:7433/api/health', { mode: 'cors' }).then(function(r) { return r.json(); }).then(function() {
-  document.querySelectorAll('.plan-btn-check').forEach(function(btn) { btn.disabled = false; btn.title = 'Plan this feature'; });
-}).catch(function() {});
 
 // ── Inbox badge ──
 fetch('http://localhost:7433/api/inbox?status=new').then(function(r) { return r.json(); }).then(function(items) {
@@ -2013,9 +2141,80 @@ function renderOrphaned(features) {
   return html;
 }
 
+function runSelfTest() {
+  // parseUserStories: gamification-shaped spec — 1 story, 2 scenarios.
+  const spec = [
+    "## User Stories",
+    "",
+    "### US-1: As a user, I want to see progress",
+    "",
+    "Status: pending",
+    "Repos: frontend",
+    "",
+    "**Scenarios:**",
+    "- **BDD-1** GIVEN a WHEN b THEN c",
+    "- **BDD-2** GIVEN a WHEN b THEN c",
+    "",
+    "## Constraints",
+  ].join("\n");
+  const stories = parseUserStories(spec);
+  assert.strictEqual(stories.length, 1, "one story");
+  assert.strictEqual(stories[0].id, "US-1");
+  assert.strictEqual(stories[0].status, "pending");
+  assert.deepStrictEqual(stories[0].repos, ["frontend"]);
+  assert.deepStrictEqual(stories[0].scenarios, ["BDD-1", "BDD-2"]);
+  // No User Stories section → empty.
+  assert.deepStrictEqual(parseUserStories("## Problem\n\nx"), []);
+  // deriveFeatureStatus over units.
+  const U = (status) => ({ status });
+  assert.strictEqual(deriveFeatureStatus([U("pending"), U("pending")], false), "not-started");
+  assert.strictEqual(deriveFeatureStatus([U("in-progress"), U("pending")], false), "in-progress");
+  assert.strictEqual(deriveFeatureStatus([U("done"), U("done")], false), "shipped");
+  assert.strictEqual(deriveFeatureStatus([U("blocked"), U("pending")], false), "blocked");
+  // Source selection: queue tasks win even when a spec has User Stories.
+  const bs = buildBoardState({
+    featureFiles: [{ path: "features/active/demo-feature.md", content: "---\nlifecycle: active\n---\n# Feature Spec: Demo\n\n## User Stories\n\n### US-1: x\n\nStatus: pending\nRepos: web\n\n**Scenarios:**\n- **BDD-1** a\n", sha: null }],
+    activeTaskFiles: [{ path: "queue/demo/ready/wave-1-web-x.md", content: "---\ntarget-repo: web\n---\n## Description\n\nx\n", sha: null }],
+  });
+  const demo = bs.features.find((f) => f.slug === "demo");
+  assert.strictEqual(demo.unitKind, "task", "queue tasks win over slices");
+  // Slice feature with no queue tasks.
+  const bs2 = buildBoardState({
+    featureFiles: [{ path: "features/active/slc-feature.md", content: "---\nlifecycle: active\n---\n# Feature Spec: Slc\n\n## User Stories\n\n### US-1: x\n\nStatus: pending\nRepos: frontend\n\n**Scenarios:**\n- **BDD-1** a\n- **BDD-2** b\n", sha: null }],
+  });
+  const slc = bs2.features.find((f) => f.slug === "slc");
+  assert.strictEqual(slc.unitKind, "slice");
+  assert.strictEqual(slc.status, "not-started");
+  assert.strictEqual(slc.tasks.total, 1);
+  assert.strictEqual(slc.tasks.done, 0);
+  // implLogDigest: header-only stub → null; one real entry → digest.
+  assert.strictEqual(implLogDigest("# Implementation Log — X\n\n"), null);
+  const log = [
+    "# Implementation Log — X",
+    "",
+    "## 2026-07-03T10:00:00Z — US-1 / frontend — agent-a — PR-frontend: #12 — RELAY-COMPLETE: BDD-1, BDD-2",
+    "",
+    "### Decisions",
+    "Chose the existing fetch lifecycle.",
+    "",
+    "### Discoveries",
+    "countsByStatus.done can be undefined.",
+    "",
+    "### Spec gaps",
+    "None.",
+  ].join("\n");
+  const d = implLogDigest(log);
+  assert.strictEqual(d.count, 1);
+  assert.deepStrictEqual(d.bdd, ["BDD-1", "BDD-2"]);
+  assert.match(d.decisions, /existing fetch lifecycle/);
+  assert.match(d.discoveries, /undefined/);
+  console.log("self-test: OK");
+}
+
 // ── Main ────────────────────────────────────────────────────────
 
 const args = parseArgs(process.argv);
+if (args.selfTest) { runSelfTest(); process.exit(0); }
 const cpDir = resolve(args.cpDir);
 const relayConfig = parseRelayConfig(cpDir);
 
@@ -2032,12 +2231,13 @@ const featureFiles = collectFeatureFiles(cpDir, "-feature.md");
 const bugFiles = [...collectFeatureFiles(cpDir, "-bug.md"), ...collectBugFiles(cpDir)];
 const activeTaskFiles = collectActiveTaskFiles(cpDir);
 const archivedTaskFiles = collectArchivedTaskFiles(cpDir);
+const implLogFiles = collectImplLogFiles(cpDir);
 
 console.log(`  Features: ${featureFiles.length}, Bugs: ${bugFiles.length}`);
 console.log(`  Active tasks: ${activeTaskFiles.length}, Archived: ${archivedTaskFiles.length}`);
 
 const handoffMap = collectHandoffFiles(cpDir);
-const boardState = buildBoardState({ featureFiles, bugFiles, activeTaskFiles, archivedTaskFiles });
+const boardState = buildBoardState({ featureFiles, bugFiles, activeTaskFiles, archivedTaskFiles, implLogFiles });
 
 // Link context from environment (GitHub Actions provides GITHUB_* automatically)
 const linkContext = {
