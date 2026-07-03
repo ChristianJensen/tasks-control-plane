@@ -248,9 +248,15 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
     const isArchived = tasks.length > 0 && tasks.every((t) =>
       archivedTaskFiles.some((f) => f.path.includes(`/_done/${slug}/`))
     );
+    // No decomposed tasks yet: a draft or a freshly-activated feature is
+    // "not-started" (stays visible — Draft/Ready column), NOT "orphaned".
+    // Reserve "orphaned" (hidden from the board) for specs that are closed out
+    // or a lifecycle we don't recognize, so finishing a spec never makes it
+    // vanish while it's waiting to be planned.
     const status = tasks.length > 0
       ? deriveFeatureStatus(tasks, isArchived)
-      : (spec.lifecycle === "draft" ? "not-started" : "orphaned");
+      : (spec.lifecycle === "draft" || spec.lifecycle === "active"
+          ? "not-started" : "orphaned");
 
     const cost = {
       usd: tasks.reduce((s, t) => s + (t.cost_usd || 0), 0),
