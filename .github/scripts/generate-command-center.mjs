@@ -176,6 +176,24 @@ function parseTask(content, filename, featureSlug, isArchived, sha, relPath) {
   };
 }
 
+// A draft spec is "ready to activate" once every Readiness Checklist item is
+// ticked — the same gate validate.py enforces at Approve & Activate. Both the
+// web wizard and the CLI tick these deterministically via
+// wf.tick_readiness_items, so this signal is author-agnostic (works the same
+// for CLI- and browser-authored specs). Requires ≥1 item so an empty/malformed
+// checklist never reads as complete.
+function isSpecComplete(body) {
+  const lines = body.split("\n");
+  let inSection = false, checked = 0, unchecked = 0;
+  for (const line of lines) {
+    if (/^##\s+/.test(line)) { inSection = /^##\s+Readiness Checklist\s*$/i.test(line); continue; }
+    if (!inSection) continue;
+    if (/^\s*[-*]\s+\[[xX]\]/.test(line)) checked++;
+    else if (/^\s*[-*]\s+\[ \]/.test(line)) unchecked++;
+  }
+  return checked > 0 && unchecked === 0;
+}
+
 function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [], archivedTaskFiles = [] }) {
   const specs = {};
   for (const f of [...featureFiles, ...bugFiles]) {
@@ -189,6 +207,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
       epic: (typeof fields.epic === "string" && fields.epic) ? fields.epic : "",
       epicTitle: (typeof fields["epic-title"] === "string" && fields["epic-title"]) ? fields["epic-title"] : "",
       title: fields.title || extractTitle(body, slug), problem: extractProblemStatement(body),
+      specComplete: !isBug && isSpecComplete(body),
       bugDigest: isBug ? extractBugDigest(body) : undefined,
       severity: isBug ? fields.severity || "" : undefined,
       reportedBy: isBug ? fields["reported-by"] || "" : undefined,
@@ -243,6 +262,7 @@ function buildBoardState({ featureFiles = [], bugFiles = [], activeTaskFiles = [
 
     const feature = {
       slug, title: spec.title, type: spec.type, lifecycle: spec.lifecycle, status,
+      specComplete: !!spec.specComplete,
       execution: spec.execution, epic: spec.epic, epicTitle: spec.epicTitle,
       createdAt: spec.createdAt || "", completedAt: spec.completedAt || "", specSha: spec.sha || null, specPath: spec.specPath || "",
       problem: spec.problem, cost, tasks: tasks.length > 0 ? taskCounts(tasks) : null,
@@ -753,7 +773,9 @@ function renderFeatureRow(feature, prsByFeature, idx, linkContext, generatedAt) 
     `<div class="bug-digest-actions"><button class="dismiss-btn" onclick="event.stopPropagation();showToast('Dismiss not yet implemented','warn')">Dismiss</button></div>`
     : "";
 
-  const isDimmed = feature.lifecycle === "draft" || feature.lifecycle === "paused";
+  // Dim only drafts still being authored — a completed (ready-to-activate)
+  // draft reads as active work, so don't grey it out.
+  const isDimmed = (feature.lifecycle === "draft" && !feature.specComplete) || feature.lifecycle === "paused";
 
   return `<div class="feature-row${isDimmed ? " feature-dimmed" : ""}" data-status="${feature.status}" data-type="${feature.type}" data-execution="${feature.execution || ""}" data-title="${escHTML(feature.title.toLowerCase())}" data-epic="${escHTML(feature.epic)}" data-epic-title="${escHTML((feature.epicTitle || '').toLowerCase())}" style="animation-delay:${idx * 60}ms">
     <div class="feature-header">
@@ -842,7 +864,10 @@ const KANBAN_COLUMNS = [
 ];
 
 function assignKanbanColumn(feature) {
-  if (feature.lifecycle === "draft") return "draft";
+  // A fully-authored draft (all Readiness Checklist items ticked) is ready to
+  // activate — surface it in "Ready", not "Draft". It stays in features/draft/
+  // and still requires Approve & Activate; only the board column changes.
+  if (feature.lifecycle === "draft") return feature.specComplete ? "ready" : "draft";
   if (feature.status === "blocked") return "blocked";
   if (feature.status === "shipped") return "done";
   if (feature.status === "in-progress") return "in-progress";
