@@ -1,6 +1,6 @@
 ---
 title: "Gamification v1 — Your Progress card"
-lifecycle: draft
+lifecycle: active
 execution: supervised
 model: ""
 priority: medium
