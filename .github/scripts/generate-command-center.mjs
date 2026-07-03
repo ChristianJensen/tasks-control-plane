@@ -1496,7 +1496,21 @@ function openDetail(slug) {
   var dispatchHtml = '';
   var hasReadyTasks = f.taskList && f.taskList.some(function(t) { return t.status === 'ready'; });
   var inProgressTasks = f.taskList ? f.taskList.filter(function(t) { return t.status === 'in-progress' && t.claimed_by; }) : [];
-  if (!hasReadyTasks && inProgressTasks.length > 0) {
+  if (f.unitKind === 'slice' && f.lifecycle === 'active' && f.status !== 'shipped') {
+    var sliceUnits = (f.taskList || []).filter(function(t) { return t.kind === 'slice'; });
+    var workingSlice = sliceUnits.filter(function(t) { return t.status === 'in-progress'; })[0];
+    var nextSlice = sliceUnits.filter(function(t) { return t.status === 'pending'; })[0];
+    if (workingSlice) {
+      dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Actions</div>' +
+        '<div class="agent-bar"><div class="agent-bar-row"><span class="agent-bar-name">Agent working</span><span class="agent-bar-tasks">' + workingSlice.id + ': ' + workingSlice.name + '</span></div></div>' +
+        '<button class="dd-go-btn" style="width:100%;margin-top:8px" onclick="event.stopPropagation();haltFeature(\\'' + slug + '\\')">&#9209; Halt</button></div>';
+    } else if (nextSlice) {
+      var repoNote = (nextSlice.repos && nextSlice.repos.length) ? ' <span style="opacity:0.7">(' + nextSlice.repos.join(', ') + ')</span>' : '';
+      dispatchHtml = '<div class="dp-section"><div class="dp-section-title">Actions</div>' +
+        '<div class="dp-desc" style="margin-bottom:8px">Next slice: <strong>' + nextSlice.id + '</strong>: ' + nextSlice.name + repoNote + '</div>' +
+        '<button class="dd-go-btn" style="width:100%" onclick="event.stopPropagation();startNextSlice(\\'' + slug + '\\')">&#9654; Start next slice</button></div>';
+    }
+  } else if (!hasReadyTasks && inProgressTasks.length > 0) {
     var agentRows = {};
     inProgressTasks.forEach(function(t) {
       if (!agentRows[t.claimed_by]) agentRows[t.claimed_by] = [];
@@ -1729,6 +1743,26 @@ function dispatchAgent(slug, mode, target, agents) {
     if (r.ok || r.status === 204) showToast('Cloud agent dispatch triggered', 'success');
     else r.text().then(function(t) { showToast('Failed: ' + t, 'error'); });
   }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+}
+
+function startNextSlice(slug) {
+  showToast('Starting agent on next slice...', 'info');
+  fetch('http://localhost:7433/api/feature/' + slug + '/loop/start', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ once: true })
+  }).then(function(r) {
+    if (r.status === 409) { showToast('An agent is already running for this feature', 'warn'); return; }
+    if (r.ok) { r.json().then(function(d) { showToast('Agent started on next slice (PID ' + d.pid + ')', 'success'); }); return; }
+    r.json().then(function(d) { showToast('Start failed: ' + (d.error || 'unknown'), 'error'); })
+             .catch(function() { r.text().then(function(t) { showToast('Start failed: ' + t, 'error'); }); });
+  }).catch(function() { showToast('Start relay serve to launch a local agent', 'error'); });
+}
+
+function haltFeature(slug) {
+  showToast('Sending halt signal...', 'info');
+  fetch('http://localhost:7433/api/feature/' + slug + '/loop/halt', { method: 'POST' })
+    .then(function(r) { if (r.ok) showToast('Halt signal sent', 'success'); else r.text().then(function(t) { showToast('Halt failed: ' + t, 'error'); }); })
+    .catch(function() { showToast('Server offline — cannot halt', 'error'); });
 }
 
 // ── Task Reset & Triage ──
