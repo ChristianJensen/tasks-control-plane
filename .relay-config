@@ -1,3 +1,4 @@
+anthropic-api-key-cmd: cat /Users/christianjensen/src/agentic-sdlc-demo/tasks-control-plane/.relay/anthropic-api-key
 relay-nwo: ChristianJensen/tasks-control-plane
 relay-repo: ChristianJensen/Relay
 relay-path: /Users/christianjensen/src/agentic-sdlc-demo/relay

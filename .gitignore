@@ -4,3 +4,4 @@ relay
 .relay/inbox.db-wal
 .relay/env
 .relay/logs/
+.relay/anthropic-api-key
