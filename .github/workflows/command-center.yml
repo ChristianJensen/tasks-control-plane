@@ -21,7 +21,10 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Never cancel an in-flight Pages deployment — canceling one mid-flight can
+  # wedge GitHub's deploy backend into persistent "Deployment failed, try again
+  # later" errors. Matches GitHub's official Pages workflow guidance.
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
