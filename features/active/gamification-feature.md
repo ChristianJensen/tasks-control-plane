@@ -43,9 +43,9 @@ hook without pretending to be a multi-user leaderboard yet.
 
 ### US-1: As a task-app user, I want to see how many tasks I have completed so that I feel a sense of progress when I open the analytics view
 
-Status: pending
+Status: done
 Repos: frontend
-PR-frontend:
+PR-frontend: #126
 
 **Scenarios:**
 - **BDD-1** **GIVEN** the analytics endpoint reports `countsByStatus.done` equal to 12 **WHEN** the user navigates to `/analytics` **THEN** a "Your Progress" card is rendered at the top of the page displaying the number `12` and the label `tasks completed`
