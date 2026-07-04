@@ -43,7 +43,7 @@ hook without pretending to be a multi-user leaderboard yet.
 
 ### US-1: As a task-app user, I want to see how many tasks I have completed so that I feel a sense of progress when I open the analytics view
 
-Status: in-progress
+Status: pending
 Repos: frontend
 PR-frontend:
 
