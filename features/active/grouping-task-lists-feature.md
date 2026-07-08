@@ -1,6 +1,6 @@
 ---
 title: "Grouping Task Lists"
-lifecycle: draft
+lifecycle: active
 execution: supervised
 model: ""
 priority: medium
